@@ -286,4 +286,16 @@ textarea.prompt-output {
         padding: 10px;
     }
     .paste-btn { padding: 4px 6px; font-size: 10px; }
+    .ratio-btn-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        padding-bottom: 15px;
+        overflow-x: hidden;
+        border-bottom: none;
+    }
+    .ratio-btn {
+        width: 100%;
+        padding: 12px 0;
+    }
 }
