@@ -22,7 +22,6 @@ window.runAnalysis = function() {
 
     setTimeout(() => {
         try {
-            // 1. データのパースと構造化 (parser.js)
             const { validHorseNames, target, horseBlocks } = window.parseAllData(d1, d2);
             
             const ratios = [
@@ -34,7 +33,6 @@ window.runAnalysis = function() {
 
             let globalHasAuditIssues = false;
 
-            // 2. 各比率ごとのATV計算 (calculator.js)
             ratios.forEach(ratio => {
                 const data = window.calculateATV(horseBlocks, validHorseNames, target, ratio);
                 window.processedData[ratio.id] = { ...data, target };
@@ -43,7 +41,6 @@ window.runAnalysis = function() {
                     globalHasAuditIssues = true;
                 }
 
-                // 3. 検証用・デバッグ用プロンプトの生成
                 const tbStr = data.results.map(h => `${h.horseNo},${h.horseName},${h.pastRaces.length},${h.validCount}`).join('|');
                 const rkStr = data.results.map((h, i) => `${h.centralRank},${h.horseNo},${h.horseName},中央加重:${h.centralATV !== null ? h.centralATV.toFixed(2) : "-"},加重:${h.weightedATV !== null ? h.weightedATV.toFixed(2) : "-"}`).join('|');
                 
@@ -56,7 +53,6 @@ window.runAnalysis = function() {
                 window.generatedPrompts[ratio.id] = basePrompt;
             });
 
-            // 4. UIの枠組み生成と、データの流し込み
             window.renderUI(target, globalHasAuditIssues);
             window.switchRatio('04');
 
@@ -130,10 +126,10 @@ window.renderUI = function(target, hasAuditIssues) {
             </div>
             <div class="pattern-block">
                 <div class="ratio-btn-group">
-                    <button data-ratio="02" class="ratio-btn" onclick="window.switchRatio('02')">0.2 / 0.8</button>
-                    <button data-ratio="03" class="ratio-btn" onclick="window.switchRatio('03')">0.3 / 0.7</button>
-                    <button data-ratio="04" class="ratio-btn active" onclick="window.switchRatio('04')">0.4 / 0.6</button>
-                    <button data-ratio="05" class="ratio-btn" onclick="window.switchRatio('05')">0.5 / 0.5</button>
+                    <button data-ratio="02" class="ratio-btn" onclick="window.switchRatio('02')">前 2：8 後</button>
+                    <button data-ratio="03" class="ratio-btn" onclick="window.switchRatio('03')">前 3：7 後</button>
+                    <button data-ratio="04" class="ratio-btn active" onclick="window.switchRatio('04')">前 4：6 後</button>
+                    <button data-ratio="05" class="ratio-btn" onclick="window.switchRatio('05')">前 5：5 後</button>
                 </div>
                 <h3 style="margin-top:0;">平均ATVランキング</h3>
                 <div id="tableContainer" class="table-responsive"></div>
