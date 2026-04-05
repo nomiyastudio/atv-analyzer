@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>競馬ATV解析ツール</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="input-section">
+            <div class="inputs-container">
+                <div class="input-box">
+                    <label>データ①（出馬表・馬名辞書用） <button class="paste-btn" onclick="pasteFromClipboard('data1')">📋 貼り付け</button></label>
+                    <textarea id="data1" class="input-data" placeholder="ここにデータ①を貼り付けてください"></textarea>
+                </div>
+                <div class="input-box">
+                    <label>データ②（馬柱データ） <button class="paste-btn" onclick="pasteFromClipboard('data2')">📋 貼り付け</button></label>
+                    <textarea id="data2" class="input-data" placeholder="ここにデータ②を貼り付けてください"></textarea>
+                </div>
+            </div>
+            <div class="action-box">
+                <button id="runBtn" class="run-btn" onclick="runAnalysis()">解析実行</button>
+                <button id="clearBtn" class="clear-btn" onclick="clearData()">クリア</button>
+            </div>
+        </div>
+        <div id="resultArea"></div>
+    </div>
+
+    <script src="utils.js"></script>
+    <script src="parser.js"></script>
+    <script src="calculator.js"></script>
+    <script src="ui.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
