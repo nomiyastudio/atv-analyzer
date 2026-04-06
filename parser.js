@@ -6,7 +6,6 @@ window.parseAllData = function(d1, d2) {
     for (let i = 0; i < d1Lines.length; i++) {
         let m = d1Lines[i].match(/^(\d+)\s+(\d+)\s*$/);
         if (m) {
-            let horseNo = parseInt(m[2], 10);
             let name = "";
             let j = i + 1;
             while (j < d1Lines.length && j <= i + 3) {
@@ -17,8 +16,8 @@ window.parseAllData = function(d1, d2) {
                 }
                 j++;
             }
-            if (name && name !== "不明" && !validHorseNames.some(h => h.horseNo === horseNo)) {
-                validHorseNames.push({ horseNo, horseName: name });
+            if (name && name !== "不明" && !validHorseNames.includes(name)) {
+                validHorseNames.push(name);
             }
         }
     }
@@ -39,8 +38,8 @@ window.parseAllData = function(d1, d2) {
                         }
                         j++;
                     }
-                    if (name && name !== "不明" && !validHorseNames.some(h => h.horseNo === horseNo)) {
-                        validHorseNames.push({ horseNo, horseName: name });
+                    if (name && name !== "不明" && !validHorseNames.includes(name)) {
+                        validHorseNames.push(name);
                     }
                 }
             }
@@ -49,10 +48,13 @@ window.parseAllData = function(d1, d2) {
 
     let horseBlocks = d2.split(/(?=^\d+\s+\d+\s+(?:--|[◎○▲△×☆注]+)?\s*\n)/m);
     if (horseBlocks.length <= 1) {
-        horseBlocks = d2.split(/(?=^\d+\n\d+\n(?:--|[◎○▲△×☆注]+)?\n)/m);
+        horseBlocks = d2.split(/(?=^\d+\r?\n\d+\r?\n(?:--|[◎○▲△×☆注]+)?\r?\n)/m);
+    }
+    if (horseBlocks.length <= 1) {
+        horseBlocks = d2.split(/(?=^\d+[\t ]+\d+[\t ]*(?:\r?\n|--|[◎○▲△×☆注]+))/m);
     }
 
-    horseBlocks = horseBlocks.filter(block => /^\s*\d+[\s\n]+\d+[\s\n]+/.test(block));
+    horseBlocks = horseBlocks.filter(block => /\d{2}\/\d{2}\s+[^\s]+\s+\d+R/.test(block));
 
     return { validHorseNames, target, horseBlocks };
 };
