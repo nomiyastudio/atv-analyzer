@@ -1,90 +1,193 @@
-/**
- * parser.js
- * 入力されたテキストデータを解析し、構造化されたデータオブジェクトに変換する
- */
-
-window.parseAllData = function(nameData, rawData) {
+window.parseAllData = function(d1, d2) {
+    let target = window.parseTarget(d1);
     let validHorseNames = [];
+    let d1Lines = d1.split('\n').map(l => l.trim()).filter(l => l !== '');
 
-    // 1. 出馬表（nameData）から有効な馬名の辞書を作成
-    // 通常の正規表現による一括抽出
-    const regDB = /([ァ-ヴー]{2,9})のデータベース/g;
-    const regWeight = /([ァ-ヴー]{2,9})\s+(?:牝|牡|セ)\d\s+(?:4[8-9]\.\d|5\d\.\d|6[0-5]\.\d)/g;
-    const regMemo = /馬メモ\s*\r?\n\s*([ァ-ヴー]{2,9})\s*\r?\n\s*全角/g;
-    
-    let match;
-    while ((match = regDB.exec(nameData)) !== null) { if (!validHorseNames.includes(match[1])) validHorseNames.push(match[1]); }
-    while ((match = regWeight.exec(nameData)) !== null) { if (!validHorseNames.includes(match[1])) validHorseNames.push(match[1]); }
-    while ((match = regMemo.exec(nameData)) !== null) { if (!validHorseNames.includes(match[1])) validHorseNames.push(match[1]); }
+    for (let i = 0; i < d1Lines.length; i++) {
+        let m = d1Lines[i].match(/^(\d+)\s+(\d+)\s*$/);
+        if (m) {
+            let horseNo = parseInt(m[2], 10);
+            let name = "";
+            let j = i + 1;
+            while (j < d1Lines.length && j <= i + 3) {
+                let txt = d1Lines[j];
+                if (txt !== '--' && !/^[◎○▲△×☆注]+$/.test(txt)) {
+                    name = txt.split(/\s+/)[0]; 
+                    break;
+                }
+                j++;
+            }
+            if (name && name !== "不明" && !validHorseNames.some(h => h.horseNo === horseNo)) {
+                validHorseNames.push({ horseNo, horseName: name });
+            }
+        }
+    }
 
-    // 除外・取消馬の特殊な改行パターンへの対応（行ベースの走査）
-    const lines = nameData.split(/\r?\n/);
-    for (let i = 0; i < lines.length; i++) {
-        if (/(?:取消|除外)/.test(lines[i])) {
-            // 「除外」と書かれた行の直後2行以内に馬名（カタカナのみ）があるか探す
-            for (let j = 1; j <= 2; j++) {
-                if (i + j < lines.length) {
-                    let m = lines[i + j].match(/^\s*([ァ-ヴー]{2,9})\s*$/);
-                    if (m && !validHorseNames.includes(m[1])) {
-                        validHorseNames.push(m[1]);
-                        break;
+    if (validHorseNames.length === 0) {
+        for (let i = 0; i < d1Lines.length - 2; i++) {
+            if (/^\d+$/.test(d1Lines[i]) && /^\d+$/.test(d1Lines[i+1])) {
+                let waku = parseInt(d1Lines[i], 10);
+                let horseNo = parseInt(d1Lines[i+1], 10);
+                if (waku > 0 && waku <= 8 && horseNo > 0 && horseNo <= 18) {
+                    let name = "";
+                    let j = i + 2;
+                    while (j < d1Lines.length && j <= i + 4) {
+                        let txt = d1Lines[j];
+                        if (txt !== '--' && !/^[◎○▲△×☆注]+$/.test(txt)) {
+                            name = txt.split(/\s+/)[0];
+                            break;
+                        }
+                        j++;
+                    }
+                    if (name && name !== "不明" && !validHorseNames.some(h => h.horseNo === horseNo)) {
+                        validHorseNames.push({ horseNo, horseName: name });
                     }
                 }
             }
         }
     }
 
-    // 文字数の長い順にソート（部分一致による誤判定を防ぐ）
-    validHorseNames.sort((a, b) => b.length - a.length);
+    let horseBlocks = d2.split(/(?=^\d+\s+\d+\s+(?:--|[◎○▲△×☆注]+)?\s*\n)/m);
+    if (horseBlocks.length <= 1) {
+        horseBlocks = d2.split(/(?=^\d+\n\d+\n(?:--|[◎○▲△×☆注]+)?\n)/m);
+    }
 
-    // 2. ターゲットレースの条件を抽出
-    const headerStr = rawData.substring(0, 1000);
+    horseBlocks = horseBlocks.filter(block => /^\s*\d+[\s\n]+\d+[\s\n]+/.test(block));
+
+    return { validHorseNames, target, horseBlocks };
+};
+
+window.parseTarget = function(d1) {
+    let lines = d1.split('\n').map(l => l.trim());
     let target = {
-        className: "条件戦クラス",
-        distance: 0,
+        className: "不明",
+        distance: 2000,
         trackType: "芝",
-        weightRule: "定量",
         location: "不明",
-        dateStr: ""
+        weightRule: "馬齢"
     };
+    for (let line of lines) {
+        let mDist = line.match(/(芝|ダ|ダート)(\d+)m/);
+        if (mDist) {
+            target.trackType = mDist[1].replace("ダート", "ダ");
+            target.distance = parseInt(mDist[2], 10);
+        }
+        if (line.includes("ハンデ")) target.weightRule = "ハンデ";
+        else if (line.includes("別定")) target.weightRule = "別定";
+        else if (line.includes("定量")) target.weightRule = "定量";
+        let mLoc = line.match(/(\d+)回\s+([^\s]+)\s+\d+日目/);
+        if (mLoc && mLoc[2]) {
+            target.location = mLoc[2].replace("競馬", "");
+        }
+    }
+    if (target.location === "不明") {
+         const locs = ["札幌","函館","福島","新潟","東京","中山","中京","京都","阪神","小倉","川崎","大井","船橋","浦和","盛岡","水沢","門別","園田","姫路","名古屋","笠松","高知","佐賀"];
+         let text = d1.replace(/\s+/g, "");
+         for(let l of locs) {
+             if (text.includes(l)) { target.location = l; break; }
+         }
+    }
+    return target;
+};
 
-    // クラス判定
-    if (headerStr.match(/オープン|OP|G1|G2|G3|Jpn|重賞/)) target.className = "オープンクラス";
-    
-    // 日付
-    let targetDateMatch = headerStr.match(/(\d{1,2})月(\d{1,2})日/);
-    if (targetDateMatch) target.dateStr = `${targetDateMatch[1]}月${targetDateMatch[2]}日`;
-    
-    // 距離・トラック
-    const distMatch = headerStr.match(/(芝|ダ|ダート)\s*(\d+)m/);
-    if (distMatch) {
-        target.trackType = distMatch[1].replace("ダート", "ダ");
-        target.distance = parseInt(distMatch[2], 10);
+window.parseHorseBlock = function(block, target) {
+    let lines = block.split('\n').map(l => l.trim()).filter(l => l);
+    let pastRaces = [];
+    let styleClass = null;
+    let avgPosRatio = null;
+    let currentWeight = 57.0;
+
+    for (let i = 0; i < Math.min(20, lines.length); i++) {
+        let wm = lines[i].match(/(\d+\.\d+)/);
+        if (wm) {
+            let w = parseFloat(wm[1]);
+            if (w >= 48.0 && w <= 65.0 && (lines[i].includes("牡") || lines[i].includes("牝") || lines[i].includes("セ"))) {
+                currentWeight = w;
+                break;
+            }
+        }
+    }
+
+    let raceIdx = 1;
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        let dateMatch = line.match(/^(\d{2}\/\d{2})\s+([^\s]+)\s+\d+R/);
+        if (dateMatch) {
+            let pDate = dateMatch[1];
+            let pLoc = dateMatch[2].replace(/\[|\]/g, "");
+            let j = i + 1;
+            
+            let pTrack = "芝";
+            let pDist = 2000;
+            let pCond = "良";
+            let pWeight = currentWeight;
+            let f3f = NaN;
+            let f3b = NaN;
+            let posArr = [];
+
+            while (j < lines.length && !lines[j].match(/^\d{2}\/\d{2}\s+/)) {
+                let l = lines[j];
+                let distMatch = l.match(/(芝|ダ)(\d+)\s+([^\s]+)\s+(良|稍|重|不)/);
+                if (distMatch) {
+                    pTrack = distMatch[1];
+                    pDist = parseInt(distMatch[2], 10);
+                    pCond = distMatch[4];
+                }
+                
+                let weightMatch = l.match(/[^\s]+\s+(\d+\.\d+)\s+\d+kg/);
+                if (weightMatch) {
+                    pWeight = parseFloat(weightMatch[1]);
+                }
+
+                if (l.startsWith("前")) {
+                    let fMatch = l.match(/^前\s+(\d+\.\d+)/);
+                    if (fMatch) f3f = parseFloat(fMatch[1]);
+                    let posMatch = l.match(/前\s+(?:\d+\.\d+\s+)?([\d\s\-]+)$/);
+                    if (posMatch) {
+                        posArr = posMatch[1].split(/\s+/).map(x => parseInt(x)).filter(x => !isNaN(x));
+                    }
+                }
+                if (l.startsWith("後")) {
+                    let bMatch = l.match(/^後\s+(\d+\.\d+)/);
+                    if (bMatch) f3b = parseFloat(bMatch[1]);
+                }
+                j++;
+            }
+
+            let reason = "";
+            let valid = true;
+            if (isNaN(f3f) || isNaN(f3b)) { valid = false; reason = "3Fタイム欠損"; }
+            if (pTrack !== target.trackType) { valid = false; reason = "芝ダート不一致"; }
+
+            pastRaces.push({
+                idx: raceIdx,
+                date: pDate,
+                pLoc: pLoc,
+                pTrack: pTrack,
+                pDist: pDist,
+                pCond: pCond,
+                pWeight: pWeight,
+                f3f: f3f,
+                f3b: f3b,
+                posArr: posArr,
+                valid: valid,
+                reason: reason
+            });
+            raceIdx++;
+        }
     }
     
-    // 場所
-    const locMatch = headerStr.match(/回\s*(東京|中山|京都|阪神|中京|小倉|新潟|福島|札幌|函館)/);
-    if (locMatch) target.location = locMatch[1];
-    
-    // 斤量ルール
-    if (headerStr.match(/ハンデ/)) target.weightRule = "ハンデ";
-    else if (headerStr.match(/別定/)) target.weightRule = "別定";
-
-    // 3. 馬ごとのデータブロックに分割
-    // 各馬のデータ開始を示すパターン（馬番 + 印 などの並び）で分割
-    let horseBlocks = rawData.split(/\r?\n(?=\s*\d{1,2}\s+\d{1,2}\s*(?:\r?\n|\s+)?(?:--|◎|◯|〇|▲|△|☆|✓|消|取消|除外))/);
-    
-    // 分割に失敗した場合のフォールバックパターン
-    if (horseBlocks.length <= 1) {
-        horseBlocks = rawData.split(/\r?\n(?=\d{1,2}\r?\n(?:--|◎|◯|〇|▲|△|☆|✓|消|取消|除外)\r?\n[ァ-ヴーA-Za-z])/);
-    }
-    if (horseBlocks.length <= 1) {
-        horseBlocks = rawData.split(/\r?\n(?=\d{1,2}\(\d{1,2}\))/);
+    let validPosRaces = pastRaces.filter(r => r.valid && r.posArr && r.posArr.length > 0);
+    if (validPosRaces.length > 0) {
+        let totalPos = 0;
+        validPosRaces.forEach(r => totalPos += r.posArr[0]);
+        let avg = totalPos / validPosRaces.length;
+        avgPosRatio = Math.min(avg / 16, 1.0);
+        if (avg <= 2.5) styleClass = 1;
+        else if (avg <= 6.5) styleClass = 2;
+        else if (avg <= 11.5) styleClass = 3;
+        else styleClass = 4;
     }
 
-    return {
-        validHorseNames,
-        target,
-        horseBlocks
-    };
+    return { pastRaces, currentWeight, styleClass, avgPosRatio };
 };
