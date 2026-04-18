@@ -39,16 +39,39 @@ window.cleanHorseName = function(rawName) {
 window.parseAllData = function(d1, d2) {
     let target = window.parseTarget(d1);
     let validHorseNames = [];
-    let d1Lines = d1.split('\n').map(l => l.trim()).filter(l => l !== '');
+    
+    // --- 新規追加: 抽出漏れストッパー（不要なフッター領域のカット） ---
+    let cleanD1 = d1;
+    let d1CutoffMatch = d1.match(/選んだ馬のオッズ|予想を共有|AI展開予測|各データ上位3頭|展開予測の見方/);
+    if (d1CutoffMatch) {
+        cleanD1 = d1.substring(0, d1CutoffMatch.index);
+    }
+
+    let d1Lines = cleanD1.split('\n').map(l => l.trim()).filter(l => l !== '');
 
     let isIgnoreText = (txt) => {
-        // 修正箇所1：判定対象の記号に ◯ (大きな丸) と 〇 (漢数字のゼロ) を追加
         return txt === '--' || 
                /^[◎○◯〇▲△×☆注消－✓✔]+$/.test(txt) || 
                /^&#\d+;?$/.test(txt) || 
                /削除|保存|閉じる|文字以内|馬メモ|次走|相性度|波乱度|マスターコース|ログイン|予想|展開|トラックバイアス|的中|プラス|コース情報|ペース|編集/.test(txt) ||
                /^前走/.test(txt) ||
                /^\d+$/.test(txt); 
+    };
+
+    // --- 新規追加: 重複・略称排除フィルター ---
+    const addValidName = (name) => {
+        if (!name || name === "不明") return;
+        
+        // 既に存在する馬名の一部（略称）であれば追加しない
+        if (validHorseNames.some(existing => existing.includes(name))) return;
+        
+        // 逆に追加しようとしている名前が、既存の短い名前を包含している場合は上書きする
+        let shortIdx = validHorseNames.findIndex(existing => name.includes(existing));
+        if (shortIdx !== -1) {
+            validHorseNames[shortIdx] = name;
+        } else {
+            validHorseNames.push(name);
+        }
     };
 
     // D1からの馬名抽出ロジック
@@ -67,9 +90,7 @@ window.parseAllData = function(d1, d2) {
                 }
                 j++;
             }
-            if (name && name !== "不明" && !validHorseNames.includes(name)) {
-                validHorseNames.push(name);
-            }
+            addValidName(name);
         }
     }
 
@@ -93,10 +114,43 @@ window.parseAllData = function(d1, d2) {
                         }
                         j++;
                     }
-                    if (name && name !== "不明" && !validHorseNames.includes(name)) {
-                        validHorseNames.push(name);
-                    }
+                    addValidName(name);
                 }
+            }
+        }
+    }
+
+    // --- スマホ版（縦並び）フォーマット対応の馬名抽出 ---
+    if (validHorseNames.length === 0) {
+        for (let i = 0; i < d1Lines.length; i++) {
+            // フック1: 「のデータベース」が含まれる行から抽出
+            let dbMatch = d1Lines[i].match(/(?:牡|牝|セ)\d+[\s\S]*?([^\s]+)のデータベース/);
+            if (!dbMatch) {
+                dbMatch = d1Lines[i].match(/^([^\s]+)のデータベース/);
+            }
+            
+            if (dbMatch) {
+                let name = window.cleanHorseName(dbMatch[1]);
+                addValidName(name);
+            } else if (/^\d+$/.test(d1Lines[i])) {
+                // フック2: 数字（馬番）のみの行から下を探索
+                let name = "";
+                let j = i + 1;
+                while (j < d1Lines.length && j <= i + 6) {
+                    let txt = d1Lines[j];
+                    if (/^\d+$/.test(txt)) break; // 次の馬番らしき数字が来たら探索終了
+                    
+                    if (!isIgnoreText(txt) && txt.length > 1 && !/^\d/.test(txt)) {
+                        // 馬名らしき文字列（カタカナを含む）を判定
+                        if (/[\u30A0-\u30FF]/.test(txt)) {
+                            let cleanTxt = txt.replace(/のデータベース.*$/, '');
+                            name = window.cleanHorseName(cleanTxt);
+                            break;
+                        }
+                    }
+                    j++;
+                }
+                addValidName(name);
             }
         }
     }
@@ -108,7 +162,7 @@ window.parseAllData = function(d1, d2) {
         cleanD2 = d2.substring(0, cutoffMatch.index);
     }
 
-    // 修正箇所2：ブロック分割の正規表現に ◯ (大きな丸) と 〇 (漢数字のゼロ) を追加
+    // ブロック分割の正規表現に ◯ (大きな丸) と 〇 (漢数字のゼロ) を追加
     let horseBlocks = cleanD2.split(/(?=^\d+\s+\d+\s+(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\s*\n)/m);
     if (horseBlocks.length <= 1) {
         horseBlocks = cleanD2.split(/(?=^\d+\r?\n\d+\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\r?\n)/m);
@@ -116,8 +170,18 @@ window.parseAllData = function(d1, d2) {
     if (horseBlocks.length <= 1) {
         horseBlocks = cleanD2.split(/(?=^\d+[\t ]+\d+[\t ]*(?:\r?\n|--|[◎○◯〇▲△×☆注消✓✔]+))/m);
     }
+    
+    // --- スマホ版（縦並び）フォーマット対応のブロック分割 ---
+    if (horseBlocks.length <= 1) {
+        // スマホ版: 馬番(数字1〜2桁) -> 改行 -> 予想印(省略可) -> 改行 -> 馬名+のデータベース
+        horseBlocks = cleanD2.split(/(?=^\d{1,2}\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\r?\n?[^\n]*のデータベース)/m);
+    }
+    if (horseBlocks.length <= 1) {
+        // さらにシンプルなスマホ版ブロック分割（数字行＋印行＋カタカナ行）
+        horseBlocks = cleanD2.split(/(?=^\d{1,2}\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)\r?\n)/m);
+    }
 
-    // D2ブロックと馬名のマッチング判定強化（前回改修分）
+    // D2ブロックと馬名のマッチング判定強化
     horseBlocks = horseBlocks.filter(block => {
         let cleanBlock = block.replace(/[\r\n\s\t\u200B-\u200D\uFEFF]/g, '');
         return validHorseNames.some(name => cleanBlock.includes(name));

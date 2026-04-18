@@ -83,7 +83,8 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         }
         let baseWeight = currentWeight;
 
-        let races = block.split(/\r?\n(?=\d{2}\/\d{2}\s)/);
+        // 修正箇所1: スマホ版の改行フォーマットに対応する分割ロジックの拡張
+        let races = block.split(/\r?\n(?=\s*\d{2}\/\d{2}[\s\r\n])/);
         let pastRaces = [];
         let validATVs = [];
 
@@ -91,7 +92,8 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             if (j > maxRacesIdx) maxRacesIdx = j;
             let rText = races[j].split(/\r?\n(?:全場(?:芝|ダ)|(?:中山|東京|京都|阪神|中京|小倉|新潟|福島|札幌|函館)(?:芝|ダ)\d+m)/)[0];
 
-            let rDateMatch = rText.match(/^(\d{2}\/\d{2})/);
+            // 修正箇所2: 行頭縛りを解除し、スマホ版の空白・改行インデントに対応
+            let rDateMatch = rText.match(/(?:^|\n|\s)(\d{2}\/\d{2})/);
             let rDate = rDateMatch ? rDateMatch[1] : "不明";
 
             let isOuter = /外/.test(rText);
@@ -108,10 +110,13 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
 
             let condMatch = rText.match(/(良|稍|重|不)/);
             let pCond = condMatch ? condMatch[1] : "良";
-            let pLocMatch = rText.match(/\d{2}\/\d{2}\s+(東京|中山|京都|阪神|中京|小倉|新潟|福島|札幌|函館|盛岡|水沢|大井|船橋|川崎|浦和|門別|園田|名古屋|笠松|金沢|高知|佐賀|姫路)/);
+            
+            // 修正箇所3: 日付と場所の間に多段改行が挟まるスマホ版レイアウトに対応
+            let pLocMatch = rText.match(/\d{2}\/\d{2}[\s\S]{1,20}?(東京|中山|京都|阪神|中京|小倉|新潟|福島|札幌|函館|盛岡|水沢|大井|船橋|川崎|浦和|門別|園田|名古屋|笠松|金沢|高知|佐賀|姫路)/);
             let pLoc = pLocMatch ? pLocMatch[1] : "不明";
 
-            let pwMatch = rText.match(/\s(4[8-9]\.\d|5\d\.\d|6[0-5]\.\d)\s+\d{3}kg/);
+            // 修正箇所4: 斤量と馬体重の間に多段改行が挟まるスマホ版レイアウトに対応
+            let pwMatch = rText.match(/[\s\r\n](4[8-9]\.\d|5\d\.\d|6[0-5]\.\d)[\s\r\n]+\d{3}kg/);
             let pWeight = pwMatch ? parseFloat(pwMatch[1]) : currentWeight;
 
             let f3Match = rText.match(/前[\s\S]*?([0-9\.]+|-+)([\s\S]*?)後[\s\S]*?([0-9\.]+|-+)/);
