@@ -250,17 +250,87 @@ window.renderDetailedLog = function(ratioId) {
     let data = window.processedData[ratioId];
     if (!data || data.auditErrors.length > 0) return "";
     let originalResults = [...data.results].sort((a, b) => (parseInt(a.horseNo) || 999) - (parseInt(b.horseNo) || 999));
-    let logHtml = `<div class="table-responsive"><table class="log-table"><tr><th>走</th><th>日付</th><th>判定</th><th>前3F</th><th>後3F</th><th>β値</th><th>E値</th><th>F値</th><th>G値</th><th>H値</th><th>γ値</th><th style="background:#eaf2f8;">ATV(0.2)</th><th style="background:#eaf2f8;">ATV(0.3)</th><th style="background:#eaf2f8;">ATV(0.4)</th><th style="background:#eaf2f8;">ATV(0.5)</th></tr>`;
+    
+    let logHtml = `<div class="table-responsive"><table class="log-table"><tr><th>走</th><th>日付</th><th>判定</th><th>前3F</th><th>後3F</th><th>距離補正<br>(distMod)</th><th>馬場補正<br>(surfMod)</th><th>斤量補正<br>(wghtMod)</th><th>場所補正<br>(locMod)</th><th>クラス補正<br>(classMod)</th><th>条件補正<br>(condMod)</th><th style="background:#eaf2f8;">ATV(0.0)</th><th style="background:#eaf2f8;">ATV(0.1)</th><th style="background:#eaf2f8;">ATV(0.2)</th><th style="background:#eaf2f8;">ATV(0.3)</th><th style="background:#eaf2f8;">ATV(0.4)</th><th style="background:#eaf2f8;">ATV(0.5)</th></tr>`;
+    
     originalResults.forEach(h => {
-        logHtml += `<tr><td colspan="15" class="align-left" style="background:#f4f6f7; font-weight:bold; color:var(--primary-color);">(${h.horseNo}) ${h.horseName}</td></tr>`;
+        logHtml += `<tr><td colspan="17" class="align-left" style="background:#f4f6f7; font-weight:bold; color:var(--primary-color);">(${h.horseNo}) ${h.horseName}</td></tr>`;
         h.pastRaces.forEach(r => {
             if (r.valid) {
-                let getAtv = (id) => { let res = window.processedData[id].results.find(res => res.horseNo === h.horseNo); return res ? res.pastRaces.find(pr => pr.idx === r.idx).atv.toFixed(2) : "-"; };
-                logHtml += `<tr><td>${r.idx}走</td><td>${r.date}</td><td class="success">✓</td><td>${parseFloat(r.f3f).toFixed(1)}</td><td>${parseFloat(r.f3b).toFixed(1)}</td><td>${r.beta.toFixed(3)}</td><td>${r.e.toFixed(3)}</td><td>${r.f.toFixed(3)}</td><td>${r.g.toFixed(2)}</td><td>${r.h.toFixed(2)}</td><td>${r.gamma.toFixed(3)}</td><td style="font-weight:bold;">${getAtv('02')}</td><td style="font-weight:bold;">${getAtv('03')}</td><td style="font-weight:bold;">${getAtv('04')}</td><td style="font-weight:bold;">${getAtv('05')}</td></tr>`;
+                let getAtv = (id) => { 
+                    let res = window.processedData[id].results.find(res => res.horseNo === h.horseNo); 
+                    return res ? res.pastRaces.find(pr => pr.idx === r.idx).atv.toFixed(2) : "-"; 
+                };
+                
+                logHtml += `<tr>
+                    <td>${r.idx}走</td>
+                    <td>${r.date}</td>
+                    <td class="success">✓</td>
+                    <td>${parseFloat(r.f3f).toFixed(1)}</td>
+                    <td>${parseFloat(r.f3b).toFixed(1)}</td>
+                    <td>${r.distMod.toFixed(3)}</td>
+                    <td>${r.surfMod.toFixed(3)}</td>
+                    <td>${r.wghtMod.toFixed(3)}</td>
+                    <td>${r.locMod.toFixed(2)}</td>
+                    <td>${r.classMod.toFixed(2)}</td>
+                    <td>${r.condMod.toFixed(3)}</td>
+                    <td style="font-weight:bold;">${getAtv('00')}</td>
+                    <td style="font-weight:bold;">${getAtv('01')}</td>
+                    <td style="font-weight:bold;">${getAtv('02')}</td>
+                    <td style="font-weight:bold;">${getAtv('03')}</td>
+                    <td style="font-weight:bold;">${getAtv('04')}</td>
+                    <td style="font-weight:bold;">${getAtv('05')}</td>
+                </tr>`;
             } else {
-                logHtml += `<tr><td>${r.idx}走</td><td>${r.date}</td><td class="error">×</td><td colspan="12" class="align-left">スキップ: ${r.reason}</td></tr>`;
+                logHtml += `<tr><td>${r.idx}走</td><td>${r.date}</td><td class="error">×</td><td colspan="14" class="align-left">スキップ: ${r.reason}</td></tr>`;
             }
         });
     });
     return logHtml + `</table></div>`;
+};
+
+// --- 多角展開スコア分析のテーブル描画ロジック ---
+window.renderScoreResultTable = function(sortedScores, selectedRatios, totalHorses) {
+    // 修正: styleから width:100%; を削除
+    let html = `<table style="border-collapse:collapse; font-size:13px; text-align:center;">
+        <tr>
+            <th class="col-score-rank">順位</th>
+            <th class="col-score-waku">枠</th>
+            <th class="col-score-umaban">馬番</th>
+            <th class="col-score-name">馬名</th>
+            <th class="col-score-total">合計スコア</th>`;
+    
+    selectedRatios.forEach(r => {
+        let label = {'00':'0:10', '01':'1:9', '02':'2:8', '03':'3:7', '04':'4:6', '05':'5:5'}[r];
+        html += `<th class="col-score-ratio">${label}</th>`;
+    });
+    html += `</tr>`;
+
+    let rank = 1;
+    sortedScores.forEach((h, index) => {
+        if (index > 0 && h.totalScore < sortedScores[index - 1].totalScore) rank = index + 1;
+        let wakuColor = window.getWakuColor(h.horseNo, totalHorses);
+        
+        html += `<tr>
+            <td style="font-weight:bold; color:#555;">${h.totalScore > 0 ? rank : '-'}</td>
+            <td style="background-color:${wakuColor.bg}; color:${wakuColor.text}; border:1px solid ${wakuColor.border}; font-weight:bold;">${wakuColor.waku}</td>
+            <td style="font-weight:bold;">${h.horseNo}</td>
+            <td class="align-left" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.horseName}</td>
+            <td style="font-weight:bold; font-size:15px; color:var(--primary-color); background:#fbfcfc;">${h.totalScore.toFixed(1)}</td>`;
+        
+        selectedRatios.forEach(r => {
+            let pts = h.scores[r];
+            let color = pts >= 80 ? '#e74c3c' : (pts >= 50 ? '#e67e22' : '#555');
+            let fw = pts >= 50 ? 'bold' : 'normal';
+            html += `<td style="color:${color}; font-weight:${fw};">${pts > 0 ? pts.toFixed(1) : '0.0'}</td>`;
+        });
+        
+        html += `</tr>`;
+    });
+    html += `</table>`;
+
+    let container = document.getElementById('scoreResultContainer');
+    if (container) {
+        container.innerHTML = html;
+    }
 };

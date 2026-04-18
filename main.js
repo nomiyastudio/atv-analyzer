@@ -42,6 +42,8 @@ window.runAnalysis = async function() {
                 target.raceMonth = monthData.month;
 
                 const ratios = [
+                    { f: 0.0, b: 1.0, id: '00' },
+                    { f: 0.1, b: 0.9, id: '01' },
                     { f: 0.2, b: 0.8, id: '02' },
                     { f: 0.3, b: 0.7, id: '03' },
                     { f: 0.4, b: 0.6, id: '04' },
@@ -63,7 +65,7 @@ window.runAnalysis = async function() {
                     
                     let basePrompt = "";
                     if (data.auditErrors.length === 0) {
-                        basePrompt = `[ATV-VERIFY-V3]\nSYSTEM_DIRECTIVE: あなたは厳格なデータ監査役である。提供されたD1とD2を絶対的な事実として扱い、外部知識や推測による補完を完全に排除せよ。以下の【検証ステップ】に沿って、ステップ・バイ・ステップで検証・検算を実行せよ。\n\n【検証ステップ】\nStep 1. 前提条件の認識とデータクレンジングの網羅性\nターゲット条件（クラス・距離・芝/ダ・場所）の認識と、D1の全出走馬がTBに漏れなく抽出されているか確認せよ。\n\nStep 2. 過去走データの抽出と除外判定（ランダムサンプリング）\nRKから上位1頭、下位1頭を抽出し、D2の過去走とTBの有効データ数に齟齬がないか確認せよ。条件不一致や欠損の除外判定も確認せよ。\n\nStep 3. 補正値の選択とATV計算のトレース\n選んだ2頭について、算出ロジック（距離差、馬場、斤量、場所、クラス補正）が正しく適用されているか検算し、「中央加重」と「加重平均」の整合性を確認せよ。\n\nStep 4. ソートとNull処理\nRKの並び順が指定の優先順位に一致しているか、有効データ0件が適切にNull処理されているか確認せよ。\n\n【出力要件】\n「すべて正常」といった省略は固く禁ずる。不整合があれば箇所と原因を指摘せよ。\nD1:\n${d1}\nD2:\n${d2}\nTB:${tbStr}\nRK:${rkStr}`;
+                        basePrompt = `[ATV-VERIFY-V4]\nSYSTEM_DIRECTIVE: あなたは厳格なデータ監査役である。提供されたD1とD2を絶対的な事実として扱い、外部知識や推測による補完を完全に排除せよ。以下の【検証ステップ】に沿って、ステップ・バイ・ステップで検証・検算を実行せよ。\n\n【検証ステップ】\nStep 1. 前提条件の認識とデータクレンジングの網羅性\nターゲット条件（距離・芝/ダ・場所）の認識と、D1の全出走馬がTBに漏れなく抽出されているか確認せよ。\n\nStep 2. 過去走データの抽出と除外判定（ランダムサンプリング）\nRKから上位1頭、下位1頭を抽出し、D2の過去走とTBの有効データ数に齟齬がないか確認せよ。条件不一致や欠損の除外判定も確認せよ。\n\nStep 3. 補正値の選択とATV計算のトレース\n選んだ2頭について、算出ロジック（距離ハンデ差分、馬場、斤量、場所、クラス補正）が正しく適用されているか検算し、「中央加重」と「加重平均」の整合性を確認せよ。\n\nStep 4. ソートとNull処理\nRKの並び順が指定の優先順位に一致しているか、有効データ0件が適切にNull処理されているか確認せよ。\n\n【出力要件】\n「すべて正常」といった省略は固く禁ずる。不整合があれば箇所と原因を指摘せよ。\nD1:\n${d1}\nD2:\n${d2}\nTB:${tbStr}\nRK:${rkStr}`;
                     } else {
                         basePrompt = `[ATV-DEBUG-REQ]\nSYSTEM_DIRECTIVE: 内部監査により以下のエラーが検出された。JavaScriptの抽出・計算ロジックの修正案を論理的に推論し、コードを出力せよ。\n\n【エラー】\n- ${data.auditErrors.join('\n- ')}\n\nD1:\n${d1}\nD2:\n${d2}`;
                     }
@@ -72,7 +74,7 @@ window.runAnalysis = async function() {
 
                 window.renderUI(target, globalHasAuditIssues);
                 
-                // 変更：デフォルトの表示比率を 03 に変更
+                // デフォルトの表示比率を 03 に変更
                 window.switchRatio('03');
 
             } catch (e) {
@@ -99,7 +101,7 @@ window.renderUI = function(target, hasAuditIssues) {
 
     let paceHtml = `<div class="pace-grid">`;
     if (!hasAuditIssues) {
-        // 変更：ペース予想のベースを 03 データに変更
+        // ペース予想のベースを 03 データに変更
         let results03 = window.processedData['03'].results;
         let totalHorses = results03.length;
         const paceStyles = [
@@ -146,22 +148,66 @@ window.renderUI = function(target, hasAuditIssues) {
     `;
 
     if (!hasAuditIssues) {
-        // 変更：03のボタンに active クラスを設定
         resultHTML += `
             <div class="pace-pattern-block">
                 <h3 style="margin-top:0;">展開予想 (脚質グルーピング)</h3>
                 ${paceHtml}
             </div>
             <div class="pattern-block">
-                <div class="ratio-btn-group">
-                    <button data-ratio="02" class="ratio-btn" onclick="window.switchRatio('02')">前 2：8 後</button>
-                    <button data-ratio="03" class="ratio-btn active" onclick="window.switchRatio('03')">前 3：7 後</button>
-                    <button data-ratio="04" class="ratio-btn" onclick="window.switchRatio('04')">前 4：6 後</button>
-                    <button data-ratio="05" class="ratio-btn" onclick="window.switchRatio('05')">前 5：5 後</button>
+                <div class="segmented-control style-pill" style="margin-bottom: 20px;">
+                    <input type="radio" name="ratio" id="ratio-00" value="00" onchange="window.switchRatio('00')">
+                    <label for="ratio-00">0:10</label>
+                    <input type="radio" name="ratio" id="ratio-01" value="01" onchange="window.switchRatio('01')">
+                    <label for="ratio-01">1:9</label>
+                    <input type="radio" name="ratio" id="ratio-02" value="02" onchange="window.switchRatio('02')">
+                    <label for="ratio-02">2:8</label>
+                    <input type="radio" name="ratio" id="ratio-03" value="03" onchange="window.switchRatio('03')" checked>
+                    <label for="ratio-03">3:7</label>
+                    <input type="radio" name="ratio" id="ratio-04" value="04" onchange="window.switchRatio('04')">
+                    <label for="ratio-04">4:6</label>
+                    <input type="radio" name="ratio" id="ratio-05" value="05" onchange="window.switchRatio('05')">
+                    <label for="ratio-05">5:5</label>
                 </div>
-                <h3 style="margin-top:0;">平均ATVランキング</h3>
+                <h3 style="margin-top:0;">ATVランキング</h3>
                 <div id="tableContainer" class="table-responsive"></div>
             </div>
+            
+            <div class="score-analysis-block">
+                <h3 style="margin-top:0;">多角展開スコア分析</h3>
+                <div class="score-controls">
+                    <div class="score-control-group">
+                        <label class="score-control-label">評価指標</label>
+                        <select id="scoreMetric" class="score-input-select">
+                            <option value="adjCentral">展開補正 (安定)</option>
+                            <option value="adjWeighted">展開補正 (ベスト)</option>
+                            <option value="centralATV" selected>中央加重 (安定)</option>
+                            <option value="weightedATV">加重平均 (ベスト)</option>
+                        </select>
+                    </div>
+                    <div class="score-control-group">
+                        <label class="score-control-label">許容差分閾値 (Δ)</label>
+                        <input type="number" id="scoreThreshold" value="0.20" step="0.01" min="0.01" class="score-input-number">
+                    </div>
+                    <div class="score-control-group score-checkbox-container">
+                        <label class="score-control-label">評価対象比率 (複数選択可)</label>
+                        <div class="score-checkbox-group">
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="00">0:10</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="01">1:9</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="02">2:8</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="03">3:7</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="04">4:6</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="05">5:5</label>
+                        </div>
+                    </div>
+                    <div class="score-control-group score-btn-group">
+                        <button onclick="window.runScoreAnalysis()" class="score-calc-btn">スコアを算出</button>
+                    </div>
+                </div>
+                <div id="scoreResultContainer" class="table-responsive score-table-container">
+                    <p style="text-align:center; color:#777; font-size:13px; padding:20px 0;">条件を設定し「スコアを算出」ボタンを押してください。</p>
+                </div>
+            </div>
+
             <div class="details-block">
                 <details>
                     <summary style="cursor:pointer; padding: 5px 0;">
@@ -210,13 +256,10 @@ window.renderUI = function(target, hasAuditIssues) {
 };
 
 window.switchRatio = function(id) {
-    document.querySelectorAll('.ratio-btn').forEach(btn => {
-        if(btn.getAttribute('data-ratio') === id) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
+    let radio = document.getElementById('ratio-' + id);
+    if (radio) {
+        radio.checked = true;
+    }
 
     let tableContainer = document.getElementById('tableContainer');
     if (tableContainer) {
@@ -251,9 +294,9 @@ window.handleHeaderClick = function(clickedSortType) {
         window.globalSortType = clickedSortType;
     }
 
-    let activeBtn = document.querySelector('.ratio-btn.active');
-    if (activeBtn) {
-        window.switchRatio(activeBtn.getAttribute('data-ratio'));
+    let activeRadio = document.querySelector('input[name="ratio"]:checked');
+    if (activeRadio) {
+        window.switchRatio(activeRadio.value);
     }
 };
 
@@ -300,5 +343,80 @@ window.copyPrompt = async function() {
     } catch (err) {
         alert("クリップボードへのコピーに失敗しました。\nテキストエリアから手動でコピーしてください。");
         console.error("Failed to copy text: ", err);
+    }
+};
+
+// --- 多角展開スコア分析の算出処理 ---
+window.runScoreAnalysis = function() {
+    let metric = document.getElementById('scoreMetric').value;
+    let threshold = parseFloat(document.getElementById('scoreThreshold').value);
+    let selectedRatios = Array.from(document.querySelectorAll('.score-ratio-cb:checked')).map(cb => cb.value);
+
+    if (selectedRatios.length === 0) {
+        alert("評価対象の比率を1つ以上選択してください。");
+        return;
+    }
+    if (isNaN(threshold) || threshold <= 0) {
+        alert("正しい閾値(0より大きい数値)を入力してください。");
+        return;
+    }
+
+    let horseScores = {};
+    
+    // ベースとなる出走馬リストを '03' のデータから取得
+    let baseData = window.processedData['03'].results; 
+    baseData.forEach(h => {
+        horseScores[h.horseNo] = {
+            horseNo: h.horseNo,
+            horseName: h.horseName,
+            totalScore: 0,
+            scores: {}
+        };
+        selectedRatios.forEach(r => horseScores[h.horseNo].scores[r] = 0);
+    });
+
+    // 選択された比率ごとにスコアを計算
+    selectedRatios.forEach(ratioId => {
+        let data = window.processedData[ratioId].results;
+        
+        let minVal = Infinity;
+        data.forEach(h => {
+            if (h[metric] !== null && h[metric] < minVal) minVal = h[metric];
+        });
+
+        data.forEach(h => {
+            let val = h[metric];
+            let points = 0;
+            if (val !== null && minVal !== Infinity) {
+                let diff = val - minVal;
+                if (diff <= threshold) {
+                    points = 100 * (1 - (diff / threshold));
+                    if (points < 0) points = 0;
+                }
+            }
+            let hs = horseScores[h.horseNo];
+            if (hs) {
+                hs.scores[ratioId] = points;
+                hs.totalScore += points;
+            }
+        });
+    });
+
+    // 変更: 合計スコアが0より大きい馬のみを抽出して降順ソート、同点なら馬番昇順
+    let sortedScores = Object.values(horseScores)
+        .filter(h => h.totalScore > 0)
+        .sort((a, b) => {
+            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+            return parseInt(a.horseNo) - parseInt(b.horseNo);
+        });
+
+    if (sortedScores.length === 0) {
+        document.getElementById('scoreResultContainer').innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:13px; font-weight:bold; padding:20px 0;">設定した閾値(${threshold})以内に該当する馬はいませんでした。</p>`;
+        return;
+    }
+
+    // 描画処理を ui.js に委譲
+    if (window.renderScoreResultTable) {
+        window.renderScoreResultTable(sortedScores, selectedRatios, baseData.length);
     }
 };

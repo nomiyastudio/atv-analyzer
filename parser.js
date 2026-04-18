@@ -42,9 +42,9 @@ window.parseAllData = function(d1, d2) {
     let d1Lines = d1.split('\n').map(l => l.trim()).filter(l => l !== '');
 
     let isIgnoreText = (txt) => {
-        // 修正箇所1：判定対象の記号に ✓ と ✔ を追加
+        // 修正箇所1：判定対象の記号に ◯ (大きな丸) と 〇 (漢数字のゼロ) を追加
         return txt === '--' || 
-               /^[◎○▲△×☆注消－✓✔]+$/.test(txt) || 
+               /^[◎○◯〇▲△×☆注消－✓✔]+$/.test(txt) || 
                /^&#\d+;?$/.test(txt) || 
                /削除|保存|閉じる|文字以内|馬メモ|次走|相性度|波乱度|マスターコース|ログイン|予想|展開|トラックバイアス|的中|プラス|コース情報|ペース|編集/.test(txt) ||
                /^前走/.test(txt) ||
@@ -108,13 +108,13 @@ window.parseAllData = function(d1, d2) {
         cleanD2 = d2.substring(0, cutoffMatch.index);
     }
 
-    // 修正箇所2：ブロック分割の正規表現に ✓ と ✔ を追加
-    let horseBlocks = cleanD2.split(/(?=^\d+\s+\d+\s+(?:--|[◎○▲△×☆注消✓✔]+)?\s*\n)/m);
+    // 修正箇所2：ブロック分割の正規表現に ◯ (大きな丸) と 〇 (漢数字のゼロ) を追加
+    let horseBlocks = cleanD2.split(/(?=^\d+\s+\d+\s+(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\s*\n)/m);
     if (horseBlocks.length <= 1) {
-        horseBlocks = cleanD2.split(/(?=^\d+\r?\n\d+\r?\n(?:--|[◎○▲△×☆注消✓✔]+)?\r?\n)/m);
+        horseBlocks = cleanD2.split(/(?=^\d+\r?\n\d+\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\r?\n)/m);
     }
     if (horseBlocks.length <= 1) {
-        horseBlocks = cleanD2.split(/(?=^\d+[\t ]+\d+[\t ]*(?:\r?\n|--|[◎○▲△×☆注消✓✔]+))/m);
+        horseBlocks = cleanD2.split(/(?=^\d+[\t ]+\d+[\t ]*(?:\r?\n|--|[◎○◯〇▲△×☆注消✓✔]+))/m);
     }
 
     // D2ブロックと馬名のマッチング判定強化（前回改修分）

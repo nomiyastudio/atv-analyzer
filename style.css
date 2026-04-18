@@ -1,3 +1,6 @@
+/* ==========================================
+// style.css
+// ========================================== */
 :root {
     --primary-color: #2c3e50;
     --secondary-color: #18bc9c;
@@ -116,7 +119,8 @@ button.copy-btn {
     flex: 0 0 auto;
 }
 button.copy-btn:hover { background-color: #2c3e50; }
-.summary-block, .prompt-block, .details-block, .pace-pattern-block, .pattern-block {
+
+.summary-block, .prompt-block, .details-block, .pace-pattern-block, .pattern-block, .score-analysis-block {
     width: 100%;
     max-width: 100%;
     background: var(--box-bg);
@@ -132,40 +136,134 @@ button.copy-btn:hover { background-color: #2c3e50; }
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
 }
-.ratio-btn-group {
+
+/* =========================================
+   セグメントコントロール (ピル型UI)
+========================================= */
+.segmented-control {
     display: flex;
-    flex-wrap: nowrap;
-    gap: 10px;
-    margin-bottom: 20px;
     width: 100%;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    padding: 4px;
+    box-sizing: border-box;
+    user-select: none;
 }
-.ratio-btn {
-    flex: 0 0 auto;
-    padding: 12px 18px;
-    background-color: #f8f9fa;
-    color: var(--primary-color);
-    border: 2px solid transparent;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
+.segmented-control input { display: none; }
+.segmented-control label {
+    flex: 1;
     text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    margin: 0;
+    white-space: nowrap;
 }
-.ratio-btn:hover {
-    background-color: #e9ecef;
+.style-pill {
+    background-color: #eee;
+    border-radius: 50px;
 }
-.ratio-btn.active {
+.style-pill label { border-radius: 50px; color: #666; padding: 0 5px; }
+.style-pill input:checked + label {
     background-color: var(--primary-color);
     color: #fff;
-    border-color: var(--primary-color);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
+
+/* =========================================
+   多角展開スコア分析用スタイル (リファクタリング版)
+========================================= */
+.score-controls {
+    display: flex;
+    flex-wrap: wrap; /* フル表示時の基本設定 */
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 15px;
+    background: #fbfcfc;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid #e1e8ed;
+}
+.score-control-group {
+    display: flex;
+    align-items: center; /* ラベルとフォームを横並び */
+    gap: 8px;
+}
+.score-control-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--primary-color);
+    white-space: nowrap;
+    margin: 0;
+}
+.score-input-select, .score-input-number {
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    outline: none;
+}
+.score-input-number {
+    width: 70px;
+    text-align: center;
+}
+.score-checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.score-checkbox-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.score-checkbox-label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    font-size: 13px;
+    margin: 0;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.score-checkbox-label input {
+    margin-right: 4px;
+}
+.score-btn-group {
+    margin-left: auto; /* ボタンを右寄せ（PC時） */
+}
+.score-calc-btn {
+    padding: 8px 20px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 14px;
+}
+.score-calc-btn:hover {
+    background-color: #128f76;
+}
+
+/* スコア分析テーブルの列幅強固固定設定 */
+.score-table-container table {
+    width: max-content; /* コンテンツサイズに合わせて固定 */
+    table-layout: fixed;
+    margin: 0;
+}
+
+.col-score-rank, .score-table-container td:nth-child(1) { width: 40px !important; min-width: 40px !important; max-width: 40px !important; box-sizing: border-box; overflow: hidden; }
+.col-score-waku, .score-table-container td:nth-child(2) { width: 28px !important; min-width: 28px !important; max-width: 28px !important; box-sizing: border-box; padding-left: 2px; padding-right: 2px; overflow: hidden; }
+.col-score-umaban, .score-table-container td:nth-child(3) { width: 32px !important; min-width: 32px !important; max-width: 32px !important; box-sizing: border-box; padding-left: 2px; padding-right: 2px; overflow: hidden; }
+.col-score-name, .score-table-container td:nth-child(4) { width: 140px !important; min-width: 140px !important; max-width: 140px !important; box-sizing: border-box; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-score-total, .score-table-container td:nth-child(5) { width: 85px !important; min-width: 85px !important; max-width: 85px !important; box-sizing: border-box; background: #fbfcfc; font-weight: bold; overflow: hidden; }
+.col-score-ratio, .score-table-container td:nth-child(n+6) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; box-sizing: border-box; overflow: hidden; }
+
 .table-responsive {
     width: 100%;
     overflow-x: auto;
@@ -259,6 +357,7 @@ textarea.prompt-output {
 .match-highlight { color: var(--match-color); font-weight: bold; }
 .skip-text { color: #95a5a6; font-size: 10px; }
 .rank-badge { font-size: 11px; font-weight: normal; color: #555; }
+
 @media (max-width: 1024px) {
     .inputs-container {
         flex-direction: column;
@@ -276,6 +375,35 @@ textarea.prompt-output {
     .prompt-block { flex-direction: column; align-items: stretch; }
     .prompt-block .copy-btn { width: 100%; }
 }
+
+/* =========================================
+   レスポンシブ: 3段階レイアウト制御
+========================================= */
+
+/* 第2段階: 中間サイズ (タブレット幅など) 2段レイアウト */
+@media (max-width: 900px) and (min-width: 601px) {
+    .score-controls {
+        display: grid;
+        grid-template-columns: auto auto 1fr auto;
+        grid-template-rows: auto auto;
+        column-gap: 20px;
+        row-gap: 15px;
+        align-items: center;
+        padding: 15px;
+    }
+    .score-controls > :nth-child(1) { grid-column: 1 / 2; grid-row: 1 / 2; } /* 評価指標 */
+    .score-controls > :nth-child(2) { grid-column: 2 / 3; grid-row: 1 / 2; } /* 閾値 */
+    .score-controls > :nth-child(3) { grid-column: 1 / 4; grid-row: 2 / 3; } /* 比率 */
+    .score-controls > :nth-child(4) { grid-column: 4 / 5; grid-row: 2 / 3; justify-self: end; } /* ボタン */
+    
+    .score-btn-group { margin-left: 0; }
+    .score-calc-btn {
+        padding: 12px 30px; /* ボタンを少し大きく */
+        font-size: 16px;
+    }
+}
+
+/* 第3段階: モバイルサイズ (スマホ幅) 一律縦積みレイアウト */
 @media (max-width: 600px) {
     .action-box {
         width: 80px;
@@ -286,17 +414,36 @@ textarea.prompt-output {
         padding: 10px;
     }
     .paste-btn { padding: 4px 6px; font-size: 10px; }
-    .ratio-btn-group {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        padding-bottom: 15px;
-        overflow-x: hidden;
-        border-bottom: none;
+    
+    .segmented-control label {
+        font-size: 11px;
+        padding: 0 2px;
+        min-height: 32px;
     }
-    .ratio-btn {
+    
+    /* モバイル時：コントロールを一律な完全縦並びに */
+    .score-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .score-control-group {
+        width: 100%;
+        justify-content: flex-start; /* フル表示と同様に項目名と入力を左詰めで隣接 */
+    }
+    .score-checkbox-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .score-btn-group {
+        width: 100%;
+        margin-left: 0;
+    }
+    .score-calc-btn {
         width: 100%;
         padding: 12px 0;
+        font-size: 16px;
     }
 }
 
@@ -357,9 +504,6 @@ textarea.prompt-output {
     line-height: 1;
 }
 
-/* =========================================
-   追加: 月判定モーダル用スタイル
-========================================= */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;
@@ -377,8 +521,5 @@ textarea.prompt-output {
 .btn-oct { background-color: #2980b9; }
 .btn-oct:hover { background-color: #1f618d; }
 
-/* =========================================
-   追加: 斤量ハイライト用背景（セル上書き用）
-========================================= */
-.weight-bg-light { background-color: #e8f4fd !important; } /* 青系背景 (強・軽) */
-.weight-bg-heavy { background-color: #fdedec !important; } /* 赤系背景 (強・重) */
+.weight-bg-light { background-color: #e8f4fd !important; }
+.weight-bg-heavy { background-color: #fdedec !important; }

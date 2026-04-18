@@ -7,7 +7,8 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
     let auditErrors = [];
     let auditWarnings = [];
 
-    const K_CONST = (target.className === "オープンクラス") ? 0.00005 : 0.00003;
+    // --- 距離適性の感度定数 (1600mから1000m離れるごとに5%の減衰) ---
+    const DIST_SENSITIVITY = 0.05;
 
     // --- C値（展開係数）の算出 ---
     const getCourseFactor = (trackType, location, trackDetail) => {
@@ -162,91 +163,99 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 }
             }
 
-            let alpha = 0;
+            // --- baseTime (旧alpha) の算出 ---
+            let baseTime = 0;
             let f3Front = parseFloat(f3FrontStr);
-            if (isNaN(f3Front)) alpha = f3Back * 0.99;
-            else alpha = (f3Front * ratio.f) + (f3Back * ratio.b);
+            if (isNaN(f3Front)) baseTime = f3Back * 0.99;
+            else baseTime = (f3Front * ratio.f) + (f3Back * ratio.b);
 
-            let distDiff = target.distance - pDist;
-            let Q = (distDiff > 0) ? 1.5 : ((distDiff < 0) ? 0.8 : 1.0);
-            let beta = 1.00 + (distDiff * K_CONST * Q);
+            // --- distMod (旧beta) の算出: 1600mを頂点とした絶対適性V字モデル ---
+            const calcDistLoss = (d) => (Math.abs(d - 1600) / 1000) * DIST_SENSITIVITY;
+            let pDistLoss = calcDistLoss(pDist);
+            let tDistLoss = calcDistLoss(target.distance);
+            let distMod = 1.00 + (tDistLoss - pDistLoss);
 
-            let pattern = 3; 
+            let agePattern = 3; 
             let monthCheck = target.raceMonth ? target.raceMonth : 11; 
             
             if (age === 2 || (age === 3 && monthCheck <= 5)) {
-                pattern = 1; 
+                agePattern = 1; 
             } else if (age === 3 && monthCheck >= 6) {
-                pattern = 2; 
+                agePattern = 2; 
             } else if (age >= 4) {
-                pattern = 3; 
+                agePattern = 3; 
             }
 
-            let H = 0.00;
-            if (pattern === 1) {
-                if (["S", "A", "B"].includes(pClassRank)) H = 0.00;
-                else if (["C", "D", "E"].includes(pClassRank)) H = 0.01;
-                else if (pClassRank === "F") H = 0.02;
-            } else if (pattern === 2) {
-                if (pClassRank === "S") H = -0.01;
-                else if (pClassRank === "A") H = 0.00;
-                else if (pClassRank === "B") H = 0.01;
-                else if (pClassRank === "C") H = 0.02;
-                else if (pClassRank === "D") H = 0.03;
-                else if (pClassRank === "E") H = 0.05;
-                else if (pClassRank === "F") H = 0.08;
+            // --- classMod (旧H): クラス補正 ---
+            let classMod = 0.00;
+            if (agePattern === 1) {
+                if (["S", "A", "B"].includes(pClassRank)) classMod = 0.00;
+                else if (["C", "D", "E"].includes(pClassRank)) classMod = 0.01;
+                else if (pClassRank === "F") classMod = 0.02;
+            } else if (agePattern === 2) {
+                if (pClassRank === "S") classMod = -0.01;
+                else if (pClassRank === "A") classMod = 0.00;
+                else if (pClassRank === "B") classMod = 0.01;
+                else if (pClassRank === "C") classMod = 0.02;
+                else if (pClassRank === "D") classMod = 0.03;
+                else if (pClassRank === "E") classMod = 0.05;
+                else if (pClassRank === "F") classMod = 0.08;
             } else {
-                if (pClassRank === "S") H = -0.01;
-                else if (pClassRank === "A") H = 0.00;
-                else if (pClassRank === "B") H = 0.01;
-                else if (pClassRank === "C") H = 0.03;
-                else if (pClassRank === "D") H = 0.06;
-                else if (["E", "F"].includes(pClassRank)) H = 0.10;
+                if (pClassRank === "S") classMod = -0.01;
+                else if (pClassRank === "A") classMod = 0.00;
+                else if (pClassRank === "B") classMod = 0.01;
+                else if (pClassRank === "C") classMod = 0.03;
+                else if (pClassRank === "D") classMod = 0.06;
+                else if (["E", "F"].includes(pClassRank)) classMod = 0.10;
             }
 
-            let E_base = 0.00;
+            // --- surfMod (旧E): 馬場補正 ---
+            let surfModBase = 0.00;
             if (pTrack === "芝") {
-                if (pCond === "稍") E_base = -0.01;
-                else if (pCond === "重") E_base = -0.02;
-                else if (pCond === "不") E_base = -0.04;
+                if (pCond === "稍") surfModBase = -0.01;
+                else if (pCond === "重") surfModBase = -0.02;
+                else if (pCond === "不") surfModBase = -0.04;
             } else {
-                if (pCond === "稍") E_base = 0.01;
-                else if (pCond === "重" || pCond === "不") E_base = 0.02;
+                if (pCond === "稍") surfModBase = 0.01;
+                else if (pCond === "重" || pCond === "不") surfModBase = 0.02;
             }
-            let E = E_base * (pDist / 1600); 
+            let surfMod = surfModBase * (pDist / 1600); 
 
-            let G = 0.00;
+            // --- locMod (旧G): 場所補正 ---
+            let locMod = 0.00;
             if (pTrack === "芝") {
-                if (["東京","新潟","京都"].includes(pLoc)) G = 0.00;
-                else if (["阪神","中京"].includes(pLoc)) G = -0.01;
-                else if (["中山","福島","小倉"].includes(pLoc)) G = -0.02;
-                else if (["札幌","函館"].includes(pLoc)) G = -0.03;
+                if (["東京","新潟","京都"].includes(pLoc)) locMod = 0.00;
+                else if (["阪神","中京"].includes(pLoc)) locMod = -0.01;
+                else if (["中山","福島","小倉"].includes(pLoc)) locMod = -0.02;
+                else if (["札幌","函館"].includes(pLoc)) locMod = -0.03;
             } else {
-                if (["東京","新潟","小倉"].includes(pLoc)) G = -0.01;
-                else if (["阪神","中京","福島"].includes(pLoc)) G = -0.02;
-                else if (["中山","札幌","函館","盛岡"].includes(pLoc)) G = -0.03;
-                else if (["水沢"].includes(pLoc)) G = -0.04;
-                else if (["大井"].includes(pLoc)) G = -0.05;
-                else if (["船橋","川崎","門別","園田"].includes(pLoc)) G = -0.06;
-                else if (["浦和","名古屋","笠松","金沢"].includes(pLoc)) G = -0.07;
-                else if (["高知","佐賀","姫路"].includes(pLoc)) G = -0.08;
+                if (["東京","新潟","小倉"].includes(pLoc)) locMod = -0.01;
+                else if (["阪神","中京","福島"].includes(pLoc)) locMod = -0.02;
+                else if (["中山","札幌","函館","盛岡"].includes(pLoc)) locMod = -0.03;
+                else if (["水沢"].includes(pLoc)) locMod = -0.04;
+                else if (["大井"].includes(pLoc)) locMod = -0.05;
+                else if (["船橋","川崎","門別","園田"].includes(pLoc)) locMod = -0.06;
+                else if (["浦和","名古屋","笠松","金沢"].includes(pLoc)) locMod = -0.07;
+                else if (["高知","佐賀","姫路"].includes(pLoc)) locMod = -0.08;
             }
 
+            // --- wghtMod (旧F): 斤量補正 ---
             let weightDiff = baseWeight - pWeight;
-            let F = weightDiff * 0.004;
+            let wghtMod = weightDiff * 0.004;
 
-            let gamma = 1.00 + E + F + G + H; 
-            let atv = alpha * beta * gamma;
+            // --- condMod (旧gamma) の集計とATVの決定 ---
+            let condMod = 1.00 + surfMod + wghtMod + locMod + classMod; 
+            let atv = baseTime * distMod * condMod;
             let atvRounded = Math.round(atv * 100) / 100;
 
             let currentRaceData = {
                 idx: j, date: rDate, valid: true,
-                alpha: alpha, beta: beta, gamma: gamma, atv: atvRounded,
-                f3f: f3FrontStr, f3b: f3BackStr, distDiff: distDiff,
-                eText: pTrack+pCond, e: E, 
-                weightDiffText: (weightDiff >= 0 ? "+" : "") + weightDiff.toFixed(1) + "kg", f: F, 
-                gText: pLoc || "不明", g: G,
-                h: H, pattern: pattern, pClassRank: pClassRank, 
+                baseTime: baseTime, distMod: distMod, condMod: condMod, atv: atvRounded,
+                f3f: f3FrontStr, f3b: f3BackStr, distDiff: target.distance - pDist,
+                surfModText: pTrack+pCond, surfMod: surfMod, 
+                wghtModText: (weightDiff >= 0 ? "+" : "") + weightDiff.toFixed(1) + "kg", wghtMod: wghtMod, 
+                locModText: pLoc || "不明", locMod: locMod,
+                classMod: classMod, agePattern: agePattern, pClassRank: pClassRank, 
                 pLoc: pLoc || "不明", pTrack: pTrack, pDist: pDist, pCond: pCond, pWeight: pWeight,
                 isLimited: false, posRatio: posRatio, hadLead: hadLead,
                 isOuter: isOuter
@@ -453,7 +462,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         results.find(r => r.horseNo === item.horseNo).centralRank = item.centralATV !== null ? (index + 1) : "-";
     });
 
-    // --- 追加: adjCentral の順位付け ---
     let adjCentralSorted = [...results].sort((a, b) => {
         let valA = a.adjCentral; let valB = b.adjCentral;
         if (valA === null && valB === null) return 0;
@@ -470,7 +478,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         results.find(r => r.horseNo === item.horseNo).adjCentralRank = item.adjCentral !== null ? (index + 1) : "-";
     });
 
-    // --- 追加: adjWeighted の順位付け ---
     let adjWeightedSorted = [...results].sort((a, b) => {
         let valA = a.adjWeighted; let valB = b.adjWeighted;
         if (valA === null && valB === null) return 0;
