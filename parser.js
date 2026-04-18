@@ -193,7 +193,6 @@ window.parseAllData = function(d1, d2) {
 window.parseTarget = function(d1) {
     let lines = d1.split('\n').map(l => l.trim());
     let target = {
-        className: "不明",
         distance: 2000,
         trackType: "芝",
         location: "不明",

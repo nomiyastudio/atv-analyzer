@@ -100,10 +100,21 @@ window.renderUI = function(target, hasAuditIssues) {
         : `<div style="border-left: 4px solid #e74c3c; padding: 5px 10px; background: #fdf2e9; border-radius: 4px;"><details><summary style="color: #e74c3c; font-weight: bold; font-size: 13px; cursor: pointer;">⚠ システム検証: 問題あり (クリックで詳細を展開)</summary><ul style="font-size: 13px; color: #333; margin-top: 10px; padding-left: 20px; margin-bottom: 0;"><li style="color: #e74c3c; font-weight: bold; margin-bottom:4px;">抽出または計算処理に致命的なエラーが検出されました。</li></ul></details></div>`;
 
     let paceHtml = `<div class="pace-grid">`;
+    let weightText = "計算中...";
+
     if (!hasAuditIssues) {
         // ペース予想のベースを 03 データに変更
         let results03 = window.processedData['03'].results;
         let totalHorses = results03.length;
+
+        // 基準斤量の詳細判定 (utils.jsの共通関数を使用)
+        let weightAnalysis = window.analyzeWeightRule(results03, target);
+        if (weightAnalysis.isFlatRace) {
+            weightText = `定量 (ベース ${weightAnalysis.flatBaseWeight.toFixed(1)}kg)`;
+        } else {
+            weightText = "別定/ハンデ";
+        }
+
         const paceStyles = [
             {class: 1, name: "逃げ", border: "#d35400"},
             {class: 2, name: "先行", border: "#f1c40f"},
@@ -112,7 +123,7 @@ window.renderUI = function(target, hasAuditIssues) {
         ];
 
         paceStyles.forEach(s => {
-            let horses = results03.filter(h => h.styleClass === s.class).sort((a,b) => (a.avgPosRatio || 0) - (b.avgPosRatio || 0));
+            let horses = results03.filter(h => h.styleClass === s.class).sort((a,b) => (a.avgPosRatio || 0) - (b.bvgPosRatio || 0));
             paceHtml += `<div style="border:1px solid ${s.border}; border-radius:6px; background:transparent; padding:10px; box-sizing:border-box;">
                 <h4 style="margin:0 0 10px 0; color:${s.border}; text-align:center; border-bottom:1px solid ${s.border}; padding-bottom:5px;">${s.name}</h4>
                 <ul style="list-style:none; padding:0; margin:0; font-size:12px;">`;
@@ -142,7 +153,7 @@ window.renderUI = function(target, hasAuditIssues) {
     let resultHTML = `
         <div class="summary-block">
             <h3>レース条件 ＆ システム検証</h3>
-            <p style="margin-top:10px;"><b>条件:</b> ${target.className} / ${target.distance}m / ${target.trackType} ｜ <b>基準斤量:</b> 各馬の今回出走斤量 / ${target.location}</p>
+            <p style="margin-top:10px;"><b>条件:</b> ${target.distance}m / ${target.trackType} ｜ <b>基準斤量:</b> ${weightText} / ${target.location}</p>
             <div id="auditArea">${auditHtml}</div>
         </div>
     `;
@@ -300,21 +311,6 @@ window.handleHeaderClick = function(clickedSortType) {
     let activeRadio = document.querySelector('input[name="ratio"]:checked');
     if (activeRadio) {
         window.switchRatio(activeRadio.value);
-    }
-};
-
-window.clearData = function() {
-    if(confirm("入力されたデータと解析結果をすべてクリアしますか？")) {
-        document.getElementById('data1').value = "";
-        document.getElementById('data2').value = "";
-        document.getElementById('resultArea').innerHTML = "";
-        window.generatedPrompts = {};
-        window.processedData = {};
-        window.globalSortType = 'centralATV';
-        window.globalCorrectionMode = 'centralATV';
-        const btn = document.getElementById('runBtn');
-        btn.disabled = false;
-        btn.innerText = "解析実行";
     }
 };
 

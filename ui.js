@@ -66,39 +66,11 @@ window.renderAvgRanking = function(ratioId) {
         });
     }
 
-    let is2yo = target.is2yo || false;
-    let raceMonth = target.raceMonth || null;
-    let actualWeights = [];
-    let baseWeights = [];
-
-    const getAgeAllowance = (age, month, distance) => {
-        if (age !== 3 || !month || month < 6 || month > 12) return 0.0;
-        let distCat = 0;
-        if (distance < 1400) distCat = 0;
-        else if (distance <= 1600) distCat = 1;
-        else if (distance < 2200) distCat = 2;
-        else distCat = 3;
-        const table = {
-            6: [3.0, 3.0, 3.0, 4.0], 7: [2.0, 3.0, 3.0, 4.0], 8: [2.0, 2.0, 3.0, 3.0],
-            9: [1.0, 2.0, 2.0, 3.0], 10: [0.0, 1.0, 2.0, 2.0], 11: [0.0, 1.0, 1.0, 2.0],
-            12: [0.0, 0.0, 1.0, 1.0]
-        };
-        return table[month][distCat];
-    };
-
-    res.forEach(h => {
-        let actualW = h.currentWeight;
-        actualWeights.push(actualW);
-        let sexAllowance = (h.sex === "牝" || h.sex === "牝馬") ? (!is2yo ? 2.0 : (raceMonth >= 10 ? 1.0 : 0.0)) : 0.0;
-        let jockeyAllowance = {'☆':1.0, '△':2.0, '◇':2.0, '▲':3.0, '★':4.0}[h.jockeyMark] || 0.0;
-        let ageAllowance = getAgeAllowance(h.age, raceMonth, target.distance);
-        h.baseWeight = actualW + sexAllowance + jockeyAllowance + ageAllowance;
-        baseWeights.push(h.baseWeight);
-    });
-
-    let isFlatRace = baseWeights.length > 0 && baseWeights.every(w => w === baseWeights[0]);
-    let flatBaseWeight = isFlatRace ? baseWeights[0] : 0;
-    let avgActualW = actualWeights.length > 0 ? actualWeights.reduce((a, b) => a + b, 0) / actualWeights.length : 0;
+    // 基準斤量の詳細判定 (utils.jsの共通関数を使用)
+    let weightAnalysis = window.analyzeWeightRule(res, target);
+    let isFlatRace = weightAnalysis.isFlatRace;
+    let flatBaseWeight = weightAnalysis.flatBaseWeight;
+    let avgActualW = weightAnalysis.avgActualW;
 
     // 各指標の1位（最小値）を取得
     let minCentralATV = Infinity;

@@ -81,7 +81,7 @@ textarea.input-data {
 }
 button.run-btn {
     width: 100%;
-    flex: 1;
+    flex: 1; /* 親(action-box)の高さ全体を占有 */
     background-color: var(--secondary-color);
     color: white;
     border: none;
@@ -93,19 +93,7 @@ button.run-btn {
 }
 button.run-btn:hover { background-color: #128f76; }
 button.run-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
-button.clear-btn {
-    width: 100%;
-    flex: 1;
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-button.clear-btn:hover { background-color: #c0392b; }
+
 button.copy-btn {
     padding: 12px 30px;
     background-color: #34495e;
@@ -116,7 +104,7 @@ button.copy-btn {
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
-    width: 100%; /* グループ内で幅を揃える */
+    width: 100%;
 }
 button.copy-btn:hover { background-color: #2c3e50; }
 
@@ -145,6 +133,7 @@ button.copy-btn:hover { background-color: #2c3e50; }
     padding: 4px;
     box-sizing: border-box;
     user-select: none;
+    min-width: 600px; /* デフォルトで最低幅を確保 */
 }
 .segmented-control input { display: none; }
 .segmented-control label {
@@ -405,7 +394,7 @@ textarea.prompt-output {
    レスポンシブ: 3段階レイアウト制御
 ========================================= */
 
-/* 第2段階: 中間サイズ (タブレット幅など) 2段レイアウト */
+/* 第2段階: 中間サイズ (タブレット幅など) */
 @media (max-width: 1100px) and (min-width: 801px) {
     .score-controls {
         display: grid;
@@ -423,11 +412,9 @@ textarea.prompt-output {
     .score-controls > :nth-child(2) { grid-column: 2 / 3; grid-row: 1; justify-self: start; }
     .score-controls > :nth-child(3) { grid-column: 1 / 4; grid-row: 2; justify-self: start; }
     .score-controls > :nth-child(4) { grid-column: 4 / 5; grid-row: 2; justify-self: start; }
-    
-    .score-btn-group { margin-left: 0; }
 }
 
-/* 第3段階: モバイルサイズ (スマホ幅) 一律縦積みレイアウト */
+/* 第3段階: モバイルサイズ (スマホ幅) */
 @media (max-width: 800px) {
     .action-box {
         width: 80px;
@@ -439,7 +426,12 @@ textarea.prompt-output {
     }
     .paste-btn { padding: 4px 6px; font-size: 10px; }
     
-    .segmented-control { display: flex; width: 100%; }
+    /* 比率ボタンのスマホ最適化 (案A) */
+    .segmented-control { 
+        display: flex; 
+        width: 100%; 
+        min-width: 0; 
+    }
     .segmented-control label {
         font-size: 11px;
         padding: 0 2px;
@@ -458,10 +450,18 @@ textarea.prompt-output {
         width: 100%;
         justify-content: flex-start;
     }
+    /* チェックボックス群をラベルの横に配置して2段にする */
     .score-checkbox-container {
-        flex-direction: column;
+        flex-direction: row; 
         align-items: flex-start;
     }
+    .score-checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3列 */
+        gap: 8px 12px;
+        width: 100%;
+    }
+    
     .score-btn-group {
         width: 100%;
         margin-left: 0;

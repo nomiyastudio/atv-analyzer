@@ -68,7 +68,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         }
 
         let jockeyMark = "";
-        let markMatch = headerArea.match(/[☆△▲★◇]/);
+        let markMatch = headerArea.match(/[☆△▲★◇](?=[一-龥ぁ-んァ-ヴー])/);
         if (markMatch) {
             jockeyMark = markMatch[0];
         }
