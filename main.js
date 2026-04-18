@@ -245,7 +245,10 @@ window.renderUI = function(target, hasAuditIssues) {
 
     resultHTML += `
         <div class="prompt-block">
-            <button class="copy-btn" onclick="window.copyPrompt()">検証用プロンプトをコピー</button>
+            <div class="prompt-btn-group">
+                <button class="dl-btn" onclick="window.downloadPrompt(${hasAuditIssues})">プロンプトをファイルで保存</button>
+                <button class="copy-btn" onclick="window.copyPrompt()">検証用プロンプトをコピー</button>
+            </div>
             <div class="prompt-content">
                 <textarea id="promptOutput" class="prompt-output" readonly></textarea>
             </div>
@@ -344,6 +347,36 @@ window.copyPrompt = async function() {
         alert("クリップボードへのコピーに失敗しました。\nテキストエリアから手動でコピーしてください。");
         console.error("Failed to copy text: ", err);
     }
+};
+
+window.downloadPrompt = function(hasAuditIssues) {
+    const promptText = document.getElementById('promptOutput').value;
+    if (!promptText) {
+        alert("保存するプロンプトがありません。");
+        return;
+    }
+    
+    const blob = new Blob([promptText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const dateStr = `${yyyy}${mm}${dd}_${hh}${min}`;
+    
+    const purpose = hasAuditIssues ? "DebugReq" : "Verify";
+    const fileName = `ATV_${purpose}_${dateStr}.txt`;
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 };
 
 // --- 多角展開スコア分析の算出処理 ---

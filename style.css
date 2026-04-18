@@ -116,7 +116,7 @@ button.copy-btn {
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
-    flex: 0 0 auto;
+    width: 100%; /* グループ内で幅を揃える */
 }
 button.copy-btn:hover { background-color: #2c3e50; }
 
@@ -179,8 +179,8 @@ button.copy-btn:hover { background-color: #2c3e50; }
 .score-controls {
     display: flex;
     flex-wrap: nowrap;
-    width: max-content; /* 修正: 枠を内包コンテンツにピタッと合わせる */
-    max-width: 100%; /* 修正: 画面外へのはみ出しを防ぐ */
+    width: max-content;
+    max-width: 100%;
     gap: 20px;
     align-items: center;
     margin-bottom: 15px;
@@ -323,6 +323,8 @@ h3 {
 .log-table td.success { color: #27ae60; font-weight: bold; }
 .log-table td.error { color: #e74c3c; font-weight: bold; }
 .log-table { font-family: monospace; font-size: 11px; }
+
+/* プロンプト表示・操作ブロック */
 .prompt-block {
     background: #eaf2f8;
     border: 1px dashed #3498db;
@@ -330,6 +332,26 @@ h3 {
     align-items: center;
     gap: 20px;
 }
+.prompt-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+button.dl-btn {
+    padding: 12px 30px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+button.dl-btn:hover { background-color: #128f76; }
+
 .prompt-content {
     flex: 1;
     display: flex;
@@ -376,7 +398,7 @@ textarea.prompt-output {
         grid-template-columns: repeat(2, 1fr);
     }
     .prompt-block { flex-direction: column; align-items: stretch; }
-    .prompt-block .copy-btn { width: 100%; }
+    .prompt-btn-group { width: 100%; }
 }
 
 /* =========================================
@@ -387,7 +409,6 @@ textarea.prompt-output {
 @media (max-width: 1100px) and (min-width: 801px) {
     .score-controls {
         display: grid;
-        /* 修正: 指標と閾値の幅を独立させ、余分な拡張を防ぐ4列構造 */
         grid-template-columns: max-content max-content auto max-content;
         justify-content: start;
         column-gap: 20px;
@@ -430,7 +451,7 @@ textarea.prompt-output {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
-        width: 100%; /* スマホでは横幅いっぱいを使用 */
+        width: 100%;
         box-sizing: border-box;
     }
     .score-control-group {
