@@ -186,10 +186,10 @@ window.renderUI = function(target, hasAuditIssues) {
                     </div>
                     <div class="score-control-group">
                         <label class="score-control-label">許容差分閾値 (Δ)</label>
-                        <input type="number" id="scoreThreshold" value="0.20" step="0.01" min="0.01" class="score-input-number">
+                        <input type="number" id="scoreThreshold" value="0.50" step="0.01" min="0.01" class="score-input-number">
                     </div>
                     <div class="score-control-group score-checkbox-container">
-                        <label class="score-control-label">評価対象比率 (複数選択可)</label>
+                        <label class="score-control-label">評価対象比率</label>
                         <div class="score-checkbox-group">
                             <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="00">0:10</label>
                             <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="01">1:9</label>

@@ -141,8 +141,7 @@ button.copy-btn:hover { background-color: #2c3e50; }
    セグメントコントロール (ピル型UI)
 ========================================= */
 .segmented-control {
-    display: flex;
-    width: 100%;
+    display: inline-flex;
     padding: 4px;
     box-sizing: border-box;
     user-select: none;
@@ -161,6 +160,7 @@ button.copy-btn:hover { background-color: #2c3e50; }
     min-height: 36px;
     margin: 0;
     white-space: nowrap;
+    padding: 0 15px;
 }
 .style-pill {
     background-color: #eee;
@@ -178,7 +178,9 @@ button.copy-btn:hover { background-color: #2c3e50; }
 ========================================= */
 .score-controls {
     display: flex;
-    flex-wrap: wrap; /* フル表示時の基本設定 */
+    flex-wrap: nowrap;
+    width: max-content; /* 修正: 枠を内包コンテンツにピタッと合わせる */
+    max-width: 100%; /* 修正: 画面外へのはみ出しを防ぐ */
     gap: 20px;
     align-items: center;
     margin-bottom: 15px;
@@ -186,10 +188,11 @@ button.copy-btn:hover { background-color: #2c3e50; }
     padding: 12px 15px;
     border-radius: 6px;
     border: 1px solid #e1e8ed;
+    box-sizing: border-box;
 }
 .score-control-group {
     display: flex;
-    align-items: center; /* ラベルとフォームを横並び */
+    align-items: center;
     gap: 8px;
 }
 .score-control-label {
@@ -207,7 +210,7 @@ button.copy-btn:hover { background-color: #2c3e50; }
     outline: none;
 }
 .score-input-number {
-    width: 70px;
+    width: 55px;
     text-align: center;
 }
 .score-checkbox-container {
@@ -233,7 +236,7 @@ button.copy-btn:hover { background-color: #2c3e50; }
     margin-right: 4px;
 }
 .score-btn-group {
-    margin-left: auto; /* ボタンを右寄せ（PC時） */
+    margin-left: 0;
 }
 .score-calc-btn {
     padding: 8px 20px;
@@ -252,7 +255,7 @@ button.copy-btn:hover { background-color: #2c3e50; }
 
 /* スコア分析テーブルの列幅強固固定設定 */
 .score-table-container table {
-    width: max-content; /* コンテンツサイズに合わせて固定 */
+    width: max-content;
     table-layout: fixed;
     margin: 0;
 }
@@ -260,7 +263,7 @@ button.copy-btn:hover { background-color: #2c3e50; }
 .col-score-rank, .score-table-container td:nth-child(1) { width: 40px !important; min-width: 40px !important; max-width: 40px !important; box-sizing: border-box; overflow: hidden; }
 .col-score-waku, .score-table-container td:nth-child(2) { width: 28px !important; min-width: 28px !important; max-width: 28px !important; box-sizing: border-box; padding-left: 2px; padding-right: 2px; overflow: hidden; }
 .col-score-umaban, .score-table-container td:nth-child(3) { width: 32px !important; min-width: 32px !important; max-width: 32px !important; box-sizing: border-box; padding-left: 2px; padding-right: 2px; overflow: hidden; }
-.col-score-name, .score-table-container td:nth-child(4) { width: 140px !important; min-width: 140px !important; max-width: 140px !important; box-sizing: border-box; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-score-name, .score-table-container td:nth-child(4) { width: 180px !important; min-width: 180px !important; max-width: 180px !important; box-sizing: border-box; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .col-score-total, .score-table-container td:nth-child(5) { width: 85px !important; min-width: 85px !important; max-width: 85px !important; box-sizing: border-box; background: #fbfcfc; font-weight: bold; overflow: hidden; }
 .col-score-ratio, .score-table-container td:nth-child(n+6) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; box-sizing: border-box; overflow: hidden; }
 
@@ -381,30 +384,30 @@ textarea.prompt-output {
 ========================================= */
 
 /* 第2段階: 中間サイズ (タブレット幅など) 2段レイアウト */
-@media (max-width: 900px) and (min-width: 601px) {
+@media (max-width: 1100px) and (min-width: 801px) {
     .score-controls {
         display: grid;
-        grid-template-columns: auto auto 1fr auto;
-        grid-template-rows: auto auto;
+        /* 修正: 指標と閾値の幅を独立させ、余分な拡張を防ぐ4列構造 */
+        grid-template-columns: max-content max-content auto max-content;
+        justify-content: start;
         column-gap: 20px;
         row-gap: 15px;
         align-items: center;
         padding: 15px;
+        width: max-content;
+        max-width: 100%;
+        box-sizing: border-box;
     }
-    .score-controls > :nth-child(1) { grid-column: 1 / 2; grid-row: 1 / 2; } /* 評価指標 */
-    .score-controls > :nth-child(2) { grid-column: 2 / 3; grid-row: 1 / 2; } /* 閾値 */
-    .score-controls > :nth-child(3) { grid-column: 1 / 4; grid-row: 2 / 3; } /* 比率 */
-    .score-controls > :nth-child(4) { grid-column: 4 / 5; grid-row: 2 / 3; justify-self: end; } /* ボタン */
+    .score-controls > :nth-child(1) { grid-column: 1 / 2; grid-row: 1; justify-self: start; }
+    .score-controls > :nth-child(2) { grid-column: 2 / 3; grid-row: 1; justify-self: start; }
+    .score-controls > :nth-child(3) { grid-column: 1 / 4; grid-row: 2; justify-self: start; }
+    .score-controls > :nth-child(4) { grid-column: 4 / 5; grid-row: 2; justify-self: start; }
     
     .score-btn-group { margin-left: 0; }
-    .score-calc-btn {
-        padding: 12px 30px; /* ボタンを少し大きく */
-        font-size: 16px;
-    }
 }
 
 /* 第3段階: モバイルサイズ (スマホ幅) 一律縦積みレイアウト */
-@media (max-width: 600px) {
+@media (max-width: 800px) {
     .action-box {
         width: 80px;
         flex: 0 0 80px;
@@ -415,22 +418,24 @@ textarea.prompt-output {
     }
     .paste-btn { padding: 4px 6px; font-size: 10px; }
     
+    .segmented-control { display: flex; width: 100%; }
     .segmented-control label {
         font-size: 11px;
         padding: 0 2px;
         min-height: 32px;
     }
     
-    /* モバイル時：コントロールを一律な完全縦並びに */
     .score-controls {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
+        width: 100%; /* スマホでは横幅いっぱいを使用 */
+        box-sizing: border-box;
     }
     .score-control-group {
         width: 100%;
-        justify-content: flex-start; /* フル表示と同様に項目名と入力を左詰めで隣接 */
+        justify-content: flex-start;
     }
     .score-checkbox-container {
         flex-direction: column;
@@ -442,8 +447,6 @@ textarea.prompt-output {
     }
     .score-calc-btn {
         width: 100%;
-        padding: 12px 0;
-        font-size: 16px;
     }
 }
 
