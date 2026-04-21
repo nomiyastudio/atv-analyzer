@@ -224,23 +224,6 @@ button.copy-btn:hover { background-color: #2c3e50; }
 .score-checkbox-label input {
     margin-right: 4px;
 }
-.score-btn-group {
-    margin-left: 0;
-}
-.score-calc-btn {
-    padding: 8px 20px;
-    background-color: var(--secondary-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 14px;
-}
-.score-calc-btn:hover {
-    background-color: #128f76;
-}
 
 /* スコア分析テーブルの列幅強固固定設定 */
 .score-table-container table {
@@ -256,12 +239,22 @@ button.copy-btn:hover { background-color: #2c3e50; }
 .col-score-total, .score-table-container td:nth-child(5) { width: 85px !important; min-width: 85px !important; max-width: 85px !important; box-sizing: border-box; background: #fbfcfc; font-weight: bold; overflow: hidden; }
 .col-score-ratio, .score-table-container td:nth-child(n+6) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; box-sizing: border-box; overflow: hidden; }
 
+/* スマホでの横スクロール操作性の向上 */
 .table-responsive {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin-bottom: 30px;
+    padding-bottom: 4px;
 }
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 4px;
+}
+
 table {
     width: auto;
     border-collapse: collapse;
@@ -398,7 +391,7 @@ textarea.prompt-output {
 @media (max-width: 1100px) and (min-width: 801px) {
     .score-controls {
         display: grid;
-        grid-template-columns: max-content max-content auto max-content;
+        grid-template-columns: max-content max-content auto;
         justify-content: start;
         column-gap: 20px;
         row-gap: 15px;
@@ -411,7 +404,6 @@ textarea.prompt-output {
     .score-controls > :nth-child(1) { grid-column: 1 / 2; grid-row: 1; justify-self: start; }
     .score-controls > :nth-child(2) { grid-column: 2 / 3; grid-row: 1; justify-self: start; }
     .score-controls > :nth-child(3) { grid-column: 1 / 4; grid-row: 2; justify-self: start; }
-    .score-controls > :nth-child(4) { grid-column: 4 / 5; grid-row: 2; justify-self: start; }
 }
 
 /* 第3段階: モバイルサイズ (スマホ幅) */
@@ -426,7 +418,7 @@ textarea.prompt-output {
     }
     .paste-btn { padding: 4px 6px; font-size: 10px; }
     
-    /* 比率ボタンのスマホ最適化 (案A) */
+    /* 比率ボタンのスマホ最適化 */
     .segmented-control { 
         display: flex; 
         width: 100%; 
@@ -449,6 +441,7 @@ textarea.prompt-output {
     .score-control-group {
         width: 100%;
         justify-content: flex-start;
+        flex-wrap: wrap;
     }
     /* チェックボックス群をラベルの横に配置して2段にする */
     .score-checkbox-container {
@@ -459,14 +452,6 @@ textarea.prompt-output {
         display: grid;
         grid-template-columns: repeat(3, 1fr); /* 3列 */
         gap: 8px 12px;
-        width: 100%;
-    }
-    
-    .score-btn-group {
-        width: 100%;
-        margin-left: 0;
-    }
-    .score-calc-btn {
         width: 100%;
     }
 }

@@ -66,13 +66,11 @@ window.renderAvgRanking = function(ratioId) {
         });
     }
 
-    // 基準斤量の詳細判定 (utils.jsの共通関数を使用)
     let weightAnalysis = window.analyzeWeightRule(res, target);
     let isFlatRace = weightAnalysis.isFlatRace;
     let flatBaseWeight = weightAnalysis.flatBaseWeight;
     let avgActualW = weightAnalysis.avgActualW;
 
-    // 各指標の1位（最小値）を取得
     let minCentralATV = Infinity;
     let minWeightedATV = Infinity;
     let minAdjCentral = Infinity;
@@ -158,7 +156,6 @@ window.renderAvgRanking = function(ratioId) {
         let isPaceSetter = hasNige ? (h.styleClass === 1) : (h.styleClass === 2 && h.avgPosRatio === minPaceRatio && h.avgPosRatio !== null);
         let paceTdStyle = `text-align:center; vertical-align:middle; padding:4px; border:1px solid var(--border-color);` + (isPaceSetter ? `background-color: #fff3e0; background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,167,38,0.15) 8px, rgba(255,167,38,0.15) 16px); box-shadow: inset 0 0 0 2px #ffa726; border: 1px solid #ff9800;` : ``);
 
-        // 現在の補正モードに基づく補正値・順位・1位差の決定
         let displayAdj = (correctionMode === 'centralATV') ? h.adjCentral : h.adjWeighted;
         let displayAdjRank = (correctionMode === 'centralATV') ? h.adjCentralRank : h.adjWeightedRank;
         let minAdj = (correctionMode === 'centralATV') ? minAdjCentral : minAdjWeighted;
@@ -261,9 +258,7 @@ window.renderDetailedLog = function(ratioId) {
     return logHtml + `</table></div>`;
 };
 
-// --- 多角展開スコア分析のテーブル描画ロジック ---
 window.renderScoreResultTable = function(sortedScores, selectedRatios, totalHorses) {
-    // 修正: styleから width:100%; を削除
     let html = `<table style="border-collapse:collapse; font-size:13px; text-align:center;">
         <tr>
             <th class="col-score-rank">順位</th>
@@ -304,5 +299,182 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, totalHors
     let container = document.getElementById('scoreResultContainer');
     if (container) {
         container.innerHTML = html;
+    }
+};
+
+window.renderUI = function(target, hasAuditIssues) {
+    let auditHtml = !hasAuditIssues 
+        ? `<div style="border-left: 4px solid #27ae60; padding: 5px 10px; background: #f4fdf8; border-radius: 4px;"><span style="color: #27ae60; font-weight: bold; font-size: 13px;">✓ システム検証: 全項目正常</span></div>` 
+        : `<div style="border-left: 4px solid #e74c3c; padding: 5px 10px; background: #fdf2e9; border-radius: 4px;"><details><summary style="color: #e74c3c; font-weight: bold; font-size: 13px; cursor: pointer;">⚠ システム検証: 問題あり (クリックで詳細を展開)</summary><ul style="font-size: 13px; color: #333; margin-top: 10px; padding-left: 20px; margin-bottom: 0;"><li style="color: #e74c3c; font-weight: bold; margin-bottom:4px;">抽出または計算処理に致命的なエラーが検出されました。</li></ul></details></div>`;
+
+    let paceHtml = `<div class="pace-grid">`;
+    let weightText = "計算中...";
+
+    if (!hasAuditIssues) {
+        let results03 = window.processedData['03'].results;
+        let totalHorses = results03.length;
+
+        let weightAnalysis = window.analyzeWeightRule(results03, target);
+        if (weightAnalysis.isFlatRace) {
+            weightText = `定量 (ベース ${weightAnalysis.flatBaseWeight.toFixed(1)}kg)`;
+        } else {
+            weightText = "別定/ハンデ";
+        }
+
+        const paceStyles = [
+            {class: 1, name: "逃げ", border: "#d35400"},
+            {class: 2, name: "先行", border: "#f1c40f"},
+            {class: 3, name: "差し", border: "#6b8e23"},
+            {class: 4, name: "追込", border: "#1b4f72"}
+        ];
+
+        paceStyles.forEach(s => {
+            let horses = results03.filter(h => h.styleClass === s.class).sort((a,b) => (a.avgPosRatio || 0) - (b.bvgPosRatio || 0));
+            paceHtml += `<div style="border:1px solid ${s.border}; border-radius:6px; background:transparent; padding:10px; box-sizing:border-box;">
+                <h4 style="margin:0 0 10px 0; color:${s.border}; text-align:center; border-bottom:1px solid ${s.border}; padding-bottom:5px;">${s.name}</h4>
+                <ul style="list-style:none; padding:0; margin:0; font-size:12px;">`;
+            if (horses.length === 0) {
+                paceHtml += `<li style="color:#999; text-align:center;">不在</li>`;
+            } else {
+                horses.forEach(h => {
+                    let pct = (h.avgPosRatio !== null) ? h.avgPosRatio * 100 : 50;
+                    let rgb = window.getColorFromStops(window.paceStops, pct);
+                    let hex = window.rgbToHex(rgb);
+                    let textCol = window.getTextColor(rgb);
+                    let borderCol = window.rgbToHex(window.darken(rgb));
+                    let wColor = window.getWakuColor(h.horseNo, totalHorses);
+                    let wakuBadge = `<span style="display:inline-block; width:16px; height:16px; line-height:16px; text-align:center; background-color:${wColor.bg}; color:${wColor.text}; border:1px solid ${wColor.border}; border-radius:3px; margin-right:4px; font-size:10px;">${h.horseNo}</span>`;
+                    
+                    paceHtml += `<li style="margin-bottom:6px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center;" title="${h.horseNo}. ${h.horseName}">
+                        ${wakuBadge}
+                        <span style="background-color:${hex}; color:${textCol}; border:1px solid ${borderCol}; padding: 2px 6px; border-radius: 4px; display:inline-block; width:100%; box-sizing:border-box;">${h.horseName}</span>
+                    </li>`;
+                });
+            }
+            paceHtml += `</ul></div>`;
+        });
+    }
+    paceHtml += `</div>`;
+
+    let resultHTML = `
+        <div class="summary-block">
+            <h3 style="margin: 0;">レース条件 ＆ システム検証</h3>
+            <p style="margin-top:10px;"><b>条件:</b> ${target.distance}m / ${target.trackType} ｜ <b>基準斤量:</b> ${weightText} / ${target.location}</p>
+            <div id="auditArea">${auditHtml}</div>
+        </div>
+    `;
+
+    if (!hasAuditIssues) {
+        resultHTML += `
+            <div class="pace-pattern-block">
+                <h3 style="margin-top:0;">展開予想 (脚質グルーピング)</h3>
+                ${paceHtml}
+            </div>
+            <div class="pattern-block">
+                <div class="segmented-control style-pill" style="margin-bottom: 20px;">
+                    <input type="radio" name="ratio" id="ratio-00" value="00" onchange="window.switchRatio('00')">
+                    <label for="ratio-00">0:10</label>
+                    <input type="radio" name="ratio" id="ratio-01" value="01" onchange="window.switchRatio('01')">
+                    <label for="ratio-01">1:9</label>
+                    <input type="radio" name="ratio" id="ratio-02" value="02" onchange="window.switchRatio('02')">
+                    <label for="ratio-02">2:8</label>
+                    <input type="radio" name="ratio" id="ratio-03" value="03" onchange="window.switchRatio('03')" checked>
+                    <label for="ratio-03">3:7</label>
+                    <input type="radio" name="ratio" id="ratio-04" value="04" onchange="window.switchRatio('04')">
+                    <label for="ratio-04">4:6</label>
+                    <input type="radio" name="ratio" id="ratio-05" value="05" onchange="window.switchRatio('05')">
+                    <label for="ratio-05">5:5</label>
+                </div>
+                <h3 style="margin-top:0;">ATVランキング</h3>
+                <div id="tableContainer" class="table-responsive"></div>
+            </div>
+            
+            <div class="score-analysis-block">
+                <h3 style="margin-top:0;">多角展開スコア分析</h3>
+                <div class="score-controls">
+                    <div class="score-control-group">
+                        <label class="score-control-label">評価指標</label>
+                        <select id="scoreMetric" class="score-input-select" onchange="window.runScoreAnalysis()">
+                            <option value="adjCentral">展開補正 (安定)</option>
+                            <option value="adjWeighted">展開補正 (ベスト)</option>
+                            <option value="centralATV" selected>中央加重 (安定)</option>
+                            <option value="weightedATV">加重平均 (ベスト)</option>
+                        </select>
+                    </div>
+                    <div class="score-control-group">
+                        <label class="score-control-label">許容差分閾値 (Δ)</label>
+                        <input type="number" id="scoreThreshold" value="0.50" step="0.01" min="0.01" class="score-input-number">
+                        <button onclick="window.runScoreAnalysis()" style="padding: 4px 10px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 5px;">確定</button>
+                    </div>
+                    <div class="score-control-group score-checkbox-container">
+                        <label class="score-control-label">評価対象比率</label>
+                        <div class="score-checkbox-group">
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="00" onchange="window.runScoreAnalysis()">0:10</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="01" onchange="window.runScoreAnalysis()">1:9</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="02" onchange="window.runScoreAnalysis()">2:8</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="03" onchange="window.runScoreAnalysis()">3:7</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="04" onchange="window.runScoreAnalysis()">4:6</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="05" onchange="window.runScoreAnalysis()">5:5</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="scoreResultContainer" class="table-responsive score-table-container">
+                    <p style="text-align:center; color:#777; font-size:13px; padding:10px 0; margin: 0;">比率を選択すると自動的にスコアが算出されます。</p>
+                </div>
+            </div>
+
+            <div class="details-block">
+                <details>
+                    <summary style="cursor:pointer; padding: 5px 0;">
+                        <h3 style="margin:0; display:inline; line-height:1.5;">詳細データ (計算プロセスログ)</h3>
+                        <span style="font-size:12px; color:#666; margin-left:10px;">(クリックで展開)</span>
+                    </summary>
+                    <div style="margin-top:15px;" id="detailedLogContainer"></div>
+                </details>
+            </div>
+        `;
+    } else {
+        resultHTML += `
+            <div class="pattern-block">
+                <div class="pattern-content">
+                    <div style="text-align:center; padding: 30px 10px 10px 10px;">
+                        <h3 style="color:#e74c3c; display:inline-block; border-left:4px solid #e74c3c; margin-bottom:10px; padding-left:8px;">⚠ 解析停止</h3>
+                        <p style="color:#555; font-size:14px; font-weight:bold; margin:0;">システム検証で問題が検出されたため、解析結果の表示を停止しています。</p>
+                        <p style="font-size:13px; color:#777; margin-top:5px;">下の検証用プロンプトをコピーし、AIに修正案をリクエストしてください。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="details-block">
+                <details>
+                    <summary style="cursor:pointer; padding: 5px 0;">
+                        <h3 style="margin:0; display:inline; line-height:1.5;">詳細データ (計算プロセスログ)</h3>
+                        <span style="font-size:12px; color:#666; margin-left:10px;">(クリックで展開)</span>
+                    </summary>
+                    <div style="margin-top:15px; padding: 20px; text-align: center; color: #e74c3c; font-weight: bold;">
+                        エラー発生のため、詳細ログの生成を中止しました。
+                    </div>
+                </details>
+            </div>
+        `;
+    }
+
+    resultHTML += `
+        <div class="prompt-block">
+            <div class="prompt-btn-group">
+                <button onclick="window.saveProject()" style="background: #27ae60; color: #fff; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; margin-bottom: 5px;">💾 プロジェクトを保存</button>
+                <button class="dl-btn" onclick="window.downloadPrompt(${hasAuditIssues})">プロンプトをファイルで保存</button>
+                <button class="copy-btn" onclick="window.copyPrompt()">検証用プロンプトをコピー</button>
+            </div>
+            <div class="prompt-content">
+                <textarea id="promptOutput" class="prompt-output" readonly></textarea>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('resultArea').innerHTML = resultHTML;
+
+    // 初期化直後に一回スコア分析を走らせる（チェックボックスが初期状態でONのものがあるため）
+    if (!hasAuditIssues) {
+        window.runScoreAnalysis();
     }
 };

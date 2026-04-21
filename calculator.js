@@ -34,13 +34,10 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
     };
     const cFactor = getCourseFactor(target.trackType, target.location, target.trackDetail);
 
-    for (let i = 0; i < horseBlocks.length; i++) {
-        let block = horseBlocks[i];
-        
-        if (block.includes("調教タイム") || block.includes("ラップ表示")) continue;
-        
-        let headerArea = /\d{2}\/\d{2}/.test(block) ? block.split(/\d{2}\/\d{2}/)[0] : block;
-        
+    // ==========================================
+    // 内部関数1: ヘッダー情報（馬番、馬名、年齢、斤量等）の抽出
+    // ==========================================
+    const extractHeaderInfo = (headerArea) => {
         let horseName = "不明";
         for (let n = 0; n < validHorseNames.length; n++) {
             if (headerArea.indexOf(validHorseNames[n]) !== -1) {
@@ -48,8 +45,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 break;
             }
         }
-        
-        if (horseName === "不明") continue;
 
         let horseNo = (results.length + 1).toString();
         let matchNo = headerArea.match(/(?:^|\n)\s*(?:[枠]?\d{1,2}\s+)?(\d{1,2})\s*(?:\r?\n|\s+)?(?:--|◎|◯|〇|▲|△|☆|✓|✔|消|取消|除外)/);
@@ -57,21 +52,15 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
 
         let age = 4;
         let ageMatch = headerArea.match(/(?:牝|牡|セ)(\d+)/);
-        if (ageMatch) {
-            age = parseInt(ageMatch[1], 10);
-        }
+        if (ageMatch) age = parseInt(ageMatch[1], 10);
 
         let sex = "牡";
         let sexMatch = headerArea.match(/(牝|牡|セ)/);
-        if (sexMatch) {
-            sex = sexMatch[1];
-        }
+        if (sexMatch) sex = sexMatch[1];
 
         let jockeyMark = "";
         let markMatch = headerArea.match(/[☆△▲★◇](?=[一-龥ぁ-んァ-ヴー])/);
-        if (markMatch) {
-            jockeyMark = markMatch[0];
-        }
+        if (markMatch) jockeyMark = markMatch[0];
 
         let currentWeight = 55.0;
         let cwMatch = headerArea.match(/(?:牝|牡|セ)\d[\s\S]{1,50}?(4[8-9]\.[05]|5\d\.[05]|6[0-5]\.[05])(?=$|\s|\n)/);
@@ -81,18 +70,22 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             let cwMatchFallback = headerArea.match(/(?:^|\s|\n)(4[8-9]\.[05]|5\d\.[05]|6[0-5]\.[05])(?=$|\s|\n)/);
             if (cwMatchFallback) currentWeight = parseFloat(cwMatchFallback[1]);
         }
-        let baseWeight = currentWeight;
 
-        // 修正箇所1: スマホ版の改行フォーマットに対応する分割ロジックの拡張
-        let races = block.split(/\r?\n(?=\s*\d{2}\/\d{2}[\s\r\n])/);
+        return { horseName, horseNo, age, sex, jockeyMark, baseWeight: currentWeight };
+    };
+
+    // ==========================================
+    // 内部関数2: 各過去走データの解析と補正値計算
+    // ==========================================
+    const processPastRaces = (races, baseWeight, age) => {
         let pastRaces = [];
         let validATVs = [];
+        let localMax = 0;
 
         for (let j = 1; j < races.length; j++) {
-            if (j > maxRacesIdx) maxRacesIdx = j;
+            if (j > localMax) localMax = j;
             let rText = races[j].split(/\r?\n(?:全場(?:芝|ダ)|(?:中山|東京|京都|阪神|中京|小倉|新潟|福島|札幌|函館)(?:芝|ダ)\d+m)/)[0];
 
-            // 修正箇所2: 行頭縛りを解除し、スマホ版の空白・改行インデントに対応
             let rDateMatch = rText.match(/(?:^|\n|\s)(\d{2}\/\d{2})/);
             let rDate = rDateMatch ? rDateMatch[1] : "不明";
 
@@ -111,13 +104,11 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             let condMatch = rText.match(/(良|稍|重|不)/);
             let pCond = condMatch ? condMatch[1] : "良";
             
-            // 修正箇所3: 日付と場所の間に多段改行が挟まるスマホ版レイアウトに対応
             let pLocMatch = rText.match(/\d{2}\/\d{2}[\s\S]{1,20}?(東京|中山|京都|阪神|中京|小倉|新潟|福島|札幌|函館|盛岡|水沢|大井|船橋|川崎|浦和|門別|園田|名古屋|笠松|金沢|高知|佐賀|姫路)/);
             let pLoc = pLocMatch ? pLocMatch[1] : "不明";
 
-            // 修正箇所4: 斤量と馬体重の間に多段改行が挟まるスマホ版レイアウトに対応
             let pwMatch = rText.match(/[\s\r\n](4[8-9]\.\d|5\d\.\d|6[0-5]\.\d)[\s\r\n]+\d{3}kg/);
-            let pWeight = pwMatch ? parseFloat(pwMatch[1]) : currentWeight;
+            let pWeight = pwMatch ? parseFloat(pwMatch[1]) : baseWeight;
 
             let f3Match = rText.match(/前[\s\S]*?([0-9\.]+|-+)([\s\S]*?)後[\s\S]*?([0-9\.]+|-+)/);
             if (!f3Match) {
@@ -141,7 +132,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             else if (/OP|ＯＰ|L|Ｌ|リステッド/i.test(rText)) pClassRank = "B";
             else if (/3勝|３勝|1600万|１６００万/.test(rText)) pClassRank = "C";
             else if (/2勝|２勝|1000万|１０００万/.test(rText)) pClassRank = "D";
-            else if (/1勝|１勝|500万|５００万/.test(rText)) pClassRank = "E";
+            else if (/1勝|１勝|500万|５０0万/.test(rText)) pClassRank = "E";
             else if (/新馬|未勝利/.test(rText)) pClassRank = "F";
 
             let headMatch = rText.match(/(\d+)頭/);
@@ -168,13 +159,11 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 }
             }
 
-            // --- baseTime (旧alpha) の算出 ---
             let baseTime = 0;
             let f3Front = parseFloat(f3FrontStr);
             if (isNaN(f3Front)) baseTime = f3Back * 0.99;
             else baseTime = (f3Front * ratio.f) + (f3Back * ratio.b);
 
-            // --- distMod (旧beta) の算出: 1600mを頂点とした絶対適性V字モデル ---
             const calcDistLoss = (d) => (Math.abs(d - 1600) / 1000) * DIST_SENSITIVITY;
             let pDistLoss = calcDistLoss(pDist);
             let tDistLoss = calcDistLoss(target.distance);
@@ -191,7 +180,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 agePattern = 3; 
             }
 
-            // --- classMod (旧H): クラス補正 ---
             let classMod = 0.00;
             if (agePattern === 1) {
                 if (["S", "A", "B"].includes(pClassRank)) classMod = 0.00;
@@ -214,7 +202,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 else if (["E", "F"].includes(pClassRank)) classMod = 0.10;
             }
 
-            // --- surfMod (旧E): 馬場補正 ---
             let surfModBase = 0.00;
             if (pTrack === "芝") {
                 if (pCond === "稍") surfModBase = -0.01;
@@ -226,7 +213,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             }
             let surfMod = surfModBase * (pDist / 1600); 
 
-            // --- locMod (旧G): 場所補正 ---
             let locMod = 0.00;
             if (pTrack === "芝") {
                 if (["東京","新潟","京都"].includes(pLoc)) locMod = 0.00;
@@ -244,11 +230,9 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 else if (["高知","佐賀","姫路"].includes(pLoc)) locMod = -0.08;
             }
 
-            // --- wghtMod (旧F): 斤量補正 ---
             let weightDiff = baseWeight - pWeight;
             let wghtMod = weightDiff * 0.004;
 
-            // --- condMod (旧gamma) の集計とATVの決定 ---
             let condMod = 1.00 + surfMod + wghtMod + locMod + classMod; 
             let atv = baseTime * distMod * condMod;
             let atvRounded = Math.round(atv * 100) / 100;
@@ -270,6 +254,13 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             validATVs.push(currentRaceData);
         }
 
+        return { pastRaces, validATVs, localMax };
+    };
+
+    // ==========================================
+    // 内部関数3: 洋芝・野芝専用機判定
+    // ==========================================
+    const checkTurfSpecialist = (validATVs) => {
         let onlyYoshiba = false;
         let onlyNoshiba = false;
 
@@ -311,7 +302,13 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 }
             }
         }
+        return { onlyYoshiba, onlyNoshiba };
+    };
 
+    // ==========================================
+    // 内部関数4: 脚質とペース判定
+    // ==========================================
+    const calcPaceAndStyle = (validATVs) => {
         let sumRatio = 0;
         let countRatio = 0;
         let hasLeadExperience = false;
@@ -336,7 +333,13 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             else if (avgPosRatio <= 0.85) { styleClass = 3; styleName = "差"; }
             else { styleClass = 4; styleName = "追"; }
         }
+        return { avgPosRatio, styleClass, styleName };
+    };
 
+    // ==========================================
+    // 内部関数5: ATVの集計と展開補正
+    // ==========================================
+    const calcAggregateATVs = (validATVs, avgPosRatio) => {
         validATVs.sort((a, b) => a.atv - b.atv);
         
         let weightedATV = null;
@@ -392,6 +395,13 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             }
         }
 
+        return { weightedATV, centralATV, adjCentral, adjWeighted, centralAdopted, centralOutliers };
+    };
+
+    // ==========================================
+    // 内部関数6: レース間隔判定
+    // ==========================================
+    const calcInterval = (headerArea, pastRaces) => {
         let intervalHtml = "-";
         let intervalMatch = headerArea.match(/(連闘|中\s*\d+\s*週|休\s*\d+\s*月|休\s*半年|半年\s*休)/);
         
@@ -431,74 +441,86 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 }
             }
         }
+        return intervalHtml;
+    };
 
-        results.push({ horseNo, horseName, age, currentWeight: baseWeight, sex, jockeyMark, pastRaces, weightedATV, centralATV, adjCentral, adjWeighted, validCount: vLen, validATVs, centralAdopted, centralOutliers, onlyYoshiba, onlyNoshiba, styleClass, styleName, avgPosRatio, intervalHtml });
+    // ==========================================
+    // 内部関数7: ソートおよび順位付与ヘルパー
+    // ==========================================
+    const applyRanking = (sortKey, rankKey) => {
+        let sorted = [...results].sort((a, b) => {
+            let valA = a[sortKey]; let valB = b[sortKey];
+            if (valA === null && valB === null) return 0;
+            if (valA === null) return 1; if (valB === null) return -1;
+            if (valA !== valB) return valA - valB;
+            for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {
+                let atvA = a.validATVs.length > i ? a.validATVs[i].atv : Infinity;
+                let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
+                if(atvA !== atvB) return atvA - atvB;
+            }
+            return parseInt(a.horseNo) - parseInt(b.horseNo);
+        });
+        sorted.forEach((item, index) => {
+            results.find(r => r.horseNo === item.horseNo)[rankKey] = item[sortKey] !== null ? (index + 1) : "-";
+        });
+        return sorted;
+    };
+
+
+    // ==========================================
+    // メインループ処理
+    // ==========================================
+    for (let i = 0; i < horseBlocks.length; i++) {
+        let block = horseBlocks[i];
+        if (block.includes("調教タイム") || block.includes("ラップ表示")) continue;
+        
+        let headerArea = /\d{2}\/\d{2}/.test(block) ? block.split(/\d{2}\/\d{2}/)[0] : block;
+        
+        let info = extractHeaderInfo(headerArea);
+        if (info.horseName === "不明") continue;
+
+        let races = block.split(/\r?\n(?=\s*\d{2}\/\d{2}[\s\r\n])/);
+        
+        let raceData = processPastRaces(races, info.baseWeight, info.age);
+        if (raceData.localMax > maxRacesIdx) maxRacesIdx = raceData.localMax;
+        
+        let turfData = checkTurfSpecialist(raceData.validATVs);
+        let paceData = calcPaceAndStyle(raceData.validATVs);
+        let aggData = calcAggregateATVs(raceData.validATVs, paceData.avgPosRatio);
+        let intervalHtml = calcInterval(headerArea, raceData.pastRaces);
+
+        results.push({
+            horseNo: info.horseNo, 
+            horseName: info.horseName, 
+            age: info.age, 
+            currentWeight: info.baseWeight, 
+            sex: info.sex, 
+            jockeyMark: info.jockeyMark, 
+            pastRaces: raceData.pastRaces, 
+            weightedATV: aggData.weightedATV, 
+            centralATV: aggData.centralATV, 
+            adjCentral: aggData.adjCentral, 
+            adjWeighted: aggData.adjWeighted, 
+            validCount: raceData.validATVs.length, 
+            validATVs: raceData.validATVs, 
+            centralAdopted: aggData.centralAdopted, 
+            centralOutliers: aggData.centralOutliers, 
+            onlyYoshiba: turfData.onlyYoshiba, 
+            onlyNoshiba: turfData.onlyNoshiba, 
+            styleClass: paceData.styleClass, 
+            styleName: paceData.styleName, 
+            avgPosRatio: paceData.avgPosRatio, 
+            intervalHtml: intervalHtml
+        });
     }
 
-    let rankSorted = [...results].sort((a, b) => {
-        let valA = a.weightedATV; let valB = b.weightedATV;
-        if (valA === null && valB === null) return 0;
-        if (valA === null) return 1; if (valB === null) return -1;
-        if (valA !== valB) return valA - valB;
-        for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {
-            let atvA = a.validATVs.length > i ? a.validATVs[i].atv : Infinity;
-            let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
-            if(atvA !== atvB) return atvA - atvB;
-        }
-        return parseInt(a.horseNo) - parseInt(b.horseNo);
-    });
-    rankSorted.forEach((item, index) => {
-        results.find(r => r.horseNo === item.horseNo).weightedRank = item.weightedATV !== null ? (index + 1) : "-";
-    });
+    // 各指標によるソートと順位付け
+    applyRanking('weightedATV', 'weightedRank');
+    let centralSorted = applyRanking('centralATV', 'centralRank');
+    applyRanking('adjCentral', 'adjCentralRank');
+    applyRanking('adjWeighted', 'adjWeightedRank');
 
-    let centralSorted = [...results].sort((a, b) => {
-        let valA = a.centralATV; let valB = b.centralATV;
-        if (valA === null && valB === null) return 0;
-        if (valA === null) return 1; if (valB === null) return -1;
-        if (valA !== valB) return valA - valB;
-        for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {
-            let atvA = a.validATVs.length > i ? a.validATVs[i].atv : Infinity;
-            let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
-            if(atvA !== atvB) return atvA - atvB;
-        }
-        return parseInt(a.horseNo) - parseInt(b.horseNo);
-    });
-    centralSorted.forEach((item, index) => {
-        results.find(r => r.horseNo === item.horseNo).centralRank = item.centralATV !== null ? (index + 1) : "-";
-    });
-
-    let adjCentralSorted = [...results].sort((a, b) => {
-        let valA = a.adjCentral; let valB = b.adjCentral;
-        if (valA === null && valB === null) return 0;
-        if (valA === null) return 1; if (valB === null) return -1;
-        if (valA !== valB) return valA - valB;
-        for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {
-            let atvA = a.validATVs.length > i ? a.validATVs[i].atv : Infinity;
-            let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
-            if(atvA !== atvB) return atvA - atvB;
-        }
-        return parseInt(a.horseNo) - parseInt(b.horseNo);
-    });
-    adjCentralSorted.forEach((item, index) => {
-        results.find(r => r.horseNo === item.horseNo).adjCentralRank = item.adjCentral !== null ? (index + 1) : "-";
-    });
-
-    let adjWeightedSorted = [...results].sort((a, b) => {
-        let valA = a.adjWeighted; let valB = b.adjWeighted;
-        if (valA === null && valB === null) return 0;
-        if (valA === null) return 1; if (valB === null) return -1;
-        if (valA !== valB) return valA - valB;
-        for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {
-            let atvA = a.validATVs.length > i ? a.validATVs[i].atv : Infinity;
-            let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
-            if(atvA !== atvB) return atvA - atvB;
-        }
-        return parseInt(a.horseNo) - parseInt(b.horseNo);
-    });
-    adjWeightedSorted.forEach((item, index) => {
-        results.find(r => r.horseNo === item.horseNo).adjWeightedRank = item.adjWeighted !== null ? (index + 1) : "-";
-    });
-
+    // --- 監査ロジック ---
     let extractedNames = results.map(r => r.horseName);
     let missingHorses = validHorseNames.filter(name => !extractedNames.includes(name));
     if (missingHorses.length > 0) auditErrors.push(`【抽出漏れ】出馬表に存在する以下の馬が抽出できませんでした: ${missingHorses.join(', ')}`);
@@ -526,4 +548,78 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         auditErrors, 
         auditWarnings 
     };
+};
+
+// ==========================================
+// 多角展開スコア分析の算出処理 (main.jsより移行)
+// ==========================================
+window.runScoreAnalysis = function() {
+    let metric = document.getElementById('scoreMetric').value;
+    let threshold = parseFloat(document.getElementById('scoreThreshold').value);
+    let selectedRatios = Array.from(document.querySelectorAll('.score-ratio-cb:checked')).map(cb => cb.value);
+
+    if (selectedRatios.length === 0) {
+        document.getElementById('scoreResultContainer').innerHTML = `<p style="text-align:center; color:#777; font-size:13px; padding:10px 0; margin: 0;">比率を選択すると自動的にスコアが算出されます。</p>`;
+        return;
+    }
+    
+    if (isNaN(threshold) || threshold <= 0) {
+        alert("正しい閾値(0より大きい数値)を入力してください。");
+        return;
+    }
+
+    let horseScores = {};
+    
+    let baseData = window.processedData['03'].results; 
+    baseData.forEach(h => {
+        horseScores[h.horseNo] = {
+            horseNo: h.horseNo,
+            horseName: h.horseName,
+            totalScore: 0,
+            scores: {}
+        };
+        selectedRatios.forEach(r => horseScores[h.horseNo].scores[r] = 0);
+    });
+
+    selectedRatios.forEach(ratioId => {
+        let data = window.processedData[ratioId].results;
+        
+        let minVal = Infinity;
+        data.forEach(h => {
+            if (h[metric] !== null && h[metric] < minVal) minVal = h[metric];
+        });
+
+        data.forEach(h => {
+            let val = h[metric];
+            let points = 0;
+            if (val !== null && minVal !== Infinity) {
+                let diff = val - minVal;
+                if (diff <= threshold) {
+                    points = 100 * (1 - (diff / threshold));
+                    if (points < 0) points = 0;
+                }
+            }
+            let hs = horseScores[h.horseNo];
+            if (hs) {
+                hs.scores[ratioId] = points;
+                hs.totalScore += points;
+            }
+        });
+    });
+
+    let sortedScores = Object.values(horseScores)
+        .filter(h => h.totalScore > 0)
+        .sort((a, b) => {
+            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+            return parseInt(a.horseNo) - parseInt(b.horseNo);
+        });
+
+    if (sortedScores.length === 0) {
+        document.getElementById('scoreResultContainer').innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:13px; font-weight:bold; padding:20px 0;">設定した閾値(${threshold})以内に該当する馬はいませんでした。</p>`;
+        return;
+    }
+
+    if (window.renderScoreResultTable) {
+        window.renderScoreResultTable(sortedScores, selectedRatios, baseData.length);
+    }
 };

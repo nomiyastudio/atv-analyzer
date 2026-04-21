@@ -8,7 +8,9 @@
 </head>
 <body>
     <div class="container">
-        <h3 id="version-display" style="margin-bottom: 25px;">競馬ATV解析ツール</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h3 id="version-display" style="margin: 0;">競馬ATV解析ツール</h3>
+        </div>
 
         <div class="input-section">
             <div class="inputs-container">
@@ -22,6 +24,8 @@
                 </div>
             </div>
             <div class="action-box">
+                <input type="file" id="loadProjectInput" accept=".json" style="display: none;" onchange="window.loadProject(event)">
+                <label for="loadProjectInput" style="cursor: pointer; background: #2980b9; color: #fff; padding: 12px 0; border-radius: 6px; font-size: 14px; font-weight: bold; display: block; text-align: center; transition: background-color 0.2s; margin-bottom: 0;">📂 データ読込</label>
                 <button id="runBtn" class="run-btn" onclick="runAnalysis()">解析実行</button>
             </div>
         </div>
