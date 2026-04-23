@@ -7,12 +7,14 @@ window.onload = function() {
     if (versionDisplay && window.SYSTEM_VERSION && window.LAST_UPDATED) {
         versionDisplay.style.textAlign = "left";
         versionDisplay.style.height = "auto";
+        // 余白を他のブロック要素（20px）と統一
         versionDisplay.style.marginBottom = "20px";
-        versionDisplay.innerHTML = `<h3>システムバージョン: v${window.SYSTEM_VERSION} <span style="font-size: 11px; color: #666; font-weight: normal; margin-left: 10px;">(最終更新: ${window.LAST_UPDATED})</span></h3>`;
+        // <h3>タグの二重ネストを解消し、テキストとspanのみを代入
+        versionDisplay.innerHTML = `システムバージョン: v${window.SYSTEM_VERSION} <span style="font-size: 11px; color: #666; font-weight: normal; margin-left: 10px;">(最終更新: ${window.LAST_UPDATED})</span>`;
     }
 };
 
-// --- 改修: プロジェクト保存機能（ファイル名の一意性を強化） ---
+// --- プロジェクト保存機能 ---
 window.saveProject = function() {
     const d1 = document.getElementById('data1').value;
     const d2 = document.getElementById('data2').value;
@@ -30,26 +32,20 @@ window.saveProject = function() {
     const min = String(now.getMinutes()).padStart(2, '0');
     const dateStr = `${yyyy}${mm}${dd}`;
 
-    // 場所とレース番号の抽出
     let location = "";
     let raceNo = "";
     
-    // データ①から場所とレース番号を特定（例: 2回中山1日目 11R 皐月賞）
     const lines = d1.split('\n');
     for (let line of lines) {
-        // 場所の抽出（〇回場所〇日目）
         let mLoc = line.match(/\d+回\s*([^\s]+)\s*\d+日目/);
         if (mLoc) location = mLoc[1].replace("競馬", "");
 
-        // レース番号の抽出（11R, 1Rなど）
         let mNo = line.match(/(\d{1,2})R/);
         if (mNo) raceNo = mNo[1] + "R";
 
         if (location && raceNo) break;
     }
 
-    // ファイル名の構築
-    // 抽出できなかった場合は「不明」+「時刻」で重複を回避
     let fileId = "";
     if (location || raceNo) {
         fileId = `_${location}_${raceNo}`;
@@ -77,7 +73,7 @@ window.saveProject = function() {
     URL.revokeObjectURL(url);
 };
 
-// --- 新設: プロジェクト読み込み機能（スマホ対応） ---
+// --- プロジェクト読み込み機能 ---
 window.loadProject = function(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -89,8 +85,6 @@ window.loadProject = function(event) {
             if (data.d1_raw && data.d2_raw) {
                 document.getElementById('data1').value = data.d1_raw;
                 document.getElementById('data2').value = data.d2_raw;
-                
-                // 読み込み完了後、即座に解析を実行
                 window.runAnalysis();
             } else {
                 throw new Error("ファイル形式が正しくありません。");
@@ -98,7 +92,6 @@ window.loadProject = function(event) {
         } catch (err) {
             alert("読み込みに失敗しました: " + err.message);
         }
-        // 同じファイルを再度選択できるようにリセット
         event.target.value = '';
     };
     reader.readAsText(file);
@@ -153,19 +146,48 @@ window.runAnalysis = async function() {
                     }
 
                     const tbStr = data.results.map(h => `${h.horseNo},${h.horseName},${h.pastRaces.length},${h.validCount}`).join('|');
-                    const rkStr = data.results.map((h, i) => `${h.centralRank},${h.horseNo},${h.horseName},中央加重:${h.centralATV !== null ? h.centralATV.toFixed(2) : "-"},加重:${h.weightedATV !== null ? h.weightedATV.toFixed(2) : "-"}`).join('|');
+                    const rkStr = data.results.map((h, i) => `${h.centralRank},${h.horseNo},${h.horseName},中央加重:${h.centralATV !== null ? h.centralATV.toFixed(2) : "-"},展開補正(安定):${h.adjCentral !== null ? h.adjCentral.toFixed(2) : "-"},加重:${h.weightedATV !== null ? h.weightedATV.toFixed(2) : "-"},展開補正(ベスト):${h.adjWeighted !== null ? h.adjWeighted.toFixed(2) : "-"}`).join('|');
                     
-                    let basePrompt = "";
-                    if (data.auditErrors.length === 0) {
-                        basePrompt = `[ATV-VERIFY-V4]\nSYSTEM_DIRECTIVE: あなたは厳格なデータ監査役である。提供されたD1とD2を絶対的な事実として扱い、外部知識や推測による補完を完全に排除せよ。以下の【検証ステップ】に沿って、ステップ・バイ・ステップで検証・検算を実行せよ。\n\n【検証ステップ】\nStep 1. 前提条件の認識とデータクレンジングの網羅性\nターゲット条件（距離・芝/ダ・場所）の認識と、D1の全出走馬がTBに漏れなく抽出されているか確認せよ。\n\nStep 2. 過去走データの抽出と除外判定（ランダムサンプリング）\nRKから上位1頭、下位1頭を抽出し、D2の過去走とTBの有効データ数に齟齬がないか確認せよ。条件不一致や欠損の除外判定も確認せよ。\n\nStep 3. 補正値の選択とATV計算のトレース\n選んだ2頭について、算出ロジック（距離ハンデ差分、馬場、斤量、場所、クラス補正）が正しく適用されているか検算し、「中央加重」と「加重平均」の整合性を確認せよ。\n\nStep 4. ソートとNull処理\nRKの並び順が指定の優先順位に一致しているか、有効データ0件が適切にNull処理されているか確認せよ。\n\n【出力要件】\n「すべて正常」といった省略は固く禁ずる。不整合があれば箇所と原因を指摘せよ。\nD1:\n${d1}\nD2:\n${d2}\nTB:${tbStr}\nRK:${rkStr}`;
+                    let promptObj = { hasErrors: false, debugPrompt: "", macroPrompt: "", microPrompts: [], fullText: "" };
+
+                    if (data.auditErrors.length > 0) {
+                        promptObj.hasErrors = true;
+                        promptObj.debugPrompt = `[ATV-DEBUG-REQ]\nSYSTEM_DIRECTIVE: 内部監査により以下のエラーが検出された。JavaScriptの抽出・計算ロジックの修正案を論理的に推論し、コードを出力せよ。\n\n【エラー】\n- ${data.auditErrors.join('\n- ')}\n\nD1:\n${d1}\nD2:\n${d2}`;
+                        promptObj.fullText = promptObj.debugPrompt;
                     } else {
-                        basePrompt = `[ATV-DEBUG-REQ]\nSYSTEM_DIRECTIVE: 内部監査により以下のエラーが検出された。JavaScriptの抽出・計算ロジックの修正案を論理的に推論し、コードを出力せよ。\n\n【エラー】\n- ${data.auditErrors.join('\n- ')}\n\nD1:\n${d1}\nD2:\n${d2}`;
+                        // マクロ検証プロンプトの生成
+                        promptObj.macroPrompt = `[ATV-VERIFY-MACRO]\nSYSTEM_DIRECTIVE: あなたは厳格なデータ監査役である。提供されたD1、TB、RKを絶対的な事実として扱い、以下の【検証ステップ】を実行せよ。過去走データ（D2）は本ステップでは不要なため提供していない。途中式の省略を禁ずる。\n\n【検証ステップ】\nStep 1. 抽出の網羅性チェック\nD1に記載されている全出走馬をリストアップし、それがTB（内部データ）に漏れなく存在するか確認せよ。「〇番: 馬名 - 抽出OK」の形式で全頭分出力せよ。「以下略」は固く禁ずる。\n\nStep 2. ソートとNull処理の確認\nRKの順位が正しいか確認せよ。1位から最下位まで、隣り合う馬の数値（展開補正または中央加重など）を「1位(100.5) ＞ 2位(98.2) : 正常」の形式で全順位分比較して証明せよ。\n\n【データ】\nD1:\n${d1}\nTB:${tbStr}\nRK:${rkStr}`;
+
+                        // ミクロ検証プロンプトの生成（3頭ずつ分割）
+                        let sortedForMicro = [...data.results].sort((a,b) => (parseInt(a.horseNo)||999) - (parseInt(b.horseNo)||999));
+                        let targetConditions = d1.split('\n').slice(0, 5).join('\n');
+
+                        for (let i = 0; i < sortedForMicro.length; i += 3) {
+                            let batch = sortedForMicro.slice(i, i + 3);
+                            let targetHorseNumbers = batch.map(h => `${h.horseNo}番`).join('、');
+                            let batchNames = batch.map(h => h.horseName);
+                            
+                            let d2Filtered = horseBlocks.filter(block => {
+                                let cleanBlock = block.replace(/[\r\n\s\t\u200B-\u200D\uFEFF]/g, '');
+                                return batchNames.some(name => cleanBlock.includes(name));
+                            }).join('\n\n');
+                            
+                            let tbFiltered = batch.map(h => `${h.horseNo},${h.horseName},${h.pastRaces.length},${h.validCount}`).join('|');
+                            let rkFiltered = batch.map((h, idx) => `${h.centralRank},${h.horseNo},${h.horseName},中央加重:${h.centralATV !== null ? h.centralATV.toFixed(2) : "-"},展開補正(安定):${h.adjCentral !== null ? h.adjCentral.toFixed(2) : "-"},加重:${h.weightedATV !== null ? h.weightedATV.toFixed(2) : "-"},展開補正(ベスト):${h.adjWeighted !== null ? h.adjWeighted.toFixed(2) : "-"}`).join('|');
+
+                            let microText = `[ATV-VERIFY-MICRO: 対象馬 ${targetHorseNumbers}]\nSYSTEM_DIRECTIVE: あなたは厳格なデータ監査役である。提供されたデータを絶対的な事実とし、対象となる馬（${targetHorseNumbers}）についてのみ、以下の【検証ステップ】を実行せよ。ハルシネーションを防ぐため、途中式を絶対に省略せず、ステップ・バイ・ステップで検算せよ。\n\n【検証ステップ】\nStep 3. 過去走データの抽出と除外判定\n対象馬について、D2の過去走数とTBの有効データ数に齟齬がないか確認し、除外されたレースがあればその理由（馬場不一致やタイム欠損など）を明記せよ。\n\nStep 4. 補正値とATV計算のトレース\n対象馬について、ベース算出ロジック（距離ハンデ差分、馬場、斤量、場所、クラス補正）を検算せよ。さらに、脚質とコース係数（C値）による「展開補正（安定・ベスト）」のペナルティ乗算が正確に行われているか確認し、最終的な「中央加重」「加重平均」との整合性を検証せよ。\n\n【出力要件】\n「すべて正常」といった省略、および「以下略」「同様に」といった手抜きは固く禁ずる。必ず対象馬すべての計算過程を出力せよ。\n\n【データ】\n対象レース条件（D1より抽出）:\n${targetConditions}\n\n対象馬の過去走データ（D2抽出分）:\n${d2Filtered}\n\n対象馬のTBデータ:\n${tbFiltered}\n\n対象馬のRKデータ:\n${rkFiltered}`;
+
+                            promptObj.microPrompts.push({
+                                title: `${batch[0].horseNo}番〜${batch[batch.length-1].horseNo}番`,
+                                text: microText
+                            });
+                        }
+                        promptObj.fullText = promptObj.macroPrompt + "\n\n====================\n\n" + promptObj.microPrompts.map(m => m.text).join("\n\n====================\n\n");
                     }
-                    window.generatedPrompts[ratio.id] = basePrompt;
+                    window.generatedPrompts[ratio.id] = promptObj;
                 });
 
                 window.renderUI(target, globalHasAuditIssues);
-                
                 window.switchRatio('03');
 
             } catch (e) {
@@ -173,7 +195,8 @@ window.runAnalysis = async function() {
                 console.error(e);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "解析実行";
+                // 解析実行ボタンのテキスト復元時、spanタグ構造を復元するように修正
+                btn.innerHTML = `<span class="btn-text-pc">▶ 解析実行</span><span class="btn-text-sp">▶ 解析<br>実行</span>`;
             }
         }, 50);
 
@@ -181,7 +204,8 @@ window.runAnalysis = async function() {
         alert("日付判定処理でエラーが発生しました: " + e.message);
         console.error(e);
         btn.disabled = false;
-        btn.innerText = "解析実行";
+        // エラー時のテキスト復元
+        btn.innerHTML = `<span class="btn-text-pc">▶ 解析実行</span><span class="btn-text-sp">▶ 解析<br>実行</span>`;
     }
 };
 
@@ -201,9 +225,8 @@ window.switchRatio = function(id) {
         logContainer.innerHTML = window.renderDetailedLog(id);
     }
 
-    let promptOutput = document.getElementById('promptOutput');
-    if (promptOutput) {
-        promptOutput.value = window.generatedPrompts[id] || "";
+    if (window.renderPromptArea) {
+        window.renderPromptArea(id);
     }
 };
 
@@ -239,52 +262,69 @@ window.pasteFromClipboard = async function(targetId) {
     }
 };
 
-window.copyPrompt = async function() {
-    const promptText = document.getElementById('promptOutput').value;
-    if (!promptText) {
-        alert("コピーするプロンプトがありません。");
-        return;
+window.copyPrompt = async function(type, index, btnElement) {
+    let activeRadio = document.querySelector('input[name="ratio"]:checked')?.value || '03';
+    let prompts = window.generatedPrompts[activeRadio];
+    if (!prompts) return;
+
+    let promptText = "";
+    if (prompts.hasErrors) {
+        promptText = prompts.debugPrompt;
+    } else if (type === 'macro') {
+        promptText = prompts.macroPrompt;
+    } else if (type === 'micro') {
+        promptText = prompts.microPrompts[index].text;
     }
+
+    if (!promptText) return;
+
     try {
         await navigator.clipboard.writeText(promptText);
-        const btn = document.querySelector('.copy-btn');
-        const originalText = btn.innerText;
-        btn.innerText = "✓ コピーしました！";
-        btn.style.backgroundColor = "#27ae60";
-        setTimeout(() => {
-            btn.innerText = originalText;
-            btn.style.backgroundColor = "";
-        }, 2000);
+        if (btnElement) {
+            const originalText = btnElement.innerHTML; // spanタグ構造を保持するためinnerHTMLを使用
+            btnElement.innerText = "✓ OK";
+            btnElement.style.backgroundColor = "#27ae60";
+            setTimeout(() => {
+                btnElement.innerHTML = originalText;
+                btnElement.style.backgroundColor = "";
+            }, 2000);
+        }
     } catch (err) {
-        alert("クリップボードへのコピーに失敗しました。\nテキストエリアから手動でコピーしてください。");
-        console.error("Failed to copy text: ", err);
+        alert("コピーに失敗しました。");
     }
 };
 
-window.downloadPrompt = function(hasAuditIssues) {
-    const promptText = document.getElementById('promptOutput').value;
-    if (!promptText) {
-        alert("保存するプロンプトがありません。");
-        return;
+window.downloadPrompt = function(type, index) {
+    let activeRadio = document.querySelector('input[name="ratio"]:checked')?.value || '03';
+    let prompts = window.generatedPrompts[activeRadio];
+    if (!prompts) return;
+
+    let promptText = "";
+    let prefix = "Verify";
+
+    if (prompts.hasErrors) {
+        promptText = prompts.debugPrompt;
+        prefix = "DebugReq";
+    } else if (type === 'macro') {
+        promptText = prompts.macroPrompt;
+        prefix = "Macro";
+    } else if (type === 'micro') {
+        promptText = prompts.microPrompts[index].text;
+        prefix = `Micro_${prompts.microPrompts[index].title.replace(/番/g, '')}`;
     }
-    
+
+    if (!promptText) return;
+
     const blob = new Blob([promptText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     
     const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    const hh = String(now.getHours()).padStart(2, '0');
-    const min = String(now.getMinutes()).padStart(2, '0');
-    const dateStr = `${yyyy}${mm}${dd}_${hh}${min}`;
-    
-    const purpose = hasAuditIssues ? "DebugReq" : "Verify";
-    const fileName = `ATV_${purpose}_${dateStr}.txt`;
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
     
     const a = document.createElement('a');
     a.href = url;
-    a.download = fileName;
+    a.download = `ATV_${prefix}_${dateStr}_${timeStr}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

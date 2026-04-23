@@ -302,6 +302,45 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, totalHors
     }
 };
 
+// プロンプトエリアのレンダリング (スマホ対応・左寄せマクロボタン)
+window.renderPromptArea = function(ratioId) {
+    let pData = window.generatedPrompts[ratioId];
+    let container = document.getElementById('promptControlArea');
+    if (!container || !pData) return;
+
+    let html = "";
+    if (pData.hasErrors) {
+        html = `
+            <div style="margin-bottom:10px; display:flex; gap:5px; justify-content:flex-start;">
+                <button class="copy-btn" onclick="window.copyPrompt('debug', 0, this)" style="background:#c0392b; flex:none; padding:10px 20px;">📋 デバッグ要求プロンプトをコピー</button>
+                <button class="action-btn btn-save" onclick="window.downloadPrompt('debug', 0)" style="width:45px; height:45px; flex:none;">💾</button>
+            </div>`;
+    } else {
+        html += `
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; color:#2c3e50; margin-bottom:5px; display:block;">▼ ステップ1: 全体検証（抽出・ソート）</label>
+                <div style="display:flex; gap:5px; justify-content:flex-start;">
+                    <button class="copy-btn" onclick="window.copyPrompt('macro', 0, this)" style="background:#2980b9; padding:12px 20px; flex:none; font-size:13px; min-width:max-content;">📋 [全体] マクロ検証プロンプトをコピー</button>
+                    <button class="action-btn btn-save" onclick="window.downloadPrompt('macro', 0)" style="width:45px; height:45px; flex:none;">💾</button>
+                </div>
+            </div>`;
+        
+        html += `
+            <label style="font-size:12px; color:#2c3e50; margin-bottom:5px; display:block;">▼ ステップ2: 個別検算（3頭ずつ分割）</label>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; width:100%;">`;
+        
+        pData.microPrompts.forEach((m, idx) => {
+            html += `
+                <div style="display:flex; gap:3px; flex: 0 1 auto; min-width:max-content;">
+                    <button class="copy-btn" onclick="window.copyPrompt('micro', ${idx}, this)" style="font-size:12px; padding:10px 12px; flex:none;">📋 ${m.title}</button>
+                    <button class="action-btn btn-save" onclick="window.downloadPrompt('micro', ${idx})" style="width:38px; height:38px; flex:none; font-size:12px;">💾</button>
+                </div>`;
+        });
+        html += `</div>`;
+    }
+    container.innerHTML = html;
+};
+
 window.renderUI = function(target, hasAuditIssues) {
     let auditHtml = !hasAuditIssues 
         ? `<div style="border-left: 4px solid #27ae60; padding: 5px 10px; background: #f4fdf8; border-radius: 4px;"><span style="color: #27ae60; font-weight: bold; font-size: 13px;">✓ システム検証: 全項目正常</span></div>` 
@@ -329,7 +368,7 @@ window.renderUI = function(target, hasAuditIssues) {
         ];
 
         paceStyles.forEach(s => {
-            let horses = results03.filter(h => h.styleClass === s.class).sort((a,b) => (a.avgPosRatio || 0) - (b.bvgPosRatio || 0));
+            let horses = results03.filter(h => h.styleClass === s.class).sort((a,b) => (a.avgPosRatio || 0) - (b.avgPosRatio || 0));
             paceHtml += `<div style="border:1px solid ${s.border}; border-radius:6px; background:transparent; padding:10px; box-sizing:border-box;">
                 <h4 style="margin:0 0 10px 0; color:${s.border}; text-align:center; border-bottom:1px solid ${s.border}; padding-bottom:5px;">${s.name}</h4>
                 <ul style="list-style:none; padding:0; margin:0; font-size:12px;">`;
@@ -357,7 +396,7 @@ window.renderUI = function(target, hasAuditIssues) {
     paceHtml += `</div>`;
 
     let resultHTML = `
-        <div class="summary-block">
+        <div class="summary-block" style="width:100%; box-sizing:border-box;">
             <h3 style="margin: 0;">レース条件 ＆ システム検証</h3>
             <p style="margin-top:10px;"><b>条件:</b> ${target.distance}m / ${target.trackType} ｜ <b>基準斤量:</b> ${weightText} / ${target.location}</p>
             <div id="auditArea">${auditHtml}</div>
@@ -366,11 +405,12 @@ window.renderUI = function(target, hasAuditIssues) {
 
     if (!hasAuditIssues) {
         resultHTML += `
-            <div class="pace-pattern-block">
+            <div class="pace-pattern-block" style="width:100%; box-sizing:border-box;">
                 <h3 style="margin-top:0;">展開予想 (脚質グルーピング)</h3>
                 ${paceHtml}
             </div>
-            <div class="pattern-block">
+            <div class="pattern-block" style="width:100%; box-sizing:border-box;">
+                <h3 style="margin-top:0;">ATVランキング</h3>
                 <div class="segmented-control style-pill" style="margin-bottom: 20px;">
                     <input type="radio" name="ratio" id="ratio-00" value="00" onchange="window.switchRatio('00')">
                     <label for="ratio-00">0:10</label>
@@ -385,11 +425,10 @@ window.renderUI = function(target, hasAuditIssues) {
                     <input type="radio" name="ratio" id="ratio-05" value="05" onchange="window.switchRatio('05')">
                     <label for="ratio-05">5:5</label>
                 </div>
-                <h3 style="margin-top:0;">ATVランキング</h3>
                 <div id="tableContainer" class="table-responsive"></div>
             </div>
             
-            <div class="score-analysis-block">
+            <div class="score-analysis-block" style="width:100%; box-sizing:border-box;">
                 <h3 style="margin-top:0;">多角展開スコア分析</h3>
                 <div class="score-controls">
                     <div class="score-control-group">
@@ -423,7 +462,7 @@ window.renderUI = function(target, hasAuditIssues) {
                 </div>
             </div>
 
-            <div class="details-block">
+            <div class="details-block" style="width:100%; box-sizing:border-box;">
                 <details>
                     <summary style="cursor:pointer; padding: 5px 0;">
                         <h3 style="margin:0; display:inline; line-height:1.5;">詳細データ (計算プロセスログ)</h3>
@@ -435,7 +474,7 @@ window.renderUI = function(target, hasAuditIssues) {
         `;
     } else {
         resultHTML += `
-            <div class="pattern-block">
+            <div class="pattern-block" style="width:100%; box-sizing:border-box;">
                 <div class="pattern-content">
                     <div style="text-align:center; padding: 30px 10px 10px 10px;">
                         <h3 style="color:#e74c3c; display:inline-block; border-left:4px solid #e74c3c; margin-bottom:10px; padding-left:8px;">⚠ 解析停止</h3>
@@ -444,37 +483,44 @@ window.renderUI = function(target, hasAuditIssues) {
                     </div>
                 </div>
             </div>
-            <div class="details-block">
-                <details>
-                    <summary style="cursor:pointer; padding: 5px 0;">
-                        <h3 style="margin:0; display:inline; line-height:1.5;">詳細データ (計算プロセスログ)</h3>
-                        <span style="font-size:12px; color:#666; margin-left:10px;">(クリックで展開)</span>
-                    </summary>
-                    <div style="margin-top:15px; padding: 20px; text-align: center; color: #e74c3c; font-weight: bold;">
-                        エラー発生のため、詳細ログの生成を中止しました。
-                    </div>
-                </details>
-            </div>
         `;
     }
 
     resultHTML += `
-        <div class="prompt-block">
-            <div class="prompt-btn-group">
-                <button onclick="window.saveProject()" style="background: #27ae60; color: #fff; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; margin-bottom: 5px;">💾 プロジェクトを保存</button>
-                <button class="dl-btn" onclick="window.downloadPrompt(${hasAuditIssues})">プロンプトをファイルで保存</button>
-                <button class="copy-btn" onclick="window.copyPrompt()">検証用プロンプトをコピー</button>
-            </div>
-            <div class="prompt-content">
-                <textarea id="promptOutput" class="prompt-output" readonly></textarea>
-            </div>
+        <div class="prompt-block" style="border:none; padding:0; background:transparent; box-shadow:none; width:100%; box-sizing:border-box; max-width:100%;">
+            <details>
+                <summary style="cursor:pointer; padding: 15px; background:#eaf2f8; border:1px dashed #3498db; border-radius:8px;">
+                    <h3 style="margin:0; display:inline; line-height:1.5; border-left:none; padding-left:0;">検証用プロンプト (AI監査用)</h3>
+                    <span style="font-size:12px; color:#666; margin-left:10px;">(クリックで展開)</span>
+                </summary>
+                <div class="prompt-content" style="padding:20px; border:1px solid #3498db; border-top:none; border-radius:0 0 8px 8px; background:#fff; width:100%; box-sizing:border-box;">
+                    <div id="promptControlArea"></div>
+                </div>
+            </details>
         </div>
     `;
 
     document.getElementById('resultArea').innerHTML = resultHTML;
 
-    // 初期化直後に一回スコア分析を走らせる（チェックボックスが初期状態でONのものがあるため）
     if (!hasAuditIssues) {
         window.runScoreAnalysis();
     }
 };
+
+// ==========================================
+// UIルーラー用ロジック
+// ==========================================
+window.drawRulerLabels = function() {
+    const ticksContainer = document.getElementById('ruler-ticks-container');
+    if (!ticksContainer) return;
+    ticksContainer.innerHTML = ''; 
+    for (let i = 100; i <= 4000; i += 100) {
+        const label = document.createElement('div');
+        label.className = 'ruler-label';
+        label.style.left = i + 'px';
+        label.textContent = i;
+        ticksContainer.appendChild(label);
+    }
+};
+
+window.addEventListener('load', window.drawRulerLabels);
