@@ -46,7 +46,8 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             }
         }
 
-        let horseNo = (results.length + 1).toString();
+        // 馬番が取得できない場合は一律で "-"（ハイフン）を代入
+        let horseNo = "-";
         let matchNo = headerArea.match(/(?:^|\n)\s*(?:[枠]?\d{1,2}\s+)?(\d{1,2})\s*(?:\r?\n|\s+)?(?:--|◎|◯|〇|▲|△|☆|✓|✔|消|取消|除外)/);
         if (matchNo) horseNo = matchNo[1];
 
@@ -458,7 +459,9 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
                 if(atvA !== atvB) return atvA - atvB;
             }
-            return parseInt(a.horseNo) - parseInt(b.horseNo);
+            let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
+            if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
+            return aNo - bNo;
         });
         sorted.forEach((item, index) => {
             results.find(r => r.horseNo === item.horseNo)[rankKey] = item[sortKey] !== null ? (index + 1) : "-";
@@ -611,7 +614,9 @@ window.runScoreAnalysis = function() {
         .filter(h => h.totalScore > 0)
         .sort((a, b) => {
             if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-            return parseInt(a.horseNo) - parseInt(b.horseNo);
+            let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
+            if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
+            return aNo - bNo;
         });
 
     if (sortedScores.length === 0) {

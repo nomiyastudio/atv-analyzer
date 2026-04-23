@@ -75,6 +75,7 @@ window.parseAllData = function(d1, d2) {
     };
 
     // D1からの馬名抽出ロジック
+    // パターン1: 枠番・馬番が横並びのフォーマット
     for (let i = 0; i < d1Lines.length; i++) {
         if (/^\d+[\s\t]+\d+$/.test(d1Lines[i])) {
             let name = "";
@@ -94,6 +95,7 @@ window.parseAllData = function(d1, d2) {
         }
     }
 
+    // パターン2: 枠番と馬番が改行されているフォーマット
     if (validHorseNames.length === 0) {
         for (let i = 0; i < d1Lines.length - 2; i++) {
             if (/^\d+$/.test(d1Lines[i]) && /^\d+$/.test(d1Lines[i+1])) {
@@ -114,6 +116,19 @@ window.parseAllData = function(d1, d2) {
                         }
                         j++;
                     }
+                    addValidName(name);
+                }
+            }
+        }
+    }
+
+    // --- 新規追加: 予想印フォーマット（馬番未定など）対応の馬名抽出 ---
+    if (validHorseNames.length === 0) {
+        for (let i = 0; i < d1Lines.length - 1; i++) {
+            // 単独の予想印（-- や ◎◯▲△☆消✓ など）の行を検知
+            if (/^(--|[◎○◯〇▲△×☆注消✓✔]+)$/.test(d1Lines[i])) {
+                let name = window.cleanHorseName(d1Lines[i+1]);
+                if (name && name.length > 1 && !isIgnoreText(name) && !/^\d/.test(name)) {
                     addValidName(name);
                 }
             }
@@ -162,7 +177,7 @@ window.parseAllData = function(d1, d2) {
         cleanD2 = d2.substring(0, cutoffMatch.index);
     }
 
-    // ブロック分割の正規表現に ◯ (大きな丸) と 〇 (漢数字のゼロ) を追加
+    // 既存のブロック分割 (数字ベース)
     let horseBlocks = cleanD2.split(/(?=^\d+\s+\d+\s+(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\s*\n)/m);
     if (horseBlocks.length <= 1) {
         horseBlocks = cleanD2.split(/(?=^\d+\r?\n\d+\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\r?\n)/m);
@@ -170,15 +185,49 @@ window.parseAllData = function(d1, d2) {
     if (horseBlocks.length <= 1) {
         horseBlocks = cleanD2.split(/(?=^\d+[\t ]+\d+[\t ]*(?:\r?\n|--|[◎○◯〇▲△×☆注消✓✔]+))/m);
     }
-    
-    // --- スマホ版（縦並び）フォーマット対応のブロック分割 ---
     if (horseBlocks.length <= 1) {
-        // スマホ版: 馬番(数字1〜2桁) -> 改行 -> 予想印(省略可) -> 改行 -> 馬名+のデータベース
         horseBlocks = cleanD2.split(/(?=^\d{1,2}\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\r?\n?[^\n]*のデータベース)/m);
     }
     if (horseBlocks.length <= 1) {
-        // さらにシンプルなスマホ版ブロック分割（数字行＋印行＋カタカナ行）
         horseBlocks = cleanD2.split(/(?=^\d{1,2}\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)\r?\n)/m);
+    }
+
+    // --- 新規追加: 馬番なしフォーマット（抽出した馬名ベース）対応のブロック分割 ---
+    if (horseBlocks.length <= 1 && validHorseNames.length > 0) {
+        let indices = [];
+        validHorseNames.forEach(name => {
+            // 馬名が行頭、または予想印の直後に出現する箇所を特定
+            let regex = new RegExp(`(?:^|\\n)(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\\s*\\n?${name}\\s*\\n(?:牡|牝|セ)\\d+`, 'm');
+            let match = cleanD2.match(regex);
+            
+            // 性齢が続かない場合でも馬名で探すフォールバック
+            if (!match) {
+                regex = new RegExp(`(?:^|\\n)(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\\s*\\n?${name}`, 'm');
+                match = cleanD2.match(regex);
+            }
+            
+            if (match) {
+                let idx = match.index;
+                if (cleanD2[idx] === '\n') idx++; // \nからマッチした場合は次の文字から開始
+                indices.push({ name: name, index: idx });
+            }
+        });
+        
+        if (indices.length > 1) {
+            indices.sort((a, b) => a.index - b.index);
+            horseBlocks = [];
+            // 最初の馬名より前にゴミデータがあればスキップするか、とりあえず格納
+            if (indices[0].index > 0) {
+                let prefix = cleanD2.substring(0, indices[0].index).trim();
+                if (prefix.length > 0) horseBlocks.push(prefix);
+            }
+            // 各馬名のインデックスでテキストを分割
+            for (let i = 0; i < indices.length; i++) {
+                let start = indices[i].index;
+                let end = (i + 1 < indices.length) ? indices[i+1].index : cleanD2.length;
+                horseBlocks.push(cleanD2.substring(start, end));
+            }
+        }
     }
 
     // D2ブロックと馬名のマッチング判定強化

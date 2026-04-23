@@ -216,7 +216,8 @@ textarea.input-data {
     padding: 4px;
     box-sizing: border-box;
     user-select: none;
-    min-width: 600px;
+    width: 100%;
+    max-width: 600px;
 }
 .segmented-control input { display: none; }
 .segmented-control label {
@@ -258,8 +259,8 @@ textarea.input-data {
     padding: 15px;
     border-radius: 6px;
     border: 1px solid #e1e8ed;
-    width: 100%;
-    max-width: 800px; /* 入力エリアの最大幅を制限 */
+    width: fit-content; /* 余白を抑制し要素に合わせる */
+    max-width: 100%;
     box-sizing: border-box;
 }
 .score-controls > :nth-child(1) { grid-column: 1 / 2; grid-row: 1; justify-self: start; }
@@ -399,10 +400,6 @@ h3 {
 .log-table { font-family: monospace; font-size: 11px; }
 
 /* プロンプト表示・操作ブロック */
-.prompt-block {
-    background: #eaf2f8;
-    border: 1px dashed #3498db;
-}
 
 .copy-btn {
     padding: 12px 30px;
@@ -453,10 +450,17 @@ h3 {
    レスポンシブ: レイアウト制御
 ========================================= */
 
-/* 脚質グリッド 850px以下での2列2段化 */
+/* 脚質グリッド 850px以下での2列2段化、比率ボタンの全幅化 */
 @media (max-width: 850px) {
     .pace-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+    .segmented-control {
+        max-width: 100%;
+    }
+    .segmented-control label {
+        padding: 0 5px;
+        font-size: 12px;
     }
 }
 
@@ -497,6 +501,14 @@ h3 {
     .btn-text-pc { display: none; }
     .btn-text-sp { display: inline; }
     .action-btn { padding: 10px 16px; }
+}
+
+/* 極小画面用微調整 */
+@media (max-width: 480px) {
+    .segmented-control label {
+        padding: 0 2px;
+        font-size: 11px;
+    }
 }
 
 /* 脚質バッジ */

@@ -491,15 +491,13 @@ window.renderUI = function(target, hasAuditIssues) {
     }
 
     resultHTML += `
-        <div class="prompt-block" style="border:none; padding:0; background:transparent; box-shadow:none; width:100%; box-sizing:border-box; max-width:100%;">
+        <div class="prompt-block" style="width:100%; box-sizing:border-box;">
             <details>
-                <summary style="cursor:pointer; padding: 15px; background:#eaf2f8; border:1px dashed #3498db; border-radius:8px;">
-                    <h3 style="margin:0; display:inline; line-height:1.5; border-left:none; padding-left:0;">検証用プロンプト (AI監査用)</h3>
+                <summary style="cursor:pointer; padding: 5px 0;">
+                    <h3 style="margin:0; display:inline; line-height:1.5;">検証用プロンプト (AI監査用)</h3>
                     <span style="font-size:12px; color:#666; margin-left:10px;">(クリックで展開)</span>
                 </summary>
-                <div class="prompt-content" style="padding:20px; border:1px solid #3498db; border-top:none; border-radius:0 0 8px 8px; background:#fff; width:100%; box-sizing:border-box;">
-                    <div id="promptControlArea"></div>
-                </div>
+                <div style="margin-top:15px;" id="promptControlArea"></div>
             </details>
         </div>
     `;
