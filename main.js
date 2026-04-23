@@ -156,7 +156,7 @@ window.runAnalysis = async function() {
                         promptObj.fullText = promptObj.debugPrompt;
                     } else {
                         // マクロ検証プロンプトの生成
-                        promptObj.macroPrompt = `[ATV-VERIFY-MACRO]\nSYSTEM_DIRECTIVE: あなたは厳格なデータ監査役である。提供されたD1、TB、RKを絶対的な事実として扱い、以下の【検証ステップ】を実行せよ。過去走データ（D2）は本ステップでは不要なため提供していない。途中式の省略を禁ずる。\n\n【検証ステップ】\nStep 1. 抽出の網羅性チェック\nD1に記載されている全出走馬をリストアップし、それがTB（内部データ）に漏れなく存在するか確認せよ。「〇番: 馬名 - 抽出OK」の形式で全頭分出力せよ。「以下略」は固く禁ずる。\n\nStep 2. ソートとNull処理の確認\nRKの順位が正しいか確認せよ。1位から最下位まで、隣り合う馬の数値（展開補正または中央加重など）を「1位(100.5) ＞ 2位(98.2) : 正常」の形式で全順位分比較して証明せよ。\n\n【データ】\nD1:\n${d1}\nTB:${tbStr}\nRK:${rkStr}`;
+                        promptObj.macroPrompt = `[ATV-VERIFY-MACRO]\nSYSTEM_DIRECTIVE: あなたは厳格なデータ監査役である。提供されたD1、TB、RKを絶対的な事実として扱い、以下の【検証ステップ】を実行せよ。過去走データ（D2）は本ステップでは不要なため提供していない。途中式の省略を禁ずる。\n\n【検証ステップ】\nStep 1. 抽出の網羅性チェック\nD1に記載されている全出走馬をリストアップし、それがTB（内部データ）に漏れなく存在するか確認せよ。「〇番: 馬名 - 抽出OK」の形式で全頭分出力せよ。「以下略」は固く禁ずる。\n\nStep 2. ソートとNull処理の確認\nRKの順位が正しいか確認せ位。1位から最下位まで、隣り合う馬の数値（展開補正または中央加重など）を「1位(100.5) ＞ 2位(98.2) : 正常」の形式で全順位分比較して証明せよ。\n\n【データ】\nD1:\n${d1}\nTB:${tbStr}\nRK:${rkStr}`;
 
                         // ミクロ検証プロンプトの生成（3頭ずつ分割）
                         let sortedForMicro = [...data.results].sort((a,b) => (parseInt(a.horseNo)||999) - (parseInt(b.horseNo)||999));
@@ -196,7 +196,7 @@ window.runAnalysis = async function() {
             } finally {
                 btn.disabled = false;
                 // 解析実行ボタンのテキスト復元時、spanタグ構造を復元するように修正
-                btn.innerHTML = `<span class="btn-text-pc">▶ 解析実行</span><span class="btn-text-sp">▶ 解析<br>実行</span>`;
+                btn.innerHTML = `<span class="btn-text-pc">▶ 解析実行</span><span class="btn-text-sp">▶ 解析</span>`;
             }
         }, 50);
 
@@ -205,7 +205,7 @@ window.runAnalysis = async function() {
         console.error(e);
         btn.disabled = false;
         // エラー時のテキスト復元
-        btn.innerHTML = `<span class="btn-text-pc">▶ 解析実行</span><span class="btn-text-sp">▶ 解析<br>実行</span>`;
+        btn.innerHTML = `<span class="btn-text-pc">▶ 解析実行</span><span class="btn-text-sp">▶ 解析</span>`;
     }
 };
 

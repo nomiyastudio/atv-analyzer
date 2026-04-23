@@ -342,9 +342,15 @@ window.renderPromptArea = function(ratioId) {
 };
 
 window.renderUI = function(target, hasAuditIssues) {
-    let auditHtml = !hasAuditIssues 
-        ? `<div style="border-left: 4px solid #27ae60; padding: 5px 10px; background: #f4fdf8; border-radius: 4px;"><span style="color: #27ae60; font-weight: bold; font-size: 13px;">✓ システム検証: 全項目正常</span></div>` 
-        : `<div style="border-left: 4px solid #e74c3c; padding: 5px 10px; background: #fdf2e9; border-radius: 4px;"><details><summary style="color: #e74c3c; font-weight: bold; font-size: 13px; cursor: pointer;">⚠ システム検証: 問題あり (クリックで詳細を展開)</summary><ul style="font-size: 13px; color: #333; margin-top: 10px; padding-left: 20px; margin-bottom: 0;"><li style="color: #e74c3c; font-weight: bold; margin-bottom:4px;">抽出または計算処理に致命的なエラーが検出されました。</li></ul></details></div>`;
+    let auditHtml = "";
+    let auditBadge = "";
+    if (!hasAuditIssues) {
+        // 正常時のシンプルバッジ表示
+        auditBadge = `<span style="margin-left: 10px; color: #27ae60; font-weight: bold; background: #f4fdf8; padding: 2px 6px; border-radius: 4px; border: 1px solid #27ae60; font-size: 13px;">✓</span>`;
+    } else {
+        // 異常時の詳細エラーブロック表示
+        auditHtml = `<div style="border-left: 4px solid #e74c3c; padding: 5px 10px; background: #fdf2e9; border-radius: 4px;"><details><summary style="color: #e74c3c; font-weight: bold; font-size: 13px; cursor: pointer;">⚠ システム検証: 問題あり (クリックで詳細を展開)</summary><ul style="font-size: 13px; color: #333; margin-top: 10px; padding-left: 20px; margin-bottom: 0;"><li style="color: #e74c3c; font-weight: bold; margin-bottom:4px;">抽出または計算処理に致命的なエラーが検出されました。</li></ul></details></div>`;
+    }
 
     let paceHtml = `<div class="pace-grid">`;
     let weightText = "計算中...";
@@ -398,7 +404,7 @@ window.renderUI = function(target, hasAuditIssues) {
     let resultHTML = `
         <div class="summary-block" style="width:100%; box-sizing:border-box;">
             <h3 style="margin: 0;">レース条件 ＆ システム検証</h3>
-            <p style="margin-top:10px;"><b>条件:</b> ${target.distance}m / ${target.trackType} ｜ <b>基準斤量:</b> ${weightText} / ${target.location}</p>
+            <p style="margin-top:10px;"><b>条件:</b> ${target.distance}m / ${target.trackType} ｜ <b>基準斤量:</b> ${weightText} / ${target.location}${auditBadge}</p>
             <div id="auditArea">${auditHtml}</div>
         </div>
     `;
@@ -434,9 +440,9 @@ window.renderUI = function(target, hasAuditIssues) {
                     <div class="score-control-group">
                         <label class="score-control-label">評価指標</label>
                         <select id="scoreMetric" class="score-input-select" onchange="window.runScoreAnalysis()">
-                            <option value="adjCentral">展開補正 (安定)</option>
+                            <option value="adjCentral" selected>展開補正 (安定)</option>
                             <option value="adjWeighted">展開補正 (ベスト)</option>
-                            <option value="centralATV" selected>中央加重 (安定)</option>
+                            <option value="centralATV">中央加重 (安定)</option>
                             <option value="weightedATV">加重平均 (ベスト)</option>
                         </select>
                     </div>
@@ -457,9 +463,7 @@ window.renderUI = function(target, hasAuditIssues) {
                         </div>
                     </div>
                 </div>
-                <div id="scoreResultContainer" class="table-responsive score-table-container">
-                    <p style="text-align:center; color:#777; font-size:13px; padding:10px 0; margin: 0;">比率を選択すると自動的にスコアが算出されます。</p>
-                </div>
+                <div id="scoreResultContainer" class="table-responsive score-table-container"></div>
             </div>
 
             <div class="details-block" style="width:100%; box-sizing:border-box;">

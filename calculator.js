@@ -559,7 +559,7 @@ window.runScoreAnalysis = function() {
     let selectedRatios = Array.from(document.querySelectorAll('.score-ratio-cb:checked')).map(cb => cb.value);
 
     if (selectedRatios.length === 0) {
-        document.getElementById('scoreResultContainer').innerHTML = `<p style="text-align:center; color:#777; font-size:13px; padding:10px 0; margin: 0;">比率を選択すると自動的にスコアが算出されます。</p>`;
+        document.getElementById('scoreResultContainer').innerHTML = "";
         return;
     }
     

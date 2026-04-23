@@ -9,8 +9,8 @@
         /* レイアウト・ボタン配置の追加・上書きCSS */
         .input-section {
             display: flex;
-            flex-direction: row; /* 左データ・右ボタンの横並びを維持 */
-            gap: 20px;
+            flex-direction: column; /* 上下配置に変更 */
+            gap: 15px;
             margin-bottom: 30px;
             width: 100%;
             max-width: 1400px;
@@ -19,20 +19,23 @@
         
         .inputs-container {
             display: flex;
+            flex-direction: row; /* 横幅が狭くてもD1/D2は横並びを維持 */
             gap: 20px;
-            flex: 1;
-            min-width: 0; /* データ投入エリアを柔軟に縮小可能にする */
+            width: 100%;
+            min-width: 0; 
         }
 
         .action-box {
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* ボタン群を横並び */
+            justify-content: flex-start; /* 左詰め */
             gap: 10px;
-            width: 140px; /* PC時のボタン幅 */
-            flex-shrink: 0; /* 画面が狭くなってもボタン幅を死守する */
+            width: 100%;
+            flex-shrink: 0; 
+            flex-wrap: wrap; /* 画面が極端に狭い場合の折り返し保険 */
         }
 
-        /* 共通アクションボタン */
+        /* 共通アクションボタン（独立したサイズ） */
         .action-btn {
             border: none;
             border-radius: 6px;
@@ -43,20 +46,20 @@
             transition: background-color 0.2s;
             text-decoration: none;
             line-height: 1.3;
-            padding: 10px;
+            padding: 10px 24px; /* 余白で自然なサイズを確保 */
             margin: 0;
-            width: 100%;
+            width: auto; /* 全幅ではなくコンテンツ幅に依存 */
             box-sizing: border-box;
         }
 
-        .btn-run { background: #18bc9c; color: #fff; font-size: 18px; flex: 2; cursor: pointer; }
+        .btn-run { background: #18bc9c; color: #fff; font-size: 16px; cursor: pointer; }
         .btn-run:hover { background-color: #128f76; }
         .btn-run:disabled { background-color: #95a5a6; cursor: not-allowed; }
 
-        .btn-load { background: #2980b9; color: #fff; font-size: 14px; flex: 1; cursor: pointer; }
+        .btn-load { background: #2980b9; color: #fff; font-size: 14px; cursor: pointer; }
         .btn-load:hover { background-color: #1f618d; }
 
-        .btn-save { background: #27ae60; color: #fff; font-size: 14px; flex: 1; cursor: pointer; }
+        .btn-save { background: #27ae60; color: #fff; font-size: 14px; cursor: pointer; }
         .btn-save:hover { background-color: #219150; }
 
         .btn-text-sp { display: none; }
@@ -64,15 +67,13 @@
         /* スマホ版レイアウト */
         @media (max-width: 768px) {
             .inputs-container { 
-                flex-direction: column; 
-            }
-            .action-box {
-                width: 90px; /* スマホ時は少しスリムな固定幅にし、文字を2行にする */
+                gap: 10px; /* スマホ時は少し隙間を詰めて横並びを確保 */
             }
             .btn-text-pc { display: none; }
-            .btn-text-sp { display: block; text-align: center; }
-            .btn-run { font-size: 16px; }
-            .btn-load, .btn-save { font-size: 12px; }
+            .btn-text-sp { display: inline; } /* 2行ではなく短縮テキストを1行で表示 */
+            .action-btn { padding: 10px 16px; } /* スマホ時は少し小さく */
+            .btn-run { font-size: 15px; }
+            .btn-load, .btn-save { font-size: 13px; }
         }
     </style>
 </head>
@@ -94,29 +95,29 @@
         <div class="input-section">
             <div class="inputs-container">
                 <div class="input-box">
-                    <label>データ①（出馬表・馬名辞書用） <button class="paste-btn" onclick="pasteFromClipboard('data1')">📋 貼り付け</button></label>
+                    <label>データ①（出馬表・馬名辞書用） <button class="paste-btn" onclick="pasteFromClipboard('data1')">📋 貼付</button></label>
                     <textarea id="data1" class="input-data" placeholder="ここにデータ①を貼り付けてください"></textarea>
                 </div>
                 <div class="input-box">
-                    <label>データ②（馬柱データ） <button class="paste-btn" onclick="pasteFromClipboard('data2')">📋 貼り付け</button></label>
+                    <label>データ②（馬柱データ） <button class="paste-btn" onclick="pasteFromClipboard('data2')">📋 貼付</button></label>
                     <textarea id="data2" class="input-data" placeholder="ここにデータ②を貼り付けてください"></textarea>
                 </div>
             </div>
             <div class="action-box">
                 <button id="runBtn" class="action-btn btn-run" onclick="runAnalysis()">
                     <span class="btn-text-pc">▶ 解析実行</span>
-                    <span class="btn-text-sp">▶ 解析<br>実行</span>
+                    <span class="btn-text-sp">▶ 解析</span>
                 </button>
                 
                 <input type="file" id="loadProjectInput" accept=".json" style="display: none;" onchange="window.loadProject(event)">
                 <label for="loadProjectInput" class="action-btn btn-load">
                     <span class="btn-text-pc">📂 データ読込</span>
-                    <span class="btn-text-sp">📂 データ<br>読込</span>
+                    <span class="btn-text-sp">📂 読込</span>
                 </label>
                 
                 <button class="action-btn btn-save" onclick="window.saveProject()">
                     <span class="btn-text-pc">💾 データ保存</span>
-                    <span class="btn-text-sp">💾 データ<br>保存</span>
+                    <span class="btn-text-sp">💾 保存</span>
                 </button>
             </div>
         </div>
