@@ -52,23 +52,42 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         if (matchNo) horseNo = matchNo[1];
 
         let age = 4;
-        let ageMatch = headerArea.match(/(?:牝|牡|セ)(\d+)/);
-        if (ageMatch) age = parseInt(ageMatch[1], 10);
-
         let sex = "牡";
-        let sexMatch = headerArea.match(/(牝|牡|セ)/);
-        if (sexMatch) sex = sexMatch[1];
+        let sexAgeMatch = headerArea.match(/(牝|牡|セ)(\d+)/);
+        let afterAgeArea = headerArea; // 基準点より下のテキスト領域
+        
+        if (sexAgeMatch) {
+            sex = sexAgeMatch[1];
+            age = parseInt(sexAgeMatch[2], 10);
+            afterAgeArea = headerArea.substring(sexAgeMatch.index);
+        }
 
         let jockeyMark = "";
-        let markMatch = headerArea.match(/[☆△▲★◇](?=[一-龥ぁ-んァ-ヴー])/);
-        if (markMatch) jockeyMark = markMatch[0];
+        
+        // --- 新規追加: D1（出馬表）からの減量マークのクロス・リファレンス抽出 ---
+        let d1Element = document.getElementById('data1');
+        if (d1Element && d1Element.value && horseName !== "不明") {
+            let d1Text = d1Element.value;
+            // 馬名 → 性別・年齢 → 斤量(数字) → 減量マーク の順を追跡し、斤量直後の記号のみを捕捉
+            let d1Regex = new RegExp(horseName + "[^\\r\\n]*\\s+(?:牝|牡|セ)\\d+\\s+(?:4[8-9]\\.[05]|5\\d\\.[05]|6[0-5]\\.[05])\\s*([☆△▲★◇])");
+            let d1Match = d1Text.match(d1Regex);
+            if (d1Match) {
+                jockeyMark = d1Match[1];
+            }
+        }
+
+        // D1で見つからなかった場合のみ、従来通りD2の限定領域（afterAgeArea）からフォールバック探索
+        if (!jockeyMark) {
+            let markMatch = afterAgeArea.match(/[☆△▲★◇](?=[一-龥ぁ-んァ-ヴー])/);
+            if (markMatch) jockeyMark = markMatch[0];
+        }
 
         let currentWeight = 55.0;
-        let cwMatch = headerArea.match(/(?:牝|牡|セ)\d[\s\S]{1,50}?(4[8-9]\.[05]|5\d\.[05]|6[0-5]\.[05])(?=$|\s|\n)/);
+        let cwMatch = afterAgeArea.match(/(?:牝|牡|セ)\d[\s\S]{1,100}?(4[8-9]\.[05]|5\d\.[05]|6[0-5]\.[05])(?=$|\s|\n)/);
         if (cwMatch) {
             currentWeight = parseFloat(cwMatch[1]);
         } else {
-            let cwMatchFallback = headerArea.match(/(?:^|\s|\n)(4[8-9]\.[05]|5\d\.[05]|6[0-5]\.[05])(?=$|\s|\n)/);
+            let cwMatchFallback = afterAgeArea.match(/(?:^|\s|\n)(4[8-9]\.[05]|5\d\.[05]|6[0-5]\.[05])(?=$|\s|\n)/);
             if (cwMatchFallback) currentWeight = parseFloat(cwMatchFallback[1]);
         }
 

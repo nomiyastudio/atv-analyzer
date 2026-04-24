@@ -125,6 +125,11 @@ window.analyzeWeightRule = function(results, target) {
         let sexAllowance = (h.sex === "牝" || h.sex === "牝馬") ? (!is2yo ? 2.0 : (raceMonth >= 10 ? 1.0 : 0.0)) : 0.0;
         let jockeyAllowance = {'☆':1.0, '△':2.0, '◇':2.0, '▲':3.0, '★':4.0}[h.jockeyMark] || 0.0;
         let ageAllowance = getAgeAllowance(h.age, raceMonth, distance);
+        
+        h.sexAllowance = sexAllowance;
+        h.jockeyAllowance = jockeyAllowance;
+        h.ageAllowance = ageAllowance;
+
         h.baseWeight = actualW + sexAllowance + jockeyAllowance + ageAllowance;
         baseWeights.push(h.baseWeight);
     });

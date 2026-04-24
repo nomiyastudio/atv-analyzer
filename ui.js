@@ -151,8 +151,11 @@ window.renderAvgRanking = function(ratioId) {
         let wBg = (h.weightedATV !== null) ? (h.weightedATV <= wThresh.t1 ? '#90caf9' : (h.weightedATV <= wThresh.t2 ? '#e3f2fd' : 'transparent')) : 'transparent';
         let exceptionMark = h.onlyYoshiba ? `<br><span style="color:#e67e22; font-size:10px; font-weight:bold;">(洋)</span>` : (h.onlyNoshiba ? `<br><span style="color:#e67e22; font-size:10px; font-weight:bold;">(野)</span>` : "");
         let wakuColor = window.getWakuColor(h.horseNo, res.length);
-        let diff = isFlatRace ? (h.currentWeight - flatBaseWeight) : (h.currentWeight - avgActualW);
+        
+        // 定量戦の場合は「騎手恩恵 + 年齢恩恵」のみをマイナス差分として強調判定に使用し、牝馬恩恵は除外する
+        let diff = isFlatRace ? -( (h.jockeyAllowance || 0) + (h.ageAllowance || 0) ) : (h.currentWeight - avgActualW);
         let wCol = (diff <= -2.5 || diff >= 2.5) ? (diff < 0 ? '#0055ff' : '#e74c3c') : (diff <= -1.5 || diff >= 1.5 ? (diff < 0 ? '#0077cc' : '#e67e22') : '#555555');
+        
         let isPaceSetter = hasNige ? (h.styleClass === 1) : (h.styleClass === 2 && h.avgPosRatio === minPaceRatio && h.avgPosRatio !== null);
         let paceTdStyle = `text-align:center; vertical-align:middle; padding:4px; border:1px solid var(--border-color);` + (isPaceSetter ? `background-color: #fff3e0; background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,167,38,0.15) 8px, rgba(255,167,38,0.15) 16px); box-shadow: inset 0 0 0 2px #ffa726; border: 1px solid #ff9800;` : ``);
 
@@ -356,7 +359,7 @@ window.renderUI = function(target, hasAuditIssues) {
     let weightText = "計算中...";
 
     if (!hasAuditIssues) {
-        let results03 = window.processedData['03'].results;
+        let results03 = window.processedData['03']?.results || [];
         let totalHorses = results03.length;
 
         let weightAnalysis = window.analyzeWeightRule(results03, target);
