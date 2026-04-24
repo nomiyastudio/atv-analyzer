@@ -464,7 +464,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             return aNo - bNo;
         });
         sorted.forEach((item, index) => {
-            results.find(r => r.horseNo === item.horseNo)[rankKey] = item[sortKey] !== null ? (index + 1) : "-";
+            item[rankKey] = item[sortKey] !== null ? (index + 1) : "-";
         });
         return sorted;
     };
