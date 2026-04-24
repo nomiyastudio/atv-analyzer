@@ -320,7 +320,7 @@ window.renderPromptArea = function(ratioId) {
             <div style="margin-bottom:12px;">
                 <label style="font-size:12px; color:#2c3e50; margin-bottom:5px; display:block;">▼ ステップ1: 全体検証（抽出・ソート）</label>
                 <div style="display:flex; gap:5px; justify-content:flex-start;">
-                    <button class="copy-btn" onclick="window.copyPrompt('macro', 0, this)" style="background:#2980b9; padding:12px 20px; flex:none; font-size:13px; min-width:max-content;">📋 [全体] マクロ検証プロンプトをコピー</button>
+                    <button class="copy-btn" onclick="window.copyPrompt('macro', 0, this)" style="background:#2980b9; padding:12px 20px; flex:none; font-size:13px; min-width:max-content;">📋 全体検証（抽出・ソート）</button>
                     <button class="action-btn btn-save" onclick="window.downloadPrompt('macro', 0)" style="width:45px; height:45px; flex:none;">💾</button>
                 </div>
             </div>`;
@@ -345,8 +345,8 @@ window.renderUI = function(target, hasAuditIssues) {
     let auditHtml = "";
     let auditBadge = "";
     if (!hasAuditIssues) {
-        // 正常時のシンプルバッジ表示
-        auditBadge = `<span style="margin-left: 10px; color: #27ae60; font-weight: bold; background: #f4fdf8; padding: 2px 6px; border-radius: 4px; border: 1px solid #27ae60; font-size: 13px;">✓</span>`;
+        // 正常時のシンプルバッジ表示 (右上固定用インラインスタイル付与)
+        auditBadge = `<span style="position: absolute; top: 20px; right: 20px; color: #27ae60; font-weight: bold; background: #f4fdf8; padding: 2px 6px; border-radius: 4px; border: 1px solid #27ae60; font-size: 13px;">✓</span>`;
     } else {
         // 異常時の詳細エラーブロック表示
         auditHtml = `<div style="border-left: 4px solid #e74c3c; padding: 5px 10px; background: #fdf2e9; border-radius: 4px;"><details><summary style="color: #e74c3c; font-weight: bold; font-size: 13px; cursor: pointer;">⚠ システム検証: 問題あり (クリックで詳細を展開)</summary><ul style="font-size: 13px; color: #333; margin-top: 10px; padding-left: 20px; margin-bottom: 0;"><li style="color: #e74c3c; font-weight: bold; margin-bottom:4px;">抽出または計算処理に致命的なエラーが検出されました。</li></ul></details></div>`;
@@ -404,7 +404,8 @@ window.renderUI = function(target, hasAuditIssues) {
     let resultHTML = `
         <div class="summary-block" style="width:100%; box-sizing:border-box;">
             <h3 style="margin: 0;">レース条件 ＆ システム検証</h3>
-            <p style="margin-top:10px;"><b>条件:</b> ${target.distance}m / ${target.trackType} ｜ <b>基準斤量:</b> ${weightText} / ${target.location}${auditBadge}</p>
+            <p style="margin-top:10px;"><b>条件:</b> ${target.distance}m / ${target.trackType} ｜ <b>基準斤量:</b> ${weightText} / ${target.location}</p>
+            ${auditBadge}
             <div id="auditArea">${auditHtml}</div>
         </div>
     `;

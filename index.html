@@ -95,11 +95,19 @@
         <div class="input-section">
             <div class="inputs-container">
                 <div class="input-box">
-                    <label>データ①（出馬表・馬名辞書用） <button class="paste-btn" onclick="pasteFromClipboard('data1')">📋 貼付</button></label>
+                    <label>
+                        <span class="label-pc">データ①（出馬表）</span>
+                        <span class="label-sp">データ①</span>
+                    </label>
+                    <button class="paste-btn" onclick="pasteFromClipboard('data1')">📋 貼付</button>
                     <textarea id="data1" class="input-data" placeholder="ここにデータ①を貼り付けてください"></textarea>
                 </div>
                 <div class="input-box">
-                    <label>データ②（馬柱データ） <button class="paste-btn" onclick="pasteFromClipboard('data2')">📋 貼付</button></label>
+                    <label>
+                        <span class="label-pc">データ②（馬柱）</span>
+                        <span class="label-sp">データ②</span>
+                    </label>
+                    <button class="paste-btn" onclick="pasteFromClipboard('data2')">📋 貼付</button>
                     <textarea id="data2" class="input-data" placeholder="ここにデータ②を貼り付けてください"></textarea>
                 </div>
             </div>

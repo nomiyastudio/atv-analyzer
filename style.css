@@ -117,6 +117,7 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     border: 1px solid var(--border-color);
     box-sizing: border-box;
+    position: relative;
 }
 .action-box {
     display: flex;
@@ -134,8 +135,17 @@ label {
     color: var(--primary-color);
     font-size: 14px;
 }
+.input-box label {
+    padding-right: 60px;
+}
+
+/* ラベル表示制御 */
+.label-sp { display: none; }
+
 .paste-btn {
-    float: right;
+    position: absolute;
+    top: 15px;
+    right: 15px;
     padding: 4px 10px;
     background-color: #3498db;
     color: white;
@@ -201,6 +211,7 @@ textarea.input-data {
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     box-sizing: border-box;
+    position: relative;
 }
 
 /* 脚質グルーピング: 固定4列表示（850px以下で2段に折り返し） */
@@ -378,6 +389,9 @@ h3 {
     padding-left: 8px;
     margin-bottom: 15px;
 }
+.summary-block h3 {
+    padding-right: 40px;
+}
 .sortable-header {
     cursor: pointer;
     background-color: #eaf2f8;
@@ -498,6 +512,10 @@ h3 {
     .inputs-container { 
         gap: 10px;
     }
+    /* ラベル表記の短縮 */
+    .label-pc { display: none; }
+    .label-sp { display: inline; }
+
     .btn-text-pc { display: none; }
     .btn-text-sp { display: inline; }
     .action-btn { padding: 10px 16px; }
