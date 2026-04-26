@@ -95,7 +95,8 @@ window.pasteFromClipboard = async function(targetId) {
 };
 
 window.copyPrompt = async function(type, index, btnElement) {
-    let activeRadio = document.querySelector('input[name="ratio"]:checked')?.value || '03';
+    // DOMクエリを廃止し、ステートを使用して比率を取得
+    let activeRadio = window.globalRatioId || '03';
     let prompts = window.generatedPrompts[activeRadio];
     if (!prompts) return;
 
@@ -127,7 +128,8 @@ window.copyPrompt = async function(type, index, btnElement) {
 };
 
 window.downloadPrompt = function(type, index) {
-    let activeRadio = document.querySelector('input[name="ratio"]:checked')?.value || '03';
+    // DOMクエリを廃止し、ステートを使用して比率を取得
+    let activeRadio = window.globalRatioId || '03';
     let prompts = window.generatedPrompts[activeRadio];
     if (!prompts) return;
 

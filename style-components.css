@@ -1,0 +1,309 @@
+/* ==========================================
+// style-components.css
+// ========================================== */
+label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+    font-size: 14px;
+}
+.input-box label {
+    padding-right: 60px;
+}
+
+/* ラベル表示制御 */
+.label-sp { display: none; }
+
+.paste-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 4px 10px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.paste-btn:hover { background-color: #2980b9; }
+
+textarea.input-data {
+    width: 100%;
+    height: 75px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+/* アクションボタン共通設定 */
+.action-btn {
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    text-decoration: none;
+    line-height: 1.3;
+    padding: 10px 24px; /* 余白で自然なサイズを確保 */
+    margin: 0;
+    width: auto;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.btn-run { background-color: var(--secondary-color); color: white; font-size: 16px; }
+.btn-run:hover { background-color: #128f76; }
+.btn-run:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
+.btn-load { background-color: #2980b9; color: white; font-size: 14px; }
+.btn-load:hover { background-color: #1f618d; }
+
+.btn-save { background-color: #27ae60; color: white; font-size: 14px; }
+.btn-save:hover { background-color: #219150; }
+
+.btn-text-sp { display: none; }
+
+/* セグメントコントロール (ピル型UI) */
+.segmented-control {
+    display: inline-flex;
+    padding: 4px;
+    box-sizing: border-box;
+    user-select: none;
+    width: 100%;
+    max-width: 600px;
+}
+.segmented-control input { display: none; }
+.segmented-control label {
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    margin: 0;
+    white-space: nowrap;
+    padding: 0 15px;
+}
+.style-pill {
+    background-color: #eee;
+    border-radius: 50px;
+}
+.style-pill label { border-radius: 50px; color: #666; padding: 0 5px; }
+.style-pill input:checked + label {
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.score-control-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--primary-color);
+    white-space: nowrap;
+    margin: 0;
+}
+.score-input-select, .score-input-number {
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    outline: none;
+}
+.score-input-number {
+    width: 55px;
+    text-align: center;
+}
+.score-checkbox-label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    font-size: 13px;
+    margin: 0;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.score-checkbox-label input {
+    margin-right: 4px;
+}
+
+h3 {
+    font-size: 16px;
+    margin-top: 0;
+    color: var(--primary-color);
+    border-left: 4px solid var(--secondary-color);
+    padding-left: 8px;
+    margin-bottom: 15px;
+}
+.summary-block h3 {
+    padding-right: 40px;
+}
+
+/* プロンプト表示・操作ブロック */
+.copy-btn {
+    padding: 12px 30px;
+    background-color: #34495e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.copy-btn:hover { background-color: #2c3e50; }
+
+.dl-btn {
+    padding: 12px 30px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.dl-btn:hover { background-color: #128f76; }
+
+.highlight-rank-1 { background-color: #90caf9; border: 2px solid #42a5f5 !important; }
+.highlight-rank-2 { background-color: #bbdefb; border: 2px solid #64b5f6 !important; }
+.highlight-rank-3 { background-color: #e3f2fd; border: 2px solid #90caf9 !important; }
+.highlight-trim-main { background-color: #c8e6c9; border: 2px solid #66bb6a !important; }
+.highlight-trim-sub { background-color: #f1f8e9; border: 2px dashed #81c784 !important; }
+.highlight-horse-1 { background-color: #ffcc80; border: 2px solid #ffa726 !important; }
+.highlight-horse-2 { background-color: #ffe0b2; border: 2px solid #ffcc80 !important; }
+.highlight-horse-3 { background-color: #fff3e0; border: 2px dashed #ffb74d !important; }
+.match-highlight { color: var(--match-color); font-weight: bold; }
+.skip-text { color: #95a5a6; font-size: 10px; }
+.rank-badge { font-size: 11px; font-weight: normal; color: #555; }
+
+/* 脚質バッジ */
+.pace-badge-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 56px;
+    width: 100%;
+}
+
+.pace-shape {
+    background-color: var(--badge-color);
+    color: #fff;
+    font-weight: 900;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    margin-bottom: 4px;
+    width: 24px;
+    font-size: 14px;
+}
+
+.pace-shape.shape-nige {
+    height: 38px;
+    clip-path: polygon(50% 0, 100% 12px, 100% 100%, 0 100%, 0 12px);
+    align-items: flex-end;
+    padding-bottom: 5px;
+}
+
+.pace-shape.shape-senko {
+    height: 34px;
+    border-radius: 12px 12px 0 0;
+    align-items: flex-end;
+    padding-bottom: 3px;
+}
+
+.pace-shape.shape-sashi {
+    height: 34px;
+    border-radius: 0 0 12px 12px;
+    align-items: flex-start;
+    padding-top: 3px;
+}
+
+.pace-shape.shape-oikomi {
+    height: 38px;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), 50% 100%, 0 calc(100% - 12px));
+    align-items: flex-start;
+    padding-top: 5px;
+}
+
+.pace-pct-text {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--badge-color);
+    margin-top: auto;
+    line-height: 1;
+}
+
+/* モーダル */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;
+}
+.modal-content {
+    background: #fff; padding: 25px; border-radius: 8px; max-width: 400px; text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.modal-buttons { display: flex; gap: 15px; justify-content: center; }
+.modal-buttons button {
+    padding: 10px 15px; border: none; border-radius: 4px; color: #fff; cursor: pointer; font-weight: bold;
+}
+.btn-sep { background-color: #7f8c8d; }
+.btn-oct { background-color: #2980b9; }
+
+/* HTMLクレンジング用代替クラス */
+.header-title {
+    margin: 0;
+}
+.modal-description {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* レスポンシブ: コンポーネント制御 */
+@media (max-width: 850px) {
+    .segmented-control {
+        max-width: 100%;
+    }
+    .segmented-control label {
+        padding: 0 5px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* ラベル表記の短縮 */
+    .label-pc { display: none; }
+    .label-sp { display: inline; }
+
+    .btn-text-pc { display: none; }
+    .btn-text-sp { display: inline; }
+    .action-btn { padding: 10px 16px; }
+    .btn-run { font-size: 15px; }
+    .btn-load, .btn-save { font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+    .segmented-control label {
+        padding: 0 2px;
+        font-size: 11px;
+    }
+}
+
+.modal-overlay.hidden-element {
+    display: none;
+}

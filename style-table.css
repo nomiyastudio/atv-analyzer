@@ -1,0 +1,79 @@
+/* ==========================================
+// style-table.css
+// ========================================== */
+.score-table-container {
+    padding-top: 0; /* 不要なメッセージ削除に伴う調整 */
+}
+
+.score-table-container table {
+    width: max-content;
+    table-layout: fixed;
+    margin: 0;
+}
+
+.col-score-rank, .score-table-container td:nth-child(1) { width: 40px !important; min-width: 40px !important; max-width: 40px !important; box-sizing: border-box; overflow: hidden; }
+.col-score-waku, .score-table-container td:nth-child(2) { width: 28px !important; min-width: 28px !important; max-width: 28px !important; box-sizing: border-box; padding-left: 2px; padding-right: 2px; overflow: hidden; }
+.col-score-umaban, .score-table-container td:nth-child(3) { width: 32px !important; min-width: 32px !important; max-width: 32px !important; box-sizing: border-box; padding-left: 2px; padding-right: 2px; overflow: hidden; }
+.col-score-name, .score-table-container td:nth-child(4) { width: 180px !important; min-width: 180px !important; max-width: 180px !important; box-sizing: border-box; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-score-total, .score-table-container td:nth-child(5) { width: 85px !important; min-width: 85px !important; max-width: 85px !important; box-sizing: border-box; background: #fbfcfc; font-weight: bold; overflow: hidden; }
+.col-score-ratio, .score-table-container td:nth-child(n+6) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; box-sizing: border-box; overflow: hidden; }
+
+/* レスポンシブ用 */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 30px;
+    padding-bottom: 4px;
+}
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 4px;
+}
+
+table {
+    width: auto;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+td.align-left { text-align: left; }
+th {
+    background-color: #f3f3f3;
+    font-weight: bold;
+}
+.col-waku { width: 24px; min-width: 24px; padding-left: 2px; padding-right: 2px; }
+.col-umaban { width: 24px; min-width: 24px; padding-left: 2px; padding-right: 2px; }
+.col-weight { width: 26px; min-width: 26px; padding-left: 2px; padding-right: 2px; }
+.col-interval { width: 45px; min-width: 45px; padding-left: 4px; padding-right: 4px; }
+.col-narrow { width: 40px; min-width: 40px; padding-left: 4px; padding-right: 4px; }
+
+.sortable-header {
+    cursor: pointer;
+    background-color: #eaf2f8;
+    transition: background-color 0.2s;
+}
+.sortable-header:hover {
+    background-color: #d4e6f1;
+}
+.active-sort {
+    background-color: #fffbf0 !important;
+    border-bottom: 3px solid var(--secondary-color) !important;
+}
+.sort-desc {
+    font-size: 10px;
+    font-weight: normal;
+    color: #555;
+}
+.log-table td.success { color: #27ae60; font-weight: bold; }
+.log-table td.error { color: #e74c3c; font-weight: bold; }
+.log-table { font-family: monospace; font-size: 11px; }

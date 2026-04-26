@@ -32,6 +32,7 @@ window.runAnalysis = async function() {
     window.processedData = {};
     window.globalSortType = 'centralATV'; 
     window.globalCorrectionMode = 'centralATV';
+    window.globalRatioId = '03'; // ステートのリセット
 
     try {
         const monthData = await window.detectRaceMonth(d1);
@@ -105,7 +106,7 @@ window.runAnalysis = async function() {
                 });
 
                 window.renderUI(target, globalHasAuditIssues);
-                window.switchRatio('03');
+                window.switchRatio(window.globalRatioId);
 
             } catch (e) {
                 alert("エラーが発生しました: " + e.message);
@@ -127,6 +128,7 @@ window.runAnalysis = async function() {
 };
 
 window.switchRatio = function(id) {
+    window.globalRatioId = id; // ステートの更新
     let radio = document.getElementById('ratio-' + id);
     if (radio) {
         radio.checked = true;
@@ -164,8 +166,6 @@ window.handleHeaderClick = function(clickedSortType) {
         window.globalSortType = clickedSortType;
     }
 
-    let activeRadio = document.querySelector('input[name="ratio"]:checked');
-    if (activeRadio) {
-        window.switchRatio(activeRadio.value);
-    }
+    // DOMクエリを廃止し、ステートを使用して再描画
+    window.switchRatio(window.globalRatioId);
 };

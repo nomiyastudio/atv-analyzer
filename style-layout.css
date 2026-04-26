@@ -1,0 +1,169 @@
+/* ==========================================
+// style-layout.css
+// ========================================== */
+.container {
+    margin: 0;
+}
+
+.input-section {
+    display: flex;
+    flex-direction: column; /* 上下配置に変更 */
+    gap: 15px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 1400px;
+    align-items: stretch;
+}
+
+.inputs-container {
+    display: flex;
+    flex-direction: row; /* 横幅が狭くてもD1/D2は横並びを維持 */
+    width: 100%;
+    gap: 20px;
+    min-width: 0;
+}
+
+.input-box {
+    flex: 1;
+    min-width: 0;
+    background: var(--box-bg);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+    position: relative;
+}
+
+.action-box {
+    display: flex;
+    flex-direction: row; /* ボタン群を横並び */
+    justify-content: flex-start; /* 左詰め */
+    gap: 10px;
+    width: 100%;
+    flex-shrink: 0; 
+    flex-wrap: wrap; /* 画面が極端に狭い場合の折り返し保険 */
+}
+
+/* 各種解析ブロック */
+.summary-block, .prompt-block, .details-block, .pace-pattern-block, .pattern-block, .score-analysis-block {
+    width: 100%;
+    max-width: 100%;
+    background: var(--box-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* 脚質グルーピング: 固定4列表示 */
+.pace-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+/* 多角展開スコア分析: 二段表示の統一と幅制御 */
+.score-controls {
+    display: grid;
+    grid-template-columns: max-content max-content auto;
+    justify-content: start;
+    column-gap: 20px;
+    row-gap: 15px;
+    align-items: center;
+    margin-bottom: 15px;
+    background: #fbfcfc;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e1e8ed;
+    width: fit-content; /* 余白を抑制し要素に合わせる */
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.score-controls > :nth-child(1) { grid-column: 1 / 2; grid-row: 1; justify-self: start; }
+.score-controls > :nth-child(2) { grid-column: 2 / 3; grid-row: 1; justify-self: start; }
+.score-controls > :nth-child(3) { grid-column: 1 / 4; grid-row: 2; justify-self: start; }
+
+.score-control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.score-checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.score-checkbox-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* 常に左詰め */
+}
+
+.prompt-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* レスポンシブ: レイアウト制御 */
+@media (max-width: 850px) {
+    /* 脚質グリッド 850px以下での2列2段化 */
+    .pace-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 800px) {
+    /* モバイルサイズ (スマホ幅) のスコア分析配置 */
+    .score-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    .score-control-group {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+    .score-checkbox-container {
+        flex-direction: row; 
+        align-items: flex-start;
+    }
+    .score-checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        width: 100%;
+        justify-content: flex-start; /* 確実に左詰めにする設定 */
+    }
+}
+
+@media (max-width: 768px) {
+    .inputs-container { 
+        gap: 10px; /* スマホ時は少し隙間を詰めて横並びを確保 */
+    }
+}
+
+/* HTMLクレンジング用代替クラス */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.hidden-element {
+    display: none;
+}

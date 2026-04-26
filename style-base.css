@@ -1,0 +1,21 @@
+/* ==========================================
+// style-base.css
+// ========================================== */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #18bc9c;
+    --bg-color: #f8f9fa;
+    --box-bg: #ffffff;
+    --border-color: #dee2e6;
+    --match-color: #d35400;
+}
+
+body {
+    font-family: 'Segoe UI', Meiryo, system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    /* UIルーラー(25px)の表示分、上部余白を押し下げ (20px + 25px = 45px) */
+    padding-top: 45px;
+}
