@@ -2,7 +2,7 @@
 // parser.js
 // ==========================================
 window.resolveMonth = function(month) {
-    document.getElementById('month-prompt-modal').style.display = 'none';
+    document.getElementById('month-prompt-modal').classList.add('hidden-element');
     if (window.resolveMonthCallback) window.resolveMonthCallback(month);
 };
 
@@ -18,7 +18,7 @@ window.detectRaceMonth = async function(d1Text) {
     if (uniqueMonths.includes(9) && uniqueMonths.includes(10)) {
         raceMonth = await new Promise(resolve => {
             window.resolveMonthCallback = resolve;
-            document.getElementById('month-prompt-modal').style.display = 'flex';
+            document.getElementById('month-prompt-modal').classList.remove('hidden-element');
         });
     } else if (uniqueMonths.length > 0) {
         raceMonth = uniqueMonths[uniqueMonths.length - 1];

@@ -104,11 +104,8 @@ window.analyzeWeightRule = function(results, target) {
         else if (dist <= 1600) distCat = 1;
         else if (dist < 2200) distCat = 2;
         else distCat = 3;
-        const table = {
-            6: [3.0, 3.0, 3.0, 4.0], 7: [2.0, 3.0, 3.0, 4.0], 8: [2.0, 2.0, 3.0, 3.0],
-            9: [1.0, 2.0, 2.0, 3.0], 10: [0.0, 1.0, 2.0, 2.0], 11: [0.0, 1.0, 1.0, 2.0],
-            12: [0.0, 0.0, 1.0, 1.0]
-        };
+        
+        const table = window.ATV_CONFIG.AGE_ALLOWANCE;
         return table[month] ? table[month][distCat] : 0.0;
     };
 
