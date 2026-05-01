@@ -133,7 +133,7 @@ window.renderUI = function(target, hasAuditIssues) {
                     let wColor = window.getWakuColor(h.horseNo, totalHorses);
                     let wakuBadge = `<span style="display:inline-block; width:16px; height:16px; line-height:16px; text-align:center; background-color:${wColor.bg}; color:${wColor.text}; border:1px solid ${wColor.border}; border-radius:3px; margin-right:4px; font-size:10px;">${h.horseNo}</span>`;
                     
-                    paceHtml += `<li style="margin-bottom:6px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center;" title="${h.horseNo}. ${h.horseName}">
+                    paceHtml += `<li style="margin-bottom:2px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center;" title="${h.horseNo}. ${h.horseName}">
                         ${wakuBadge}
                         <span style="background-color:${hex}; color:${textCol}; border:1px solid ${borderCol}; padding: 2px 6px; border-radius: 4px; display:inline-block; width:100%; box-sizing:border-box;">${h.horseName}</span>
                     </li>`;
@@ -166,9 +166,9 @@ window.renderUI = function(target, hasAuditIssues) {
                     <label for="ratio-00">0:10</label>
                     <input type="radio" name="radio" id="ratio-01" value="01" onchange="window.switchRatio('01')">
                     <label for="ratio-01">1:9</label>
-                    <input type="radio" name="radio" id="ratio-02" value="02" onchange="window.switchRatio('02')">
+                    <input type="radio" name="radio" id="ratio-02" value="02" onchange="window.switchRatio('02')" checked>
                     <label for="ratio-02">2:8</label>
-                    <input type="radio" name="radio" id="ratio-03" value="03" onchange="window.switchRatio('03')" checked>
+                    <input type="radio" name="radio" id="ratio-03" value="03" onchange="window.switchRatio('03')">
                     <label for="ratio-03">3:7</label>
                     <input type="radio" name="radio" id="ratio-04" value="04" onchange="window.switchRatio('04')">
                     <label for="ratio-04">4:6</label>
@@ -184,15 +184,24 @@ window.renderUI = function(target, hasAuditIssues) {
                     <div class="score-control-group">
                         <label class="score-control-label">評価指標</label>
                         <select id="scoreMetric" class="score-input-select" onchange="window.runScoreAnalysis()">
-                            <option value="adjCentral" selected>展開補正 (安定)</option>
-                            <option value="adjWeighted">展開補正 (ベスト)</option>
+                            <option value="adjCentral">展開補正 (安定)</option>
+                            <option value="adjWeighted" selected>展開補正 (ベスト)</option>
                             <option value="centralATV">中央加重 (安定)</option>
                             <option value="weightedATV">加重平均 (ベスト)</option>
                         </select>
                     </div>
                     <div class="score-control-group">
-                        <label class="score-control-label">許容差分閾値 (Δ)</label>
-                        <input type="number" id="scoreThreshold" value="0.50" step="0.01" min="0.01" class="score-input-number">
+                        <label class="score-control-label" style="margin-right: 8px;">許容差分閾値 (Δ)</label>
+                        <div style="display: flex; align-items: stretch;">
+                            <input type="number" id="scoreThreshold" value="0.50" step="0.01" min="0.01" class="score-input-number" style="width: 55px; border-right: none; border-radius: 4px 0 0 4px; z-index: 1;">
+                            <select class="score-input-select" style="width: 24px; padding: 0; border-radius: 0 4px 4px 0; border-left: 1px solid #ccc; cursor: pointer; outline: none; margin-left: -1px; z-index: 2; appearance: none; -webkit-appearance: none; text-align: center; text-align-last: center;" onchange="document.getElementById('scoreThreshold').value = parseFloat(this.value).toFixed(2); window.runScoreAnalysis(); this.selectedIndex = 0;">
+                                <option value="" disabled selected hidden>▼</option>
+                                <option value="0.5">&nbsp;&nbsp;0.50&nbsp;&nbsp;</option>
+                                <option value="1.0">&nbsp;&nbsp;1.00&nbsp;&nbsp;</option>
+                                <option value="1.5">&nbsp;&nbsp;1.50&nbsp;&nbsp;</option>
+                                <option value="2.0">&nbsp;&nbsp;2.00&nbsp;&nbsp;</option>
+                            </select>
+                        </div>
                         <button onclick="window.runScoreAnalysis()" style="padding: 4px 10px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 5px;">確定</button>
                     </div>
                     <div class="score-control-group score-checkbox-container">

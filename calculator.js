@@ -6,10 +6,8 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
     let maxRacesIdx = 0;
     let auditErrors = [];
     let auditWarnings = [];
-
     // --- 距離適性の感度定数 (1600mから1000m離れるごとに5%の減衰) ---
     const DIST_SENSITIVITY = window.ATV_CONFIG.DIST_SENSITIVITY;
-
     // --- C値（展開係数）の算出 ---
     const getCourseFactor = (trackType, location, trackDetail) => {
         let c = window.ATV_CONFIG.C_FACTOR.TURF.DEFAULT;
@@ -48,7 +46,9 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
 
         // 馬番が取得できない場合は一律で "-"（ハイフン）を代入
         let horseNo = "-";
-        let matchNo = headerArea.match(/(?:^|\n)\s*(?:[枠]?\d{1,2}\s+)?(\d{1,2})\s*(?:\r?\n|\s+)?(?:--|◎|◯|〇|▲|△|☆|✓|✔|消|取消|除外)/);
+        // window.ATV_MARK_PATTERN を使用して正規表現を動的生成
+        let regexNo = new RegExp("(?:^|\\n)\\s*(?:[枠]?\\d{1,2}\\s+)?(\\d{1,2})\\s*(?:\\r?\\n|\\s+)?" + window.ATV_MARK_PATTERN);
+        let matchNo = headerArea.match(regexNo);
         if (matchNo) horseNo = matchNo[1];
 
         let age = 4;
@@ -63,7 +63,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         }
 
         let jockeyMark = "";
-        
         // --- 新規追加: D1（出馬表）からの減量マークのクロス・リファレンス抽出 ---
         let d1Element = document.getElementById('data1');
         if (d1Element && d1Element.value && horseName !== "不明") {
@@ -78,7 +77,8 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
 
         // D1で見つからなかった場合のみ、従来通りD2の限定領域（afterAgeArea）からフォールバック探索
         if (!jockeyMark) {
-            let markMatch = afterAgeArea.match(/[☆△▲★◇](?=[一-龥ぁ-んァ-ヴー])/);
+            // 文字化け [一-?] を [一-龠] に修正して SyntaxError を回避
+            let markMatch = afterAgeArea.match(/[☆△▲★◇](?=[一-龠ぁ-んァ-ヴー])/);
             if (markMatch) jockeyMark = markMatch[0];
         }
 
@@ -255,11 +255,9 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 f3f: f3FrontStr, f3b: f3BackStr, distDiff: target.distance - pDist,
                 surfModText: pTrack+pCond, surfMod: surfMod, 
                 wghtModText: (weightDiff >= 0 ? "+" : "") + weightDiff.toFixed(1) + "kg", wghtMod: wghtMod, 
-                locModText: pLoc ||
-"不明", locMod: locMod,
+                locModText: pLoc || "不明", locMod: locMod,
                 classMod: classMod, agePattern: agePattern, pClassRank: pClassRank, 
-                pLoc: pLoc ||
-"不明", pTrack: pTrack, pDist: pDist, pCond: pCond, pWeight: pWeight,
+                pLoc: pLoc || "不明", pTrack: pTrack, pDist: pDist, pCond: pCond, pWeight: pWeight,
                 isLimited: false, posRatio: posRatio, hadLead: hadLead,
                 isOuter: isOuter
             };
@@ -297,8 +295,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
                 if (hasNoshiba) {
                     validATVs.forEach(r => {
                         let isYoshiba = ["札幌", "函館"].includes(r.pLoc);
-                        if (isYoshiba && r.atv < 
-noshibaBest) { r.atv = noshibaBest; r.isLimited = true; }
+                        if (isYoshiba && r.atv < noshibaBest) { r.atv = noshibaBest; r.isLimited = true; }
                     });
                 } else if (hasYoshiba) {
                     onlyYoshiba = true;
@@ -338,7 +335,6 @@ noshibaBest) { r.atv = noshibaBest; r.isLimited = true; }
         let avgPosRatio = countRatio > 0 ? (sumRatio / countRatio) : null;
         let styleClass = null;
         let styleName = "";
-
         if (avgPosRatio !== null) {
             if (avgPosRatio <= 0.15) {
                 if (hasLeadExperience) { styleClass = 1;
@@ -449,11 +445,9 @@ styleName = "追"; }
                         if (weeks === 0) {
                             intervalHtml = `<span style="font-size:11px; color:#e74c3c; font-weight:bold; border:1px solid #e74c3c; padding:2px 4px; border-radius:4px; background-color:#fdedec; display:inline-block;">連闘</span>`;
                         } else {
-                            let color = weeks < 3 ?
-"#e74c3c" : "#555";
+                            let color = weeks < 3 ? "#e74c3c" : "#555";
                             let fw = weeks < 3 ? "bold" : "normal";
-                            let bd = weeks < 3 ?
-`border:1px solid #e74c3c; background-color:#fdedec;` : `border:1px solid transparent;`;
+                            let bd = weeks < 3 ? `border:1px solid #e74c3c; background-color:#fdedec;` : `border:1px solid transparent;`;
                             intervalHtml = `<span style="font-size:11px; color:${color}; font-weight:${fw}; ${bd} padding:2px 4px; border-radius:4px; display:inline-block;">中${weeks}週</span>`;
                         }
                     }
@@ -470,13 +464,11 @@ styleName = "追"; }
         let sorted = [...results].sort((a, b) => {
             let valA = a[sortKey]; let valB = b[sortKey];
             if (valA === null && valB === null) return 0;
-            if (valA === null) return 1; if (valB === null) return 
--1;
+            if (valA === null) return 1; if (valB === null) return -1;
             if (valA !== valB) return valA - valB;
             for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {
                 let atvA = a.validATVs.length > i ? a.validATVs[i].atv : Infinity;
                 let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
-             
                 if(atvA !== atvB) return atvA - atvB;
             }
             let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
@@ -519,16 +511,14 @@ styleName = "追"; }
             currentWeight: info.baseWeight, 
             sex: info.sex, 
             jockeyMark: info.jockeyMark, 
-           
-             pastRaces: raceData.pastRaces, 
+            pastRaces: raceData.pastRaces, 
             weightedATV: aggData.weightedATV, 
             centralATV: aggData.centralATV, 
             adjCentral: aggData.adjCentral, 
             adjWeighted: aggData.adjWeighted, 
             validCount: raceData.validATVs.length, 
             validATVs: raceData.validATVs, 
-            centralAdopted: 
-aggData.centralAdopted, 
+            centralAdopted: aggData.centralAdopted, 
             centralOutliers: aggData.centralOutliers, 
             onlyYoshiba: turfData.onlyYoshiba, 
             onlyNoshiba: turfData.onlyNoshiba, 
@@ -536,7 +526,6 @@ aggData.centralAdopted,
             styleName: paceData.styleName, 
             avgPosRatio: paceData.avgPosRatio, 
             intervalHtml: intervalHtml
-  
         });
     }
 
@@ -558,8 +547,7 @@ aggData.centralAdopted,
         });
     });
     for(let i=0; i < centralSorted.length - 1; i++) {
-        let valA = centralSorted[i].centralATV !== null ?
-centralSorted[i].centralATV : Infinity;
+        let valA = centralSorted[i].centralATV !== null ? centralSorted[i].centralATV : Infinity;
         let valB = centralSorted[i+1].centralATV !== null ? centralSorted[i+1].centralATV : Infinity;
         if (valA > valB) {
             auditErrors.push(`【ソート異常】${centralSorted[i].horseName}(${valA}) が ${centralSorted[i+1].horseName}(${valB}) より上位です。`);

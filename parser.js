@@ -1,6 +1,8 @@
 // ==========================================
 // parser.js
 // ==========================================
+window.ATV_MARK_PATTERN = "(?:--|取消|除外|[◎○◯〇▲△×☆注消✓✔??－]+)";
+
 window.resolveMonth = function(month) {
     document.getElementById('month-prompt-modal').classList.add('hidden-element');
     if (window.resolveMonthCallback) window.resolveMonthCallback(month);
@@ -50,8 +52,7 @@ window.parseAllData = function(d1, d2) {
     let d1Lines = cleanD1.split('\n').map(l => l.trim()).filter(l => l !== '');
 
     let isIgnoreText = (txt) => {
-        return txt === '--' || 
-               /^[◎○◯〇▲△×☆注消－✓✔]+$/.test(txt) || 
+        return new RegExp(`^${window.ATV_MARK_PATTERN}$`).test(txt) || 
                /^&#\d+;?$/.test(txt) || 
                /削除|保存|閉じる|文字以内|馬メモ|次走|相性度|波乱度|マスターコース|ログイン|予想|展開|トラックバイアス|的中|プラス|コース情報|ペース|編集/.test(txt) ||
                /^前走/.test(txt) ||
@@ -64,7 +65,6 @@ window.parseAllData = function(d1, d2) {
         
         // 既に存在する馬名の一部（略称）であれば追加しない
         if (validHorseNames.some(existing => existing.includes(name))) return;
-        
         // 逆に追加しようとしている名前が、既存の短い名前を包含している場合は上書きする
         let shortIdx = validHorseNames.findIndex(existing => name.includes(existing));
         if (shortIdx !== -1) {
@@ -82,7 +82,6 @@ window.parseAllData = function(d1, d2) {
             let j = i + 1;
             while (j < d1Lines.length && j <= i + 15) {
                 let txt = d1Lines[j];
-                
                 if (/^\d+[\s\t]+\d+$/.test(txt)) break;
                 
                 if (!isIgnoreText(txt) && txt.length > 1 && !/^\d/.test(txt)) {
@@ -107,7 +106,6 @@ window.parseAllData = function(d1, d2) {
                     let j = i + 2;
                     while (j < d1Lines.length && j <= i + 15) {
                         let txt = d1Lines[j];
-                        
                         if (/^\d+$/.test(txt) && j+1 < d1Lines.length && /^\d+$/.test(d1Lines[j+1])) break;
                         
                         if (!isIgnoreText(txt) && txt.length > 1 && !/^\d/.test(txt)) {
@@ -125,8 +123,8 @@ window.parseAllData = function(d1, d2) {
     // --- 新規追加: 予想印フォーマット（馬番未定など）対応の馬名抽出 ---
     if (validHorseNames.length === 0) {
         for (let i = 0; i < d1Lines.length - 1; i++) {
-            // 単独の予想印（-- や ◎◯▲△☆消✓ など）の行を検知
-            if (/^(--|[◎○◯〇▲△×☆注消✓✔]+)$/.test(d1Lines[i])) {
+            // 単独の予想印（-- や ◎◯▲△☆消? など）の行を検知
+            if (new RegExp(`^${window.ATV_MARK_PATTERN}$`).test(d1Lines[i])) {
                 let name = window.cleanHorseName(d1Lines[i+1]);
                 if (name && name.length > 1 && !isIgnoreText(name) && !/^\d/.test(name)) {
                     addValidName(name);
@@ -178,18 +176,18 @@ window.parseAllData = function(d1, d2) {
     }
 
     // 既存のブロック分割 (数字ベース)
-    let horseBlocks = cleanD2.split(/(?=^\d+\s+\d+\s+(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\s*\n)/m);
+    let horseBlocks = cleanD2.split(new RegExp(`(?=^\\d+\\s+\\d+\\s+${window.ATV_MARK_PATTERN}?\\s*\\n)`, 'm'));
     if (horseBlocks.length <= 1) {
-        horseBlocks = cleanD2.split(/(?=^\d+\r?\n\d+\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\r?\n)/m);
+        horseBlocks = cleanD2.split(new RegExp(`(?=^\\d+\\r?\\n\\d+\\r?\\n${window.ATV_MARK_PATTERN}?\\r?\\n)`, 'm'));
     }
     if (horseBlocks.length <= 1) {
-        horseBlocks = cleanD2.split(/(?=^\d+[\t ]+\d+[\t ]*(?:\r?\n|--|[◎○◯〇▲△×☆注消✓✔]+))/m);
+        horseBlocks = cleanD2.split(new RegExp(`(?=^\\d+[\\t ]+\\d+[\\t ]*(?:\\r?\\n|${window.ATV_MARK_PATTERN}))`, 'm'));
     }
     if (horseBlocks.length <= 1) {
-        horseBlocks = cleanD2.split(/(?=^\d{1,2}\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\r?\n?[^\n]*のデータベース)/m);
+        horseBlocks = cleanD2.split(new RegExp(`(?=^\\d{1,2}\\r?\\n${window.ATV_MARK_PATTERN}?\\r?\\n?[^\\n]*のデータベース)`, 'm'));
     }
     if (horseBlocks.length <= 1) {
-        horseBlocks = cleanD2.split(/(?=^\d{1,2}\r?\n(?:--|[◎○◯〇▲△×☆注消✓✔]+)\r?\n)/m);
+        horseBlocks = cleanD2.split(new RegExp(`(?=^\\d{1,2}\\r?\\n${window.ATV_MARK_PATTERN}\\r?\\n)`, 'm'));
     }
 
     // --- 新規追加: 馬番なしフォーマット（抽出した馬名ベース）対応のブロック分割 ---
@@ -197,12 +195,12 @@ window.parseAllData = function(d1, d2) {
         let indices = [];
         validHorseNames.forEach(name => {
             // 馬名が行頭、または予想印の直後に出現する箇所を特定
-            let regex = new RegExp(`(?:^|\\n)(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\\s*\\n?${name}\\s*\\n(?:牡|牝|セ)\\d+`, 'm');
+            let regex = new RegExp(`(?:^|\\n)${window.ATV_MARK_PATTERN}?\\s*\\n?${name}\\s*\\n(?:牡|牝|セ)\\d+`, 'm');
             let match = cleanD2.match(regex);
             
             // 性齢が続かない場合でも馬名で探すフォールバック
             if (!match) {
-                regex = new RegExp(`(?:^|\\n)(?:--|[◎○◯〇▲△×☆注消✓✔]+)?\\s*\\n?${name}`, 'm');
+                regex = new RegExp(`(?:^|\\n)${window.ATV_MARK_PATTERN}?\\s*\\n?${name}`, 'm');
                 match = cleanD2.match(regex);
             }
             
@@ -212,7 +210,6 @@ window.parseAllData = function(d1, d2) {
                 indices.push({ name: name, index: idx });
             }
         });
-        
         if (indices.length > 1) {
             indices.sort((a, b) => a.index - b.index);
             horseBlocks = [];
@@ -235,7 +232,6 @@ window.parseAllData = function(d1, d2) {
         let cleanBlock = block.replace(/[\r\n\s\t\u200B-\u200D\uFEFF]/g, '');
         return validHorseNames.some(name => cleanBlock.includes(name));
     });
-
     return { validHorseNames, target, horseBlocks };
 };
 
@@ -246,9 +242,11 @@ window.parseTarget = function(d1) {
         trackType: "芝",
         location: "不明",
         weightRule: "馬齢",
-        trackDetail: "標準"
+        trackDetail: "標準",
+        raceName: "" // 新規追加: レース名保持用プロパティ
     };
-    for (let line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
         let mDist = line.match(/(芝|ダ|ダート)(\d+)m/);
         if (mDist) {
             target.trackType = mDist[1].replace("ダート", "ダ");
@@ -264,12 +262,20 @@ window.parseTarget = function(d1) {
         if (mLoc && mLoc[2]) {
             target.location = mLoc[2].replace("競馬", "");
         }
+
+        // 新規追加: レース名の抽出
+        if (/^\d{1,2}R$/.test(line) && i + 2 < lines.length) {
+            if (lines[i+2].includes("発走")) {
+                target.raceName = lines[i+1];
+            }
+        }
     }
     if (target.location === "不明") {
          const locs = ["札幌","函館","福島","新潟","東京","中山","中京","京都","阪神","小倉","川崎","大井","船橋","浦和","盛岡","水沢","門別","園田","姫路","名古屋","笠松","高知","佐賀"];
          let text = d1.replace(/\s+/g, "");
          for(let l of locs) {
-             if (text.includes(l)) { target.location = l; break; }
+             if (text.includes(l)) { target.location = l;
+                 break; }
          }
     }
     return target;

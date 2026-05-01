@@ -30,10 +30,10 @@ window.runAnalysis = async function() {
     resultArea.innerHTML = "";
     window.generatedPrompts = {};
     window.processedData = {};
-    window.globalSortType = 'centralATV'; 
-    window.globalCorrectionMode = 'centralATV';
+    window.globalSortType = 'adjustedATV'; 
+    window.globalCorrectionMode = 'weightedATV';
     window.globalSortDirection = 'asc'; // 追加: ソート方向の初期化
-    window.globalRatioId = '03'; // ステートのリセット
+    window.globalRatioId = '02'; // ステートのリセット
 
     try {
         const monthData = await window.detectRaceMonth(d1);

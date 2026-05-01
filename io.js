@@ -16,35 +16,56 @@ window.saveProject = function() {
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
-    const hh = String(now.getHours()).padStart(2, '0');
-    const min = String(now.getMinutes()).padStart(2, '0');
     const dateStr = `${yyyy}${mm}${dd}`;
 
-    let location = "";
+    let location = "不明";
     let raceNo = "";
+    let raceName = "";
     
-    const lines = d1.split('\n');
-    for (let line of lines) {
-        let mLoc = line.match(/\d+回\s*([^\s]+)\s*\d+日目/);
-        if (mLoc) location = mLoc[1].replace("競馬", "");
+    const lines = d1.split('\n').map(l => l.trim());
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        
+        // 開催場所の抽出
+        let mLoc = line.match(/(\d+)回\s+([^\s]+)\s+\d+日目/);
+        if (mLoc && mLoc[2]) {
+            location = mLoc[2].replace("競馬", "");
+        }
 
-        let mNo = line.match(/(\d{1,2})R/);
-        if (mNo) raceNo = mNo[1] + "R";
-
-        if (location && raceNo) break;
+        // レース番号（2桁化）とレース名の抽出
+        let mNo = line.match(/^(\d{1,2})R$/);
+        if (mNo) {
+            raceNo = mNo[1].padStart(2, '0') + "R";
+            // 次の行にレース名、その次の行に「発走」があるパターンを捕捉
+            if (i + 2 < lines.length && lines[i+2].includes("発走")) {
+                raceName = lines[i+1];
+            }
+        }
+        if (location !== "不明" && raceNo && raceName) break;
     }
 
-    let fileId = "";
-    if (location || raceNo) {
-        fileId = `_${location}_${raceNo}`;
-    } else {
-        fileId = `_不明_${hh}${min}`;
+    // レース名のサニタイズ（ファイル名禁止文字の除去）と10文字制限
+    let cleanRaceName = "";
+    if (raceName) {
+        cleanRaceName = raceName.replace(/[\\/:*?"<>|]/g, "").trim();
+        if (cleanRaceName.length > 10) {
+            cleanRaceName = cleanRaceName.substring(0, 10);
+        }
     }
+
+    // ファイル名の構築: ATV_開催場所_レース番号_レース名_YYYYMMDD.json
+    // レース名がない場合は ATV_開催場所_レース番号_YYYYMMDD.json
+    let fileNameParts = ["ATV", location];
+    if (raceNo) fileNameParts.push(raceNo);
+    if (cleanRaceName) fileNameParts.push(cleanRaceName);
+    fileNameParts.push(dateStr);
+
+    const fileName = fileNameParts.join("_") + ".json";
 
     const projectData = {
         d1_raw: d1,
         d2_raw: d2,
-        race_info: `${location}${raceNo}`,
+        race_info: `${location}${raceNo}${cleanRaceName ? ' ' + cleanRaceName : ''}`,
         timestamp: now.toISOString(),
         version: window.SYSTEM_VERSION
     };
@@ -54,7 +75,7 @@ window.saveProject = function() {
     
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ATV_${dateStr}${fileId}.json`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -96,8 +117,8 @@ window.pasteFromClipboard = async function(targetId) {
 
 window.copyPrompt = async function(type, index, btnElement) {
     // DOMクエリを廃止し、ステートを使用して比率を取得
-    let activeRadio = window.globalRatioId || '03';
-    let prompts = window.generatedPrompts[activeRadio];
+    let activeRatio = window.globalRatioId || '03';
+    let prompts = window.generatedPrompts[activeRatio];
     if (!prompts) return;
 
     let promptText = "";
@@ -114,7 +135,8 @@ window.copyPrompt = async function(type, index, btnElement) {
     try {
         await navigator.clipboard.writeText(promptText);
         if (btnElement) {
-            const originalText = btnElement.innerHTML; // spanタグ構造を保持するためinnerHTMLを使用
+            const originalText = btnElement.innerHTML;
+            // spanタグ構造を保持するためinnerHTMLを使用
             btnElement.innerText = "✓ OK";
             btnElement.style.backgroundColor = "#27ae60";
             setTimeout(() => {
@@ -129,13 +151,12 @@ window.copyPrompt = async function(type, index, btnElement) {
 
 window.downloadPrompt = function(type, index) {
     // DOMクエリを廃止し、ステートを使用して比率を取得
-    let activeRadio = window.globalRatioId || '03';
-    let prompts = window.generatedPrompts[activeRadio];
+    let activeRatio = window.globalRatioId || '03';
+    let prompts = window.generatedPrompts[activeRatio];
     if (!prompts) return;
 
     let promptText = "";
     let prefix = "Verify";
-
     if (prompts.hasErrors) {
         promptText = prompts.debugPrompt;
         prefix = "DebugReq";

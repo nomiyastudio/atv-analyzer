@@ -56,6 +56,11 @@ window.runScoreAnalysis = function() {
         });
     });
 
+    // 合計スコアを100点満点（選択した比率の平均値）に正規化
+    Object.values(horseScores).forEach(hs => {
+        hs.totalScore = hs.totalScore / selectedRatios.length;
+    });
+
     let sortedScores = Object.values(horseScores)
         .filter(h => h.totalScore > 0)
         .sort((a, b) => {
@@ -100,13 +105,13 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, totalHors
             <td style="background-color:${wakuColor.bg}; color:${wakuColor.text}; border:1px solid ${wakuColor.border}; font-weight:bold;">${wakuColor.waku}</td>
             <td style="font-weight:bold;">${h.horseNo}</td>
             <td class="align-left" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.horseName}</td>
-            <td style="font-weight:bold; font-size:15px; color:var(--primary-color); background:#fbfcfc;">${h.totalScore.toFixed(1)}</td>`;
+            <td style="font-weight:bold; font-size:15px; color:var(--primary-color); background:#fbfcfc;">${h.totalScore.toFixed(0)}</td>`;
         
         selectedRatios.forEach(r => {
             let pts = h.scores[r];
             let color = pts >= 80 ? '#e74c3c' : (pts >= 50 ? '#e67e22' : '#555');
             let fw = pts >= 50 ? 'bold' : 'normal';
-            html += `<td style="color:${color}; font-weight:${fw};">${pts > 0 ? pts.toFixed(1) : '0.0'}</td>`;
+            html += `<td style="color:${color}; font-weight:${fw};">${pts > 0 ? pts.toFixed(0) : '0'}</td>`;
         });
         
         html += `</tr>`;

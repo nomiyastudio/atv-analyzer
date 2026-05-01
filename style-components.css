@@ -197,7 +197,7 @@ h3 {
     flex-direction: column;
     justify-content: flex-end;
     align-items: center;
-    height: 56px;
+    height: 44px;
     width: 100%;
 }
 
@@ -208,41 +208,41 @@ h3 {
     display: flex;
     justify-content: center;
     box-sizing: border-box;
-    margin-bottom: 4px;
-    width: 24px;
-    font-size: 14px;
+    margin-bottom: 2px;
+    width: 20px;
+    font-size: 12px;
 }
 
 .pace-shape.shape-nige {
-    height: 38px;
-    clip-path: polygon(50% 0, 100% 12px, 100% 100%, 0 100%, 0 12px);
-    align-items: flex-end;
-    padding-bottom: 5px;
-}
-
-.pace-shape.shape-senko {
-    height: 34px;
-    border-radius: 12px 12px 0 0;
+    height: 28px;
+    clip-path: polygon(50% 0, 100% 8px, 100% 100%, 0 100%, 0 8px);
     align-items: flex-end;
     padding-bottom: 3px;
 }
 
+.pace-shape.shape-senko {
+    height: 24px;
+    border-radius: 8px 8px 0 0;
+    align-items: flex-end;
+    padding-bottom: 2px;
+}
+
 .pace-shape.shape-sashi {
-    height: 34px;
-    border-radius: 0 0 12px 12px;
+    height: 24px;
+    border-radius: 0 0 8px 8px;
+    align-items: flex-start;
+    padding-top: 2px;
+}
+
+.pace-shape.shape-oikomi {
+    height: 28px;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), 50% 100%, 0 calc(100% - 8px));
     align-items: flex-start;
     padding-top: 3px;
 }
 
-.pace-shape.shape-oikomi {
-    height: 38px;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), 50% 100%, 0 calc(100% - 12px));
-    align-items: flex-start;
-    padding-top: 5px;
-}
-
 .pace-pct-text {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: bold;
     color: var(--badge-color);
     margin-top: auto;
