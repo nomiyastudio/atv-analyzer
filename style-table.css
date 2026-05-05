@@ -18,6 +18,22 @@
 .col-score-total, .score-table-container td:nth-child(5) { width: 85px !important; min-width: 85px !important; max-width: 85px !important; box-sizing: border-box; background: #fbfcfc; font-weight: bold; overflow: hidden; }
 .col-score-ratio, .score-table-container td:nth-child(n+6) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; box-sizing: border-box; overflow: hidden; }
 
+/* 追加: 多角展開スコア分析の複数指標テーブル用 */
+.metric-header {
+    background-color: #d4e6f1 !important;
+    border-bottom: 2px solid #3498db !important;
+    color: var(--primary-color);
+}
+.col-subtotal {
+    width: 65px !important;
+    min-width: 65px !important;
+    max-width: 65px !important;
+    box-sizing: border-box;
+    background-color: #eaf2f8 !important;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
 /* レスポンシブ用 */
 .table-responsive {
     width: 100%;

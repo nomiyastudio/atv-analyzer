@@ -6,7 +6,6 @@ window.renderAvgRanking = function(ratioId) {
     let data = window.processedData[ratioId];
     if (!data) return "";
     let sortType = window.globalSortType;
-    let correctionMode = window.globalCorrectionMode;
     let target = data.target;
     let res = [...data.results];
 
@@ -44,14 +43,6 @@ window.renderAvgRanking = function(ratioId) {
             let cA = a.centralATV !== null ? a.centralATV : Infinity;
             let cB = b.centralATV !== null ? b.centralATV : Infinity;
             if (cA !== cB) return cA - cB;
-            return parseInt(a.horseNo) - parseInt(b.horseNo);
-        } else if (sortType === 'adjustedATV') {
-            let valA = (correctionMode === 'centralATV') ? a.adjCentral : a.adjWeighted;
-            let valB = (correctionMode === 'centralATV') ? b.adjCentral : b.adjWeighted;
-            if (valA === null && valB === null) return 0;
-            if (valA === null) return 1;
-            if (valB === null) return -1;
-            if (valA !== valB) return valA - valB;
             return parseInt(a.horseNo) - parseInt(b.horseNo);
         } else {
             let valA = a[sortType];
@@ -104,12 +95,12 @@ window.renderAvgRanking = function(ratioId) {
         return { t1: top + delta * 0.333, t2: top + delta * 0.666 };
     };
 
-    let cThresh = getThresholds('centralATV');
+    let awThresh = getThresholds('adjWeighted');
+    let acThresh = getThresholds('adjCentral');
     let wThresh = getThresholds('weightedATV');
+    let cThresh = getThresholds('centralATV');
 
-    let adjTitle = (correctionMode === 'centralATV') ? '展開補正<br><span class="sort-desc">(安定)</span>' : '展開補正<br><span class="sort-desc">(ベスト)</span>';
-
-    // ヘッダーの並び順を変更: 展開補正 → 加重平均 → 中央加重
+    // ヘッダーの並び順: 展開補正(ベスト) → 展開補正(安定) → 加重平均 → 中央加重
     let html = `<table>
         <tr>
             <th class="col-waku sortable-header ${sortType === 'horseNo' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('horseNo')" title="枠番">枠</th>
@@ -131,15 +122,19 @@ window.renderAvgRanking = function(ratioId) {
                 脚質<br><span class="sort-desc">(%)</span>
                  ${sortType === 'pace' ? `<br><span style="font-size:10px;color:var(--secondary-color);">${window.globalSortDirection === 'desc' ? '▼' : '▲'}</span>` : ''}
             </th>
-            <th class="sortable-header ${sortType === 'adjustedATV' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('adjustedATV')" title="展開補正を加味したATV（クリックでベース切り替え）">
-                ${adjTitle}
-                ${sortType === 'adjustedATV' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
+            <th class="sortable-header ${sortType === 'adjWeighted' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('adjWeighted')" title="展開補正(ベスト)でソート">
+                展開補正<br><span class="sort-desc">(ベスト)</span>
+                ${sortType === 'adjWeighted' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
             </th>
-            <th class="sortable-header ${sortType === 'weightedATV' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('weightedATV')" title="加重平均でソート（展開補正もベストモードに同期）">
+            <th class="sortable-header ${sortType === 'adjCentral' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('adjCentral')" title="展開補正(安定)でソート">
+                展開補正<br><span class="sort-desc">(安定)</span>
+                ${sortType === 'adjCentral' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
+            </th>
+            <th class="sortable-header ${sortType === 'weightedATV' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('weightedATV')" title="加重平均でソート">
                 加重平均<br><span class="sort-desc">(ベスト)</span>
                 ${sortType === 'weightedATV' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
             </th>
-            <th class="sortable-header ${sortType === 'centralATV' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('centralATV')" title="中央加重でソート（展開補正も安定モードに同期）">
+            <th class="sortable-header ${sortType === 'centralATV' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('centralATV')" title="中央加重でソート">
                 中央加重<br><span class="sort-desc">(安定)</span>
                 ${sortType === 'centralATV' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
             </th>`;
@@ -161,8 +156,11 @@ window.renderAvgRanking = function(ratioId) {
     };
 
     res.forEach((h) => {
-        let cBg = (h.centralATV !== null) ? (h.centralATV <= cThresh.t1 ? '#a5d6a7' : (h.centralATV <= cThresh.t2 ? '#e8f5e9' : 'transparent')) : 'transparent';
-        let wBg = (h.weightedATV !== null) ? (h.weightedATV <= wThresh.t1 ? '#90caf9' : (h.weightedATV <= wThresh.t2 ? '#e3f2fd' : 'transparent')) : 'transparent';
+        let awStyle = (h.adjWeighted !== null) ? (h.adjWeighted <= awThresh.t1 ? 'background-color: var(--bg-aw-1); border: 2px solid var(--bd-aw-1); font-weight: bold; color: #111;' : (h.adjWeighted <= awThresh.t2 ? 'background-color: var(--bg-aw-2); border: 1px solid var(--bd-aw-2); font-weight: normal; color: #111;' : 'font-weight: normal; color: #333;')) : 'font-weight: normal; color: #333;';
+        let acStyle = (h.adjCentral !== null) ? (h.adjCentral <= acThresh.t1 ? 'background-color: var(--bg-ac-1); border: 2px solid var(--bd-ac-1); font-weight: bold; color: #111;' : (h.adjCentral <= acThresh.t2 ? 'background-color: var(--bg-ac-2); border: 1px solid var(--bd-ac-2); font-weight: normal; color: #111;' : 'font-weight: normal; color: #333;')) : 'font-weight: normal; color: #333;';
+        let wStyle = (h.weightedATV !== null) ? (h.weightedATV <= wThresh.t1 ? 'background-color: var(--bg-w-1); border: 2px solid var(--bd-w-1); font-weight: bold; color: #111;' : (h.weightedATV <= wThresh.t2 ? 'background-color: var(--bg-w-2); border: 1px solid var(--bd-w-2); font-weight: normal; color: #111;' : 'font-weight: normal; color: #333;')) : 'font-weight: normal; color: #333;';
+        let cStyle = (h.centralATV !== null) ? (h.centralATV <= cThresh.t1 ? 'background-color: var(--bg-c-1); border: 2px solid var(--bd-c-1); font-weight: bold; color: #111;' : (h.centralATV <= cThresh.t2 ? 'background-color: var(--bg-c-2); border: 1px solid var(--bd-c-2); font-weight: normal; color: #111;' : 'font-weight: normal; color: #333;')) : 'font-weight: normal; color: #333;';
+        
         let exceptionMark = h.onlyYoshiba ? `<br><span style="color:#e67e22; font-size:10px; font-weight:bold;">(洋)</span>` : (h.onlyNoshiba ? `<br><span style="color:#e67e22; font-size:10px; font-weight:bold;">(野)</span>` : "");
         let wakuColor = window.getWakuColor(h.horseNo, res.length);
   
@@ -172,10 +170,6 @@ window.renderAvgRanking = function(ratioId) {
         
         let isPaceSetter = hasNige ? (h.styleClass === 1) : (h.styleClass === 2 && h.avgPosRatio === minPaceRatio && h.avgPosRatio !== null);
         let paceTdStyle = `text-align:center; vertical-align:middle; padding:4px; border:1px solid var(--border-color);` + (isPaceSetter ? `background-color: #fff3e0; background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,167,38,0.15) 8px, rgba(255,167,38,0.15) 16px); box-shadow: inset 0 0 0 2px #ffa726; border: 1px solid #ff9800;` : ``);
-        
-        let displayAdj = (correctionMode === 'centralATV') ? h.adjCentral : h.adjWeighted;
-        let displayAdjRank = (correctionMode === 'centralATV') ? h.adjCentralRank : h.adjWeightedRank;
-        let minAdj = (correctionMode === 'centralATV') ? minAdjCentral : minAdjWeighted;
         
         html += `<tr>
             <td style="background-color:${wakuColor.bg}; color:${wakuColor.text}; border:1px solid ${wakuColor.border}; font-weight:bold; font-size:14px;">${wakuColor.waku}</td>
@@ -190,21 +184,28 @@ window.renderAvgRanking = function(ratioId) {
                     <span class="pace-pct-text">${(h.avgPosRatio*100).toFixed(0)}%</span>
                 </div>` : "-"}
             </td>
-            <td style="font-weight:bold; font-size:15px; background:#fbfcfc;">
-                ${displayAdj !== null ? displayAdj.toFixed(2) : "-"}
+            <td style="font-size:15px; ${awStyle}">
+                ${h.adjWeighted !== null ? h.adjWeighted.toFixed(2) : "-"}
                 <div style="font-size:11px; margin-top:2px;">
-                    <span style="color:${parseInt(displayAdjRank)<=3?'#111':'#666'}; font-weight:${parseInt(displayAdjRank)<=3?'bold':'normal'};">${displayAdjRank}位</span><br>
-                    <span style="font-weight:normal; color:#666;">${(displayAdj !== null && minAdj !== Infinity && displayAdj > minAdj) ? '△'+(displayAdj-minAdj).toFixed(2) : '-'}</span>
+                    <span style="color:${parseInt(h.adjWeightedRank)<=3?'#111':'#666'}; font-weight:${parseInt(h.adjWeightedRank)<=3?'bold':'normal'};">${h.adjWeightedRank}位</span><br>
+                    <span style="font-weight:normal; color:#666;">${(h.adjWeighted !== null && minAdjWeighted !== Infinity && h.adjWeighted > minAdjWeighted) ? '△'+(h.adjWeighted-minAdjWeighted).toFixed(2) : '-'}</span>
                 </div>
             </td>
-            <td style="font-weight:bold; font-size:15px; background:${wBg};">
+            <td style="font-size:15px; ${acStyle}">
+                ${h.adjCentral !== null ? h.adjCentral.toFixed(2) : "-"}
+                <div style="font-size:11px; margin-top:2px;">
+                    <span style="color:${parseInt(h.adjCentralRank)<=3?'#111':'#666'}; font-weight:${parseInt(h.adjCentralRank)<=3?'bold':'normal'};">${h.adjCentralRank}位</span><br>
+                    <span style="font-weight:normal; color:#666;">${(h.adjCentral !== null && minAdjCentral !== Infinity && h.adjCentral > minAdjCentral) ? '△'+(h.adjCentral-minAdjCentral).toFixed(2) : '-'}</span>
+                </div>
+            </td>
+            <td style="font-size:15px; ${wStyle}">
                 ${h.weightedATV !== null ? h.weightedATV.toFixed(2) : "-"}
                 <div style="font-size:11px; margin-top:2px;">
                     <span style="color:${parseInt(h.weightedRank)<=3?'#111':'#666'}; font-weight:${parseInt(h.weightedRank)<=3?'bold':'normal'};">${h.weightedRank}位</span><br>
                     <span style="font-weight:normal; color:#666;">${(h.weightedATV !== null && minWeightedATV !== Infinity && h.weightedATV > minWeightedATV) ? '△'+(h.weightedATV-minWeightedATV).toFixed(2) : '-'}</span>
                 </div>
             </td>
-            <td style="font-weight:bold; font-size:15px; background:${cBg};">
+            <td style="font-size:15px; ${cStyle}">
                 ${h.centralATV !== null ? h.centralATV.toFixed(2) : "-"}
                 <div style="font-size:11px; margin-top:2px;">
                     <span style="color:${parseInt(h.centralRank)<=3?'#111':'#666'}; font-weight:${parseInt(h.centralRank)<=3?'bold':'normal'};">${h.centralRank}位</span><br>
@@ -216,12 +217,18 @@ window.renderAvgRanking = function(ratioId) {
             let race = h.pastRaces.find(r => r.idx === j);
             if (race && race.valid) {
                 let bgCls = '';
-                if (sortType === 'weightedATV' || (sortType === 'adjustedATV' && correctionMode === 'weightedATV')) {
+                if (sortType === 'weightedATV') {
                     let idx = h.validATVs.findIndex(v => v.idx === race.idx);
-                    bgCls = idx < 3 ? `class="highlight-rank-${idx+1}"` : '';
-                } else if (sortType === 'centralATV' || (sortType === 'adjustedATV' && correctionMode === 'centralATV')) {
-                    bgCls = h.centralAdopted.some(t => t.idx === race.idx) ? `class="highlight-trim-main"` : (h.centralOutliers.some(t => t.idx === race.idx) ? `class="highlight-trim-sub"` : '');
+                    bgCls = idx < 3 ? `class="hl-weighted-${idx+1}"` : '';
+                } else if (sortType === 'adjWeighted') {
+                    let idx = h.validATVs.findIndex(v => v.idx === race.idx);
+                    bgCls = idx < 3 ? `class="hl-adj-weighted-${idx+1}"` : '';
+                } else if (sortType === 'centralATV') {
+                    bgCls = h.centralAdopted.some(t => t.idx === race.idx) ? `class="hl-central-adopt"` : (h.centralOutliers.some(t => t.idx === race.idx) ? `class="hl-central-out"` : '');
+                } else if (sortType === 'adjCentral') {
+                    bgCls = h.centralAdopted.some(t => t.idx === race.idx) ? `class="hl-adj-central-adopt"` : (h.centralOutliers.some(t => t.idx === race.idx) ? `class="hl-adj-central-out"` : '');
                 }
+                
                 html += `<td ${bgCls}>${formatAtvDetail(race, data.target)}</td>`;
             } else {
                 html += `<td>${race ? `<span class="skip-text">除外<br>(${race.reason})</span>` : "-"}</td>`;

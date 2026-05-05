@@ -3,11 +3,11 @@
 // ==========================================
 
 window.runScoreAnalysis = function() {
-    let metric = document.getElementById('scoreMetric').value;
+    let metrics = Array.from(document.querySelectorAll('.score-metric-cb:checked')).map(cb => cb.value);
     let threshold = parseFloat(document.getElementById('scoreThreshold').value);
     let selectedRatios = Array.from(document.querySelectorAll('.score-ratio-cb:checked')).map(cb => cb.value);
 
-    if (selectedRatios.length === 0) {
+    if (metrics.length === 0 || selectedRatios.length === 0) {
         document.getElementById('scoreResultContainer').innerHTML = "";
         return;
     }
@@ -25,40 +25,49 @@ window.runScoreAnalysis = function() {
             horseNo: h.horseNo,
             horseName: h.horseName,
             totalScore: 0,
-            scores: {}
+            metrics: {}
         };
-        selectedRatios.forEach(r => horseScores[h.horseNo].scores[r] = 0);
+        metrics.forEach(m => {
+            horseScores[h.horseNo].metrics[m] = { subTotal: 0, scores: {} };
+            selectedRatios.forEach(r => horseScores[h.horseNo].metrics[m].scores[r] = 0);
+        });
     });
 
-    selectedRatios.forEach(ratioId => {
-        let data = window.processedData[ratioId].results;
-        
-        let minVal = Infinity;
-        data.forEach(h => {
-            if (h[metric] !== null && h[metric] < minVal) minVal = h[metric];
-        });
+    metrics.forEach(metric => {
+        selectedRatios.forEach(ratioId => {
+            let data = window.processedData[ratioId].results;
+            
+            let minVal = Infinity;
+            data.forEach(h => {
+                if (h[metric] !== null && h[metric] < minVal) minVal = h[metric];
+            });
 
-        data.forEach(h => {
-            let val = h[metric];
-            let points = 0;
-            if (val !== null && minVal !== Infinity) {
-                let diff = val - minVal;
-                if (diff <= threshold) {
-                    points = 100 * (1 - (diff / threshold));
-                    if (points < 0) points = 0;
+            data.forEach(h => {
+                let val = h[metric];
+                let points = 0;
+                if (val !== null && minVal !== Infinity) {
+                    let diff = val - minVal;
+                    if (diff <= threshold) {
+                        points = 100 * (1 - (diff / threshold));
+                        if (points < 0) points = 0;
+                    }
                 }
-            }
-            let hs = horseScores[h.horseNo];
-            if (hs) {
-                hs.scores[ratioId] = points;
-                hs.totalScore += points;
-            }
+                let hs = horseScores[h.horseNo];
+                if (hs) {
+                    hs.metrics[metric].scores[ratioId] = points;
+                    hs.metrics[metric].subTotal += points;
+                    hs.totalScore += points;
+                }
+            });
         });
     });
 
-    // 合計スコアを100点満点（選択した比率の平均値）に正規化
+    // 合計スコアおよび小計スコアを100点満点に正規化
     Object.values(horseScores).forEach(hs => {
-        hs.totalScore = hs.totalScore / selectedRatios.length;
+        metrics.forEach(m => {
+            hs.metrics[m].subTotal = hs.metrics[m].subTotal / selectedRatios.length;
+        });
+        hs.totalScore = hs.totalScore / (metrics.length * selectedRatios.length);
     });
 
     let sortedScores = Object.values(horseScores)
@@ -76,22 +85,40 @@ window.runScoreAnalysis = function() {
     }
 
     if (window.renderScoreResultTable) {
-        window.renderScoreResultTable(sortedScores, selectedRatios, baseData.length);
+        window.renderScoreResultTable(sortedScores, selectedRatios, metrics, baseData.length);
     }
 };
 
-window.renderScoreResultTable = function(sortedScores, selectedRatios, totalHorses) {
+window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, totalHorses) {
+    const metricLabels = {
+        'adjWeighted': '展開補正(ベスト)',
+        'adjCentral': '展開補正(安定)',
+        'weightedATV': '加重平均(ベスト)',
+        'centralATV': '中央加重(安定)'
+    };
+    const ratioLabels = {'00':'0:10', '01':'1:9', '02':'2:8', '03':'3:7', '04':'4:6', '05':'5:5'};
+
     let html = `<table style="border-collapse:collapse; font-size:13px; text-align:center;">
         <tr>
-            <th class="col-score-rank">順位</th>
-            <th class="col-score-waku">枠</th>
-            <th class="col-score-umaban">馬番</th>
-            <th class="col-score-name">馬名</th>
-            <th class="col-score-total">合計スコア</th>`;
+            <th rowspan="2" class="col-score-rank">順位</th>
+            <th rowspan="2" class="col-score-waku">枠</th>
+            <th rowspan="2" class="col-score-umaban">馬番</th>
+            <th rowspan="2" class="col-score-name">馬名</th>
+            <th rowspan="2" class="col-score-total">総合スコア</th>`;
     
-    selectedRatios.forEach(r => {
-        let label = {'00':'0:10', '01':'1:9', '02':'2:8', '03':'3:7', '04':'4:6', '05':'5:5'}[r];
-        html += `<th class="col-score-ratio">${label}</th>`;
+    // ヘッダー上段: 評価指標のグループ
+    metrics.forEach(m => {
+        let label = metricLabels[m] || m;
+        html += `<th colspan="${selectedRatios.length + 1}" class="metric-header">${label}</th>`;
+    });
+    html += `</tr><tr>`;
+
+    // ヘッダー下段: 小計と各比率
+    metrics.forEach(m => {
+        html += `<th class="col-subtotal">小計</th>`;
+        selectedRatios.forEach(r => {
+            html += `<th class="col-score-ratio">${ratioLabels[r]}</th>`;
+        });
     });
     html += `</tr>`;
 
@@ -107,11 +134,17 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, totalHors
             <td class="align-left" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.horseName}</td>
             <td style="font-weight:bold; font-size:15px; color:var(--primary-color); background:#fbfcfc;">${h.totalScore.toFixed(0)}</td>`;
         
-        selectedRatios.forEach(r => {
-            let pts = h.scores[r];
-            let color = pts >= 80 ? '#e74c3c' : (pts >= 50 ? '#e67e22' : '#555');
-            let fw = pts >= 50 ? 'bold' : 'normal';
-            html += `<td style="color:${color}; font-weight:${fw};">${pts > 0 ? pts.toFixed(0) : '0'}</td>`;
+        metrics.forEach(m => {
+            // 小計列の出力
+            html += `<td class="col-subtotal" style="font-weight:bold; color:#2c3e50; background:#eaf2f8;">${h.metrics[m].subTotal.toFixed(0)}</td>`;
+            
+            // 各比率列の出力
+            selectedRatios.forEach(r => {
+                let pts = h.metrics[m].scores[r];
+                let color = pts >= 80 ? '#e74c3c' : (pts >= 50 ? '#e67e22' : '#555');
+                let fw = pts >= 50 ? 'bold' : 'normal';
+                html += `<td style="color:${color}; font-weight:${fw};">${pts > 0 ? pts.toFixed(0) : '0'}</td>`;
+            });
         });
         
         html += `</tr>`;

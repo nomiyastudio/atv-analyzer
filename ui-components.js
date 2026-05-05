@@ -181,16 +181,27 @@ window.renderUI = function(target, hasAuditIssues) {
             <div class="score-analysis-block" style="width:100%; box-sizing:border-box;">
                 <h3 style="margin-top:0;">多角展開スコア分析</h3>
                 <div class="score-controls">
-                    <div class="score-control-group">
+                    <div class="score-control-group score-checkbox-container">
                         <label class="score-control-label">評価指標</label>
-                        <select id="scoreMetric" class="score-input-select" onchange="window.runScoreAnalysis()">
-                            <option value="adjCentral">展開補正 (安定)</option>
-                            <option value="adjWeighted" selected>展開補正 (ベスト)</option>
-                            <option value="centralATV">中央加重 (安定)</option>
-                            <option value="weightedATV">加重平均 (ベスト)</option>
-                        </select>
+                        <div class="score-checkbox-group">
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="adjWeighted" onchange="window.runScoreAnalysis()">展開補正(ベスト)</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="adjCentral" onchange="window.runScoreAnalysis()">展開補正(安定)</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="weightedATV" onchange="window.runScoreAnalysis()">加重平均(ベスト)</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="centralATV" onchange="window.runScoreAnalysis()">中央加重(安定)</label>
+                        </div>
                     </div>
-                    <div class="score-control-group">
+                    <div class="score-control-group score-checkbox-container">
+                        <label class="score-control-label">評価対象比率</label>
+                        <div class="score-checkbox-group">
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="00" onchange="window.runScoreAnalysis()">0:10</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="01" onchange="window.runScoreAnalysis()">1:9</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="02" onchange="window.runScoreAnalysis()">2:8</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="03" onchange="window.runScoreAnalysis()">3:7</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="04" onchange="window.runScoreAnalysis()">4:6</label>
+                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="05" onchange="window.runScoreAnalysis()">5:5</label>
+                        </div>
+                    </div>
+                    <div class="score-control-group" style="display: flex; align-items: center; gap: 0;">
                         <label class="score-control-label" style="margin-right: 8px;">許容差分閾値 (Δ)</label>
                         <div style="display: flex; align-items: stretch;">
                             <input type="number" id="scoreThreshold" value="0.50" step="0.01" min="0.01" class="score-input-number" style="width: 55px; border-right: none; border-radius: 4px 0 0 4px; z-index: 1;">
@@ -203,17 +214,6 @@ window.renderUI = function(target, hasAuditIssues) {
                             </select>
                         </div>
                         <button onclick="window.runScoreAnalysis()" style="padding: 4px 10px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 5px;">確定</button>
-                    </div>
-                    <div class="score-control-group score-checkbox-container">
-                        <label class="score-control-label">評価対象比率</label>
-                        <div class="score-checkbox-group">
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="00" onchange="window.runScoreAnalysis()">0:10</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="01" onchange="window.runScoreAnalysis()">1:9</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="02" onchange="window.runScoreAnalysis()">2:8</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="03" onchange="window.runScoreAnalysis()">3:7</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="04" onchange="window.runScoreAnalysis()">4:6</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="05" onchange="window.runScoreAnalysis()">5:5</label>
-                        </div>
                     </div>
                 </div>
                 <div id="scoreResultContainer" class="table-responsive score-table-container"></div>

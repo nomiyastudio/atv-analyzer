@@ -30,8 +30,7 @@ window.runAnalysis = async function() {
     resultArea.innerHTML = "";
     window.generatedPrompts = {};
     window.processedData = {};
-    window.globalSortType = 'adjustedATV'; 
-    window.globalCorrectionMode = 'weightedATV';
+    window.globalSortType = 'adjWeighted'; 
     window.globalSortDirection = 'asc'; // 追加: ソート方向の初期化
     window.globalRatioId = '02'; // ステートのリセット
 
@@ -125,22 +124,7 @@ window.handleHeaderClick = function(clickedSortType) {
     } else {
         // その他の項目（ATVスコア等）は常に昇順(asc)固定とし、トグルは行わない
         window.globalSortDirection = 'asc';
-
-        if (clickedSortType === 'centralATV') {
-            window.globalSortType = 'centralATV';
-            window.globalCorrectionMode = 'centralATV';
-        } else if (clickedSortType === 'weightedATV') {
-            window.globalSortType = 'weightedATV';
-            window.globalCorrectionMode = 'weightedATV';
-        } else if (clickedSortType === 'adjustedATV') {
-            if (window.globalSortType === 'adjustedATV') {
-                window.globalCorrectionMode = (window.globalCorrectionMode === 'centralATV') ? 'weightedATV' : 'centralATV';
-            } else {
-                window.globalSortType = 'adjustedATV';
-            }
-        } else {
-            window.globalSortType = clickedSortType;
-        }
+        window.globalSortType = clickedSortType;
     }
 
     // ステートを使用して再描画

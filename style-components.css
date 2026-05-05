@@ -179,11 +179,46 @@ h3 {
 }
 .dl-btn:hover { background-color: #128f76; }
 
-.highlight-rank-1 { background-color: #90caf9; border: 2px solid #42a5f5 !important; }
-.highlight-rank-2 { background-color: #bbdefb; border: 2px solid #64b5f6 !important; }
-.highlight-rank-3 { background-color: #e3f2fd; border: 2px solid #90caf9 !important; }
-.highlight-trim-main { background-color: #c8e6c9; border: 2px solid #66bb6a !important; }
-.highlight-trim-sub { background-color: #f1f8e9; border: 2px dashed #81c784 !important; }
+/* ==========================================
+   カラーテーマ定義 (Pattern B-1改: 2段階背景色)
+========================================== */
+:root {
+    /* 展開補正(ベスト) - 少し濃い青系 */
+    --bg-aw-1: #bbdefb; --bd-aw-1: #42a5f5; /* 1段階目 */
+    --bg-aw-2: #e3f2fd; --bd-aw-2: #64b5f6; /* 2段階目 */
+
+    /* 展開補正(安定) - 少し濃い緑系 */
+    --bg-ac-1: #c8e6c9; --bd-ac-1: #66bb6a;
+    --bg-ac-2: #e8f5e9; --bd-ac-2: #81c784;
+
+    /* 加重平均(ベスト) - 薄い青系 */
+    --bg-w-1: #e3f2fd; --bd-w-1: #90caf9;
+    --bg-w-2: #f4f9fe; --bd-w-2: #90caf9;
+
+    /* 中央加重(安定) - 薄い緑系 */
+    --bg-c-1: #e8f5e9; --bd-c-1: #a5d6a7;
+    --bg-c-2: #f5fbf6; --bd-c-2: #a5d6a7;
+}
+
+/* 過去走のハイライト用クラス */
+/* 加重平均用 */
+.hl-weighted-1 { background-color: var(--bg-w-1); border: 2px solid var(--bd-w-1) !important; font-weight: bold; color: #111; }
+.hl-weighted-2 { background-color: var(--bg-w-2); border: 1px solid var(--bd-w-2) !important; color: #111; }
+.hl-weighted-3 { background-color: var(--bg-w-2); border: 1px solid var(--bd-w-2) !important; color: #111; }
+
+/* 展開補正(ベスト)用 */
+.hl-adj-weighted-1 { background-color: var(--bg-aw-1); border: 2px solid var(--bd-aw-1) !important; font-weight: bold; color: #111; }
+.hl-adj-weighted-2 { background-color: var(--bg-aw-2); border: 1px solid var(--bd-aw-2) !important; color: #111; }
+.hl-adj-weighted-3 { background-color: var(--bg-aw-2); border: 1px solid var(--bd-aw-2) !important; color: #111; }
+
+/* 中央加重用 (採用/除外の表現) */
+.hl-central-adopt { background-color: var(--bg-c-1); border: 2px solid var(--bd-c-1) !important; font-weight: bold; color: #111; }
+.hl-central-out { background-color: #f9f9f9; border: 1px dashed #ccc !important; color: #999; }
+
+/* 展開補正(安定)用 */
+.hl-adj-central-adopt { background-color: var(--bg-ac-1); border: 2px solid var(--bd-ac-1) !important; font-weight: bold; color: #111; }
+.hl-adj-central-out { background-color: #f9f9f9; border: 1px dashed #ccc !important; color: #999; }
+
 .highlight-horse-1 { background-color: #ffcc80; border: 2px solid #ffa726 !important; }
 .highlight-horse-2 { background-color: #ffe0b2; border: 2px solid #ffcc80 !important; }
 .highlight-horse-3 { background-color: #fff3e0; border: 2px dashed #ffb74d !important; }
