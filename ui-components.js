@@ -14,8 +14,11 @@ window.renderDetailedLog = function(ratioId) {
         h.pastRaces.forEach(r => {
             if (r.valid) {
                 let getAtv = (id) => { 
-                    let res = window.processedData[id].results.find(res => res.horseNo === h.horseNo); 
-                    return res ? res.pastRaces.find(pr => pr.idx === r.idx).atv.toFixed(2) : "-"; 
+                    // 修正: 馬番(horseNo)ではなく、一意性が担保されている馬名(horseName)で検索するよう変更
+                    let res = window.processedData[id].results.find(res => res.horseName === h.horseName); 
+                    // 修正: 過去走が存在しない（undefined）場合のクラッシュを防ぐ安全なアクセス処理に変更
+                    let pr = res ? res.pastRaces.find(pr => pr.idx === r.idx) : null;
+                    return (pr && pr.atv != null) ? pr.atv.toFixed(2) : "-";
                 };
                 
                 logHtml += `<tr>
