@@ -6,7 +6,7 @@ window.runScoreAnalysis = function() {
     let metrics = Array.from(document.querySelectorAll('.score-metric-cb:checked')).map(cb => cb.value);
     let threshold = parseFloat(document.getElementById('scoreThreshold').value);
     let selectedRatios = Array.from(document.querySelectorAll('.score-ratio-cb:checked')).map(cb => cb.value);
-
+    
     if (metrics.length === 0 || selectedRatios.length === 0) {
         document.getElementById('scoreResultContainer').innerHTML = "";
         return;
@@ -19,17 +19,18 @@ window.runScoreAnalysis = function() {
 
     let horseScores = {};
     
-    let baseData = window.processedData['03'].results; 
+    let baseData = window.processedData['03'].results;
     baseData.forEach(h => {
-        horseScores[h.horseNo] = {
+        horseScores[h.horseId] = { // 変更: キーをhorseId(内部ID)に変更しデータ上書きを防止
+            horseId: h.horseId,
             horseNo: h.horseNo,
             horseName: h.horseName,
             totalScore: 0,
             metrics: {}
         };
         metrics.forEach(m => {
-            horseScores[h.horseNo].metrics[m] = { subTotal: 0, scores: {} };
-            selectedRatios.forEach(r => horseScores[h.horseNo].metrics[m].scores[r] = 0);
+            horseScores[h.horseId].metrics[m] = { subTotal: 0, scores: {} };
+            selectedRatios.forEach(r => horseScores[h.horseId].metrics[m].scores[r] = 0);
         });
     });
 
@@ -52,7 +53,7 @@ window.runScoreAnalysis = function() {
                         if (points < 0) points = 0;
                     }
                 }
-                let hs = horseScores[h.horseNo];
+                let hs = horseScores[h.horseId]; // 変更: IDで参照
                 if (hs) {
                     hs.metrics[metric].scores[ratioId] = points;
                     hs.metrics[metric].subTotal += points;
@@ -76,7 +77,8 @@ window.runScoreAnalysis = function() {
             if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
             let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
             if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
-            return aNo - bNo;
+            if (aNo !== bNo) return aNo - bNo;
+            return a.horseId.localeCompare(b.horseId); // 変更: 同値時のフォールバックをhorseIdで安定化
         });
 
     if (sortedScores.length === 0) {
@@ -105,7 +107,7 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, 
             <th rowspan="2" class="col-score-umaban">馬番</th>
             <th rowspan="2" class="col-score-name">馬名</th>
             <th rowspan="2" class="col-score-total">総合スコア</th>`;
-    
+            
     // ヘッダー上段: 評価指標のグループ
     metrics.forEach(m => {
         let label = metricLabels[m] || m;
@@ -137,7 +139,6 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, 
         metrics.forEach(m => {
             // 小計列の出力
             html += `<td class="col-subtotal" style="font-weight:bold; color:#2c3e50; background:#eaf2f8;">${h.metrics[m].subTotal.toFixed(0)}</td>`;
-            
             // 各比率列の出力
             selectedRatios.forEach(r => {
                 let pts = h.metrics[m].scores[r];
