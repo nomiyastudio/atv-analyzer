@@ -87,7 +87,7 @@ window.parseTarget = function(d1) {
 
 window.extractValidHorseNames = function(d1) {
     let validHorseNames = [];
-    
+
     // --- 新規追加: 抽出漏れストッパー（不要なフッター領域のカット） ---
     let cleanD1 = d1;
     let d1CutoffMatch = d1.match(/選んだ馬のオッズ|予想を共有|AI展開予測|各データ上位3頭|展開予測の見方/);
@@ -97,19 +97,32 @@ window.extractValidHorseNames = function(d1) {
 
     let d1Lines = cleanD1.split('\n').map(l => l.trim()).filter(l => l !== '');
 
-    let isIgnoreText = (txt) => {
-        return new RegExp(`^${window.ATV_MARK_PATTERN}$`).test(txt) || 
-               /^&#\d+;?$/.test(txt) || 
-               /削除|保存|閉じる|文字以内|馬メモ|次走|相性度|波乱度|マスターコース|ログイン|予想|展開|トラックバイアス|的中|プラス|コース情報|ペース|編集/.test(txt) ||
-               /^前走/.test(txt) ||
-               /^\d+$/.test(txt); 
+    let isValidHorseNameCandidate = (txt) => {
+        if (new RegExp(`^${window.ATV_MARK_PATTERN}$`).test(txt)) return false;
+        if (/^&#\d+;?$/.test(txt)) return false;
+        if (/^\d+$/.test(txt)) return false;
+        if (/^前走/.test(txt)) return false;
+
+        // 完全一致で除外
+        if (/^(予想|展開|ペース|プラス|次走|編集|削除|保存|閉じる|的中|ログイン)$/.test(txt)) return false;
+
+        // 部分一致で除外
+        if (/文字以内|馬メモ|ペース合わず|相性度|波乱度|マスターコース|トラックバイアス|コース情報/.test(txt)) return false;
+
+        // カタカナ必須条件：全角カタカナが2文字以上含まれていること
+        let katakanaMatch = txt.match(/[\u30A0-\u30FF]/g);
+        if (!katakanaMatch || katakanaMatch.length < 2) return false;
+
+        return true;
     };
 
     // --- 新規追加: 重複・略称排除フィルター ---
     const addValidName = (name) => {
         if (!name || name === "不明") return;
+
         // 既に存在する馬名の一部（略称）であれば追加しない
         if (validHorseNames.some(existing => existing.includes(name))) return;
+
         // 逆に追加しようとしている名前が、既存の短い名前を包含している場合は上書きする
         let shortIdx = validHorseNames.findIndex(existing => name.includes(existing));
         if (shortIdx !== -1) {
@@ -128,8 +141,7 @@ window.extractValidHorseNames = function(d1) {
             while (j < d1Lines.length && j <= i + 15) {
                 let txt = d1Lines[j];
                 if (/^\d+[\s\t]+\d+$/.test(txt)) break;
-                
-                if (!isIgnoreText(txt) && txt.length > 1 && !/^\d/.test(txt)) {
+                if (isValidHorseNameCandidate(txt) && txt.length > 1 && !/^\d/.test(txt)) {
                     name = window.cleanHorseName(txt);
                     break;
                 }
@@ -152,8 +164,7 @@ window.extractValidHorseNames = function(d1) {
                     while (j < d1Lines.length && j <= i + 15) {
                         let txt = d1Lines[j];
                         if (/^\d+$/.test(txt) && j+1 < d1Lines.length && /^\d+$/.test(d1Lines[j+1])) break;
-                        
-                        if (!isIgnoreText(txt) && txt.length > 1 && !/^\d/.test(txt)) {
+                        if (isValidHorseNameCandidate(txt) && txt.length > 1 && !/^\d/.test(txt)) {
                             name = window.cleanHorseName(txt);
                             break;
                         }
@@ -171,7 +182,7 @@ window.extractValidHorseNames = function(d1) {
             // 単独の予想印（-- や ◎◯▲△☆消? など）の行を検知
             if (new RegExp(`^${window.ATV_MARK_PATTERN}$`).test(d1Lines[i])) {
                 let name = window.cleanHorseName(d1Lines[i+1]);
-                if (name && name.length > 1 && !isIgnoreText(name) && !/^\d/.test(name)) {
+                if (name && name.length > 1 && isValidHorseNameCandidate(name) && !/^\d/.test(name)) {
                     addValidName(name);
                 }
             }
@@ -186,7 +197,6 @@ window.extractValidHorseNames = function(d1) {
             if (!dbMatch) {
                 dbMatch = d1Lines[i].match(/^([^\s]+)のデータベース/);
             }
-            
             if (dbMatch) {
                 let name = window.cleanHorseName(dbMatch[1]);
                 addValidName(name);
@@ -197,8 +207,7 @@ window.extractValidHorseNames = function(d1) {
                 while (j < d1Lines.length && j <= i + 6) {
                     let txt = d1Lines[j];
                     if (/^\d+$/.test(txt)) break; // 次の馬番らしき数字が来たら探索終了
-                    
-                    if (!isIgnoreText(txt) && txt.length > 1 && !/^\d/.test(txt)) {
+                    if (isValidHorseNameCandidate(txt) && txt.length > 1 && !/^\d/.test(txt)) {
                         // 馬名らしき文字列（カタカナを含む）を判定
                         if (/[\u30A0-\u30FF]/.test(txt)) {
                             let cleanTxt = txt.replace(/のデータベース.*$/, '');
