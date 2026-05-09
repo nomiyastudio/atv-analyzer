@@ -17,7 +17,8 @@
 
 .inputs-container {
     display: flex;
-    flex-direction: row; /* 横幅が狭くてもD1/D2は横並びを維持 */
+    flex-direction: row;
+    /* 横幅が狭くてもD1/D2は横並びを維持 */
     width: 100%;
     gap: 20px;
     min-width: 0;
@@ -38,11 +39,13 @@
 .action-box {
     display: flex;
     flex-direction: row; /* ボタン群を横並び */
-    justify-content: flex-start; /* 左詰め */
+    justify-content: flex-start;
+    /* 左詰め */
     gap: 10px;
     width: 100%;
     flex-shrink: 0; 
-    flex-wrap: wrap; /* 画面が極端に狭い場合の折り返し保険 */
+    flex-wrap: wrap;
+    /* 画面が極端に狭い場合の折り返し保険 */
 }
 
 /* 各種解析ブロック */
@@ -66,7 +69,7 @@
     gap: 10px;
 }
 
-/* 多角展開スコア分析: チェックボックス対応のため縦並びの柔軟な配置に変更 */
+/* 多角展開スコア分析: 表示域に合わせて枠幅をフィットさせる */
 .score-controls {
     display: flex;
     flex-direction: column;
@@ -77,7 +80,7 @@
     padding: 15px;
     border-radius: 6px;
     border: 1px solid #e1e8ed;
-    width: 100%;
+    width: fit-content; /* 修正: 100%から中の要素に合わせる設定に変更 */
     max-width: 100%;
     box-sizing: border-box;
 }
@@ -86,7 +89,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: wrap; /* 画面幅が狭い場合の保険 */
+    flex-wrap: wrap;
+    /* 画面幅が狭い場合の保険 */
 }
 
 .score-checkbox-container {
@@ -100,7 +104,8 @@
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-    justify-content: flex-start; /* 常に左詰め */
+    justify-content: flex-start;
+    /* 常に左詰め */
 }
 
 .prompt-content {
@@ -110,16 +115,25 @@
     min-width: 0;
 }
 
-/* レスポンシブ: レイアウト制御 */
-@media (max-width: 850px) {
-    /* 脚質グリッド 850px以下での2列2段化 */
+/* レスポンシブ: レイアウト制御 (800px以下に集約) */
+@media (max-width: 800px) {
+    /* ページ全体の左右余白を極小化 */
+    body {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+
+    /* 各ブロックの内側余白を極小化 */
+    .summary-block, .prompt-block, .details-block, .pace-pattern-block, .pattern-block, .score-analysis-block {
+        padding: 10px 8px !important;
+    }
+
+    /* 脚質グリッド 800px以下での2列2段化 */
     .pace-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-}
 
-@media (max-width: 800px) {
-    /* モバイルサイズ (スマホ幅) のスコア分析配置 */
+    /* モバイルサイズでのスコア分析配置 */
     .score-controls {
         width: 100%;
     }
@@ -134,11 +148,10 @@
     .score-checkbox-group {
         gap: 8px 12px;
     }
-}
 
-@media (max-width: 768px) {
+    /* 入力エリアの隙間を調整 */
     .inputs-container { 
-        gap: 10px; /* スマホ時は少し隙間を詰めて横並びを確保 */
+        gap: 10px;
     }
 }
 

@@ -6,7 +6,6 @@ window.runScoreAnalysis = function() {
     let metrics = Array.from(document.querySelectorAll('.score-metric-cb:checked')).map(cb => cb.value);
     let threshold = parseFloat(document.getElementById('scoreThreshold').value);
     let selectedRatios = Array.from(document.querySelectorAll('.score-ratio-cb:checked')).map(cb => cb.value);
-    
     if (metrics.length === 0 || selectedRatios.length === 0) {
         document.getElementById('scoreResultContainer').innerHTML = "";
         return;
@@ -25,6 +24,8 @@ window.runScoreAnalysis = function() {
             horseId: h.horseId,
             horseNo: h.horseNo,
             horseName: h.horseName,
+            avgPosRatio: h.avgPosRatio, // 新規追加: 脚質パーセント表示用
+            styleName: h.styleName, // 新規追加: 脚質漢字表記用
             totalScore: 0,
             metrics: {}
         };
@@ -33,7 +34,6 @@ window.runScoreAnalysis = function() {
             selectedRatios.forEach(r => horseScores[h.horseId].metrics[m].scores[r] = 0);
         });
     });
-
     metrics.forEach(metric => {
         selectedRatios.forEach(ratioId => {
             let data = window.processedData[ratioId].results;
@@ -70,7 +70,6 @@ window.runScoreAnalysis = function() {
         });
         hs.totalScore = hs.totalScore / (metrics.length * selectedRatios.length);
     });
-
     let sortedScores = Object.values(horseScores)
         .filter(h => h.totalScore > 0)
         .sort((a, b) => {
@@ -80,7 +79,6 @@ window.runScoreAnalysis = function() {
             if (aNo !== bNo) return aNo - bNo;
             return a.horseId.localeCompare(b.horseId); // 変更: 同値時のフォールバックをhorseIdで安定化
         });
-
     if (sortedScores.length === 0) {
         document.getElementById('scoreResultContainer').innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:13px; font-weight:bold; padding:20px 0;">設定した閾値(${threshold})以内に該当する馬はいませんでした。</p>`;
         return;
@@ -100,26 +98,26 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, 
     };
     const ratioLabels = {'00':'0:10', '01':'1:9', '02':'2:8', '03':'3:7', '04':'4:6', '05':'5:5'};
 
-    let html = `<table style="border-collapse:collapse; font-size:13px; text-align:center;">
+    let html = `<table style="border-collapse:collapse; font-size:13px; text-align:center; vertical-align:middle;">
         <tr>
-            <th rowspan="2" class="col-score-rank">順位</th>
-            <th rowspan="2" class="col-score-waku">枠</th>
-            <th rowspan="2" class="col-score-umaban">馬番</th>
-            <th rowspan="2" class="col-score-name">馬名</th>
-            <th rowspan="2" class="col-score-total">総合スコア</th>`;
-            
+            <th rowspan="2" class="col-score-rank" style="text-align:center; writing-mode:vertical-rl; text-orientation:upright; padding:10px 5px;">順位</th>
+            <th rowspan="2" class="col-score-waku" style="text-align:center; padding:10px 4px;">枠</th>
+            <th rowspan="2" class="col-score-umaban" style="text-align:center; writing-mode:vertical-rl; text-orientation:upright; padding:10px 5px;">馬番</th>
+            <th rowspan="2" class="col-score-name" style="text-align:center;">馬名</th>
+            <th rowspan="2" class="col-score-pace" style="text-align:center; writing-mode:vertical-rl; text-orientation:upright; padding:10px 5px;">脚質</th>
+            <th rowspan="2" class="col-score-total" style="text-align:center;">総合スコア</th>`;
     // ヘッダー上段: 評価指標のグループ
     metrics.forEach(m => {
         let label = metricLabels[m] || m;
-        html += `<th colspan="${selectedRatios.length + 1}" class="metric-header">${label}</th>`;
+        html += `<th colspan="${selectedRatios.length + 1}" class="metric-header" style="text-align:center;">${label}</th>`;
     });
     html += `</tr><tr>`;
 
     // ヘッダー下段: 小計と各比率
     metrics.forEach(m => {
-        html += `<th class="col-subtotal">小計</th>`;
+        html += `<th class="col-subtotal" style="text-align:center;">小計</th>`;
         selectedRatios.forEach(r => {
-            html += `<th class="col-score-ratio">${ratioLabels[r]}</th>`;
+            html += `<th class="col-score-ratio" style="text-align:center;">${ratioLabels[r]}</th>`;
         });
     });
     html += `</tr>`;
@@ -129,22 +127,34 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, 
         if (index > 0 && h.totalScore < sortedScores[index - 1].totalScore) rank = index + 1;
         let wakuColor = window.getWakuColor(h.horseNo, totalHorses);
         
+        // 脚質カラーとテキストの計算
+        let paceColor = "#999";
+        let paceText = "-";
+        if (h.avgPosRatio !== null) {
+            let pct = h.avgPosRatio * 100;
+            let rgb = window.getColorFromStops(window.paceStops, pct);
+            paceColor = window.rgbToHex(rgb);
+            paceText = h.styleName || "-"; // 変更: パーセント数値から漢字表記へ
+        }
+
         html += `<tr>
-            <td style="font-weight:bold; color:#555;">${h.totalScore > 0 ? rank : '-'}</td>
-            <td style="background-color:${wakuColor.bg}; color:${wakuColor.text}; border:1px solid ${wakuColor.border}; font-weight:bold;">${wakuColor.waku}</td>
-            <td style="font-weight:bold;">${h.horseNo}</td>
+            <td style="font-weight:bold; color:#555; text-align:center;">${h.totalScore > 0 ? rank : '-'}</td>
+            <td style="background-color:${wakuColor.bg}; color:${wakuColor.text}; border:1px solid ${wakuColor.border}; font-weight:bold; text-align:center;">${wakuColor.waku}</td>
+            <td style="font-weight:bold; text-align:center;">${h.horseNo}</td>
             <td class="align-left" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.horseName}</td>
-            <td style="font-weight:bold; font-size:15px; color:var(--primary-color); background:#fbfcfc;">${h.totalScore.toFixed(0)}</td>`;
+            <td style="color:${paceColor}; font-weight:bold; text-align:center;">${paceText}</td>
+            <td style="font-weight:bold; font-size:15px; color:var(--primary-color); background:#fbfcfc; text-align:center;">${h.totalScore.toFixed(0)}</td>`;
         
         metrics.forEach(m => {
             // 小計列の出力
-            html += `<td class="col-subtotal" style="font-weight:bold; color:#2c3e50; background:#eaf2f8;">${h.metrics[m].subTotal.toFixed(0)}</td>`;
+            html += `<td class="col-subtotal" style="font-weight:bold; color:#2c3e50; background:#eaf2f8; text-align:center;">${h.metrics[m].subTotal.toFixed(0)}</td>`;
             // 各比率列の出力
             selectedRatios.forEach(r => {
                 let pts = h.metrics[m].scores[r];
                 let color = pts >= 80 ? '#e74c3c' : (pts >= 50 ? '#e67e22' : '#555');
                 let fw = pts >= 50 ? 'bold' : 'normal';
-                html += `<td style="color:${color}; font-weight:${fw};">${pts > 0 ? pts.toFixed(0) : '0'}</td>`;
+          
+                html += `<td style="color:${color}; font-weight:${fw}; text-align:center;">${pts > 0 ? pts.toFixed(0) : '0'}</td>`;
             });
         });
         
