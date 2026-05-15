@@ -75,16 +75,19 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
 
     for (let j = 1; j < races.length; j++) {
         if (j > localMax) localMax = j;
+
         let rText = races[j].split(/\r?\n(?:全場(?:芝|ダ)|(?:中山|東京|京都|阪神|中京|小倉|新潟|福島|札幌|函館)(?:芝|ダ)\d+m)/)[0];
 
         let rDateMatch = rText.match(/(?:^|\n|\s)(\d{2}\/\d{2})/);
         let rDate = rDateMatch ? rDateMatch[1] : "不明";
 
         let isOuter = /外/.test(rText);
+
         let rTrackMatch = rText.match(/(芝|ダ)(\d+)/);
         if (!rTrackMatch) continue;
         let pTrack = rTrackMatch[1];
         let pDist = parseInt(rTrackMatch[2], 10);
+
         if (pTrack !== target.trackType) {
             pastRaces.push({ idx: j, date: rDate, valid: false, reason: "馬場不一致" });
             continue;
@@ -127,6 +130,7 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
         let horseCount = headMatch ? parseInt(headMatch[1]) : 0;
         let posRatio = null;
         let hadLead = false;
+        let corner4Pos = null; // 新規追加: 4コーナー位置
 
         if (horseCount > 0 && posStr) {
             let posNums = posStr.match(/\d+/g);
@@ -140,10 +144,23 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
                     targetPos = parseInt(posNums[0]);
                 }
                 posRatio = targetPos / horseCount;
+                corner4Pos = parseInt(posNums[posNums.length - 1], 10); // 最後の数字が4コーナー
                 for (let pIdx = 0; pIdx < posNums.length; pIdx++) {
                     if (parseInt(posNums[pIdx]) === 1) hadLead = true;
                 }
             }
+        }
+
+        // 新規追加: 最終着順の抽出と追い抜き頭数の算出
+        let finalRank = null;
+        let rankMatch = rText.match(/(\d+)着/);
+        if (rankMatch) {
+            finalRank = parseInt(rankMatch[1], 10);
+        }
+
+        let passedCount = null;
+        if (corner4Pos !== null && finalRank !== null) {
+            passedCount = corner4Pos - finalRank;
         }
 
         let baseTime = 0;
@@ -233,8 +250,10 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
             classMod: classMod, agePattern: agePattern, pClassRank: pClassRank, 
             pLoc: pLoc || "不明", pTrack: pTrack, pDist: pDist, pCond: pCond, pWeight: pWeight,
             isLimited: false, posRatio: posRatio, hadLead: hadLead,
-            isOuter: isOuter
+            isOuter: isOuter,
+            passedCount: passedCount // 新規追加: 追い抜き頭数
         };
+
         pastRaces.push(currentRaceData);
         validATVs.push(currentRaceData);
     }

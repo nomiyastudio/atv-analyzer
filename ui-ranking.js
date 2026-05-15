@@ -3,7 +3,6 @@
 // ==========================================
 window.renderAvgRanking = function(ratioId) 
 {
-    
     let data = window.processedData[ratioId];
     if (!data) return "";
     let sortType = window.globalSortType;
@@ -17,14 +16,11 @@ window.renderAvgRanking = function(ratioId)
             if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
             if (aNo !== bNo) return aNo - bNo;
             return a.horseId.localeCompare(b.horseId);
-   
-         } else if (sortType === 'currentWeight') {
+        } else if (sortType === 'currentWeight') {
             let wA = a.currentWeight; let wB = b.currentWeight;
             if (wA !== wB) {
                 return window.globalSortDirection === 'desc' ? wB - wA : wA - wB;
             }
-       
- 
             let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
             if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
             if (aNo !== bNo) return aNo - bNo;
@@ -35,9 +31,8 @@ window.renderAvgRanking = function(ratioId)
             if (classA !== classB) {
                 return window.globalSortDirection === 'desc' ? classB - classA : classA - classB;
             }
-       
-             let valA = a.avgPosRatio;
-             let valB = b.avgPosRatio;
+            let valA = a.avgPosRatio;
+            let valB = b.avgPosRatio;
             if (valA === null && valB === null) return 0;
             if (valA === null) return 1;
             if (valB === null) return -1;
@@ -72,6 +67,7 @@ window.renderAvgRanking = function(ratioId)
             return a.horseId.localeCompare(b.horseId);
         }
     });
+
     let hasNige = res.some(h => h.styleClass === 1);
     let minPaceRatio = Infinity;
     if (!hasNige) {
@@ -97,6 +93,7 @@ window.renderAvgRanking = function(ratioId)
         if (h.adjCentral !== null && h.adjCentral < minAdjCentral) minAdjCentral = h.adjCentral;
         if (h.adjWeighted !== null && h.adjWeighted < minAdjWeighted) minAdjWeighted = h.adjWeighted;
     });
+
     let getThresholds = (key) => {
         let vals = res.map(r => r[key]).filter(v => v !== null).sort((a,b) => a - b);
         if(vals.length === 0) return { t1: 0, t2: 0 };
@@ -110,75 +107,70 @@ window.renderAvgRanking = function(ratioId)
     let acThresh = getThresholds('adjCentral');
     let wThresh = getThresholds('weightedATV');
     let cThresh = getThresholds('centralATV');
+
     // ヘッダーの並び順: 展開補正(ベスト) → 展開補正(安定) → 加重平均 → 中央加重
     let html = `<table>
         <tr>
             <th class="col-waku sortable-header ${sortType === 'horseNo' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('horseNo')" title="枠番">枠</th>
             <th class="col-umaban sortable-header ${sortType === 'horseNo' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('horseNo')" title="馬番">
                 <div style="display:flex; flex-direction:column; align-items:center;">
-            
- 
-     <div style="writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px;">馬番</div>
-                    ${sortType === 'horseNo' ?
-'<span style="font-size:10px;color:var(--secondary-color); margin-top:2px;">▼</span>' : ''}
+                    <div style="writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px;">馬番</div>
+                    ${sortType === 'horseNo' ? '<span style="font-size:10px;color:var(--secondary-color); margin-top:2px;">▼</span>' : ''}
                 </div>
             </th>
             <th>馬名</th>
             <th class="col-weight sortable-header ${sortType === 'currentWeight' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('currentWeight')" title="今回の斤量">
                 <div style="display:flex; flex-direction:column; align-items:center;">
-              
- 
-       <div style="writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px;">斤量</div>
-                    ${sortType === 'currentWeight' ?
-`<span style="font-size:10px;color:var(--secondary-color); margin-top:2px;">${window.globalSortDirection === 'desc' ? '▼' : '▲'}</span>` : ''}
+                    <div style="writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 2px;">斤量</div>
+                    ${sortType === 'currentWeight' ? `<span style="font-size:10px;color:var(--secondary-color); margin-top:2px;">${window.globalSortDirection === 'desc' ? '▼' : '▲'}</span>` : ''}
                 </div>
             </th>
             <th class="col-interval">間隔</th>
             <th class="col-narrow sortable-header ${sortType === 'pace' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('pace')" title="クリックで展開位置順にソート">
                 脚質<br><span class="sort-desc">(%)</span>
-         
- 
-        ${sortType === 'pace' ? `<br><span style="font-size:10px;color:var(--secondary-color);">${window.globalSortDirection === 'desc' ?
-'▼' : '▲'}</span>` : ''}
+                ${sortType === 'pace' ? `<br><span style="font-size:10px;color:var(--secondary-color);">${window.globalSortDirection === 'desc' ? '▼' : '▲'}</span>` : ''}
             </th>
             <th class="sortable-header ${sortType === 'adjWeighted' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('adjWeighted')" title="展開補正(ベスト)でソート">
                 展開補正<br><span class="sort-desc">(ベスト)</span>
-                ${sortType === 'adjWeighted' ?
-'<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
+                ${sortType === 'adjWeighted' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
             </th>
             <th class="sortable-header ${sortType === 'adjCentral' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('adjCentral')" title="展開補正(安定)でソート">
                 展開補正<br><span class="sort-desc">(安定)</span>
-                ${sortType === 'adjCentral' ?
-'<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
+                ${sortType === 'adjCentral' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
             </th>
             <th class="sortable-header ${sortType === 'weightedATV' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('weightedATV')" title="加重平均でソート">
                 加重平均<br><span class="sort-desc">(ベスト)</span>
-                ${sortType === 'weightedATV' ?
-'<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
+                ${sortType === 'weightedATV' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
             </th>
             <th class="sortable-header ${sortType === 'centralATV' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('centralATV')" title="中央加重でソート">
                 中央加重<br><span class="sort-desc">(安定)</span>
-                ${sortType === 'centralATV' ?
-'<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
+                ${sortType === 'centralATV' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
             </th>`;
-for(let k=1; k<=data.maxDisplayRaces; k++) html += `<th>${k}走前</th>`;
+    for(let k=1; k<=data.maxDisplayRaces; k++) html += `<th>${k}走前</th>`;
     html += `</tr>`;
-let formatAtvDetail = (race, target) => {
-        let locStr = race.pLoc === target.location ?
-`<span class="match-highlight">${race.pLoc}</span>` : race.pLoc;
+
+    let formatAtvDetail = (race, target) => {
+        let locStr = race.pLoc === target.location ? `<span class="match-highlight">${race.pLoc}</span>` : race.pLoc;
         let distStr = race.pDist === target.distance ? `<span class="match-highlight">${race.pTrack}${race.pDist}m</span>` : `${race.pTrack}${race.pDist}m`;
-        let limitMark = race.isLimited ?
-`<span style="color:#e74c3c; font-size:10px; font-weight:bold; margin-left:2px;">[限]</span>` : "";
+        let limitMark = race.isLimited ? `<span style="color:#e74c3c; font-size:10px; font-weight:bold; margin-left:2px;">[限]</span>` : "";
+        
+        let passedMark = "";
+        if (race.passedCount !== null && race.passedCount !== undefined) {
+            if (race.passedCount > 0) {
+                passedMark = ` <span style="color:#e74c3c; font-weight:bold;">↑${race.passedCount}</span>`;
+            } else if (race.passedCount === 0) {
+                passedMark = ` <span style="color:#7f8c8d;">±0</span>`;
+            }
+        }
+
         return `
             <div style="display:flex; justify-content:center; align-items:baseline; gap:4px; margin-bottom:2px;">
-                <span style="font-size:10px; color:#888;">${isNaN(parseFloat(race.f3f)) ?
-"-" : parseFloat(race.f3f).toFixed(1)}</span>
+                <span style="font-size:10px; color:#888;">${isNaN(parseFloat(race.f3f)) ? "-" : parseFloat(race.f3f).toFixed(1)}</span>
                 <span style="font-weight:bold; font-size:14px; color:var(--primary-color);">${race.atv.toFixed(2)}${limitMark}</span>
-                <span style="font-size:10px; color:#888;">${isNaN(parseFloat(race.f3b)) ?
-"-" : parseFloat(race.f3b).toFixed(1)}</span>
+                <span style="font-size:10px; color:#888;">${isNaN(parseFloat(race.f3b)) ? "-" : parseFloat(race.f3b).toFixed(1)}</span>
             </div>
-            <span style="font-size:10px; color:#666;">${race.date} ${locStr} ${race.pWeight.toFixed(1)}kg<br>${race.pCond} ${distStr}</span>`;
-};
+            <span style="font-size:10px; color:#666;">${race.date} ${locStr} ${race.pWeight.toFixed(1)}kg<br>${race.pCond} ${distStr}${passedMark}</span>`;
+    };
 
     res.forEach((h) => {
         let awStyle = (h.adjWeighted !== null) ? (h.adjWeighted <= awThresh.t1 ? 'background-color: var(--bg-aw-1); border: 2px solid var(--bd-aw-1); font-weight: bold; color: #111;' : (h.adjWeighted <= awThresh.t2 ? 'background-color: var(--bg-aw-2); border: 1px solid var(--bd-aw-2); font-weight: normal; color: #111;' : 'font-weight: normal; color: #333;')) : 'font-weight: normal; color: #333;';
@@ -190,91 +182,75 @@ let formatAtvDetail = (race, target) => {
         let wakuColor = window.getWakuColor(h.horseNo, res.length);
   
         // 定量戦の場合は「騎手恩恵 + 年齢恩恵」のみをマイナス差分として強調判定に使用し、牝馬恩恵は除外する
-        let diff = isFlatRace ?
--( (h.jockeyAllowance || 0) + (h.ageAllowance || 0) ) : (h.currentWeight - avgActualW);
-let wCol = (diff <= -2.5 || diff >= 2.5) ?
-(diff < 0 ? '#0055ff' : '#e74c3c') : (diff <= -1.5 || diff >= 1.5 ? (diff < 0 ? '#0077cc' : '#e67e22') : '#555555');
-let isPaceSetter = hasNige ? (h.styleClass === 1) : (h.styleClass === 2 && h.avgPosRatio === minPaceRatio && h.avgPosRatio !== null);
-let paceTdStyle = `text-align:center; vertical-align:middle; padding:4px; border:1px solid var(--border-color);` + (isPaceSetter ? `background-color: #fff3e0; background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,167,38,0.15) 8px, rgba(255,167,38,0.15) 16px); box-shadow: inset 0 0 0 2px #ffa726; border: 1px solid #ff9800;` : ``);
-html += `<tr>
+        let diff = isFlatRace ? -( (h.jockeyAllowance || 0) + (h.ageAllowance || 0) ) : (h.currentWeight - avgActualW);
+        let wCol = (diff <= -2.5 || diff >= 2.5) ? (diff < 0 ? '#0055ff' : '#e74c3c') : (diff <= -1.5 || diff >= 1.5 ? (diff < 0 ? '#0077cc' : '#e67e22') : '#555555');
+        let isPaceSetter = hasNige ? (h.styleClass === 1) : (h.styleClass === 2 && h.avgPosRatio === minPaceRatio && h.avgPosRatio !== null);
+        let paceTdStyle = `text-align:center; vertical-align:middle; padding:4px; border:1px solid var(--border-color);` + (isPaceSetter ? `background-color: #fff3e0; background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,167,38,0.15) 8px, rgba(255,167,38,0.15) 16px); box-shadow: inset 0 0 0 2px #ffa726; border: 1px solid #ff9800;` : ``);
+        
+        html += `<tr>
             <td style="background-color:${wakuColor.bg}; color:${wakuColor.text}; border:1px solid ${wakuColor.border}; font-weight:bold; font-size:14px;">${wakuColor.waku}</td>
             <td style="font-weight: ${sortType === 'horseNo' ? 'bold' : 'normal'}; font-size:14px;">${h.horseNo}</td>
             <td class="align-left">${h.horseName}${exceptionMark}</td>
             <td style="text-align:center; font-size:13px;"><span style="color:${wCol}; font-weight:bold;">${h.currentWeight.toFixed(1)}</span></td>
             <td style="text-align:center;">${h.intervalHtml}</td>
             <td style="${paceTdStyle}">
-   
- 
-          ${(h.styleClass !== null) ?
-`
-                <div class="pace-badge-wrapper" style="--badge-color: ${window.rgbToHex(window.getColorFromStops(window.paceStops, h.avgPosRatio*100))};">
-                    <div class="pace-shape ${['','shape-nige','shape-senko','shape-sashi','shape-oikomi'][h.styleClass]}">${h.styleName.charAt(0)}</div>
-                    <span class="pace-pct-text">${(h.avgPosRatio*100).toFixed(0)}%</span>
+                ${(h.styleClass !== null) ?
+                `<div class="pace-badge-wrapper" style="--badge-color: ${window.rgbToHex(window.getColorFromStops(window.paceStops, h.avgPosRatio*100))}; height: auto; gap: 2px;">
+                    <span class="pace-pct-text" style="margin-top: 0; margin-bottom: 0;">${(h.avgPosRatio*100).toFixed(0)}%</span>
+                    <div class="pace-shape ${['','shape-nige','shape-senko','shape-sashi','shape-oikomi'][h.styleClass]}" style="margin-bottom: 0;">${h.styleName.charAt(0)}</div>
+                    <span style="font-size:10px; font-weight:bold; color:${h.avgPassedCount > 0 ? '#e74c3c' : '#7f8c8d'};">${h.avgPassedCount > 0 ? '↑' + h.avgPassedCount.toFixed(1) : '±0'}</span>
                 </div>` : "-"}
             </td>
-       
- 
-     <td style="font-size:15px; ${awStyle}">
-                ${h.adjWeighted !== null ?
-h.adjWeighted.toFixed(2) : "-"}
+            <td style="font-size:15px; ${awStyle}">
+                ${h.adjWeighted !== null ? h.adjWeighted.toFixed(2) : "-"}
                 <div style="font-size:11px; margin-top:2px;">
                     <span style="color:${parseInt(h.adjWeightedRank)<=3?'#111':'#666'}; font-weight:${parseInt(h.adjWeightedRank)<=3?'bold':'normal'};">${h.adjWeightedRank}位</span><br>
-                    <span style="font-weight:normal; color:#666;">${(h.adjWeighted !== null && minAdjWeighted !== Infinity && h.adjWeighted > minAdjWeighted) ?
-'△'+(h.adjWeighted-minAdjWeighted).toFixed(2) : '-'}</span>
+                    <span style="font-weight:normal; color:#666;">${(h.adjWeighted !== null && minAdjWeighted !== Infinity && h.adjWeighted > minAdjWeighted) ? '△'+(h.adjWeighted-minAdjWeighted).toFixed(2) : '-'}</span>
                 </div>
             </td>
             <td style="font-size:15px; ${acStyle}">
-                ${h.adjCentral !== null ?
-h.adjCentral.toFixed(2) : "-"}
+                ${h.adjCentral !== null ? h.adjCentral.toFixed(2) : "-"}
                 <div style="font-size:11px; margin-top:2px;">
                     <span style="color:${parseInt(h.adjCentralRank)<=3?'#111':'#666'}; font-weight:${parseInt(h.adjCentralRank)<=3?'bold':'normal'};">${h.adjCentralRank}位</span><br>
-                    <span style="font-weight:normal; color:#666;">${(h.adjCentral !== null && minAdjCentral !== Infinity && h.adjCentral > minAdjCentral) ?
-'△'+(h.adjCentral-minAdjCentral).toFixed(2) : '-'}</span>
+                    <span style="font-weight:normal; color:#666;">${(h.adjCentral !== null && minAdjCentral !== Infinity && h.adjCentral > minAdjCentral) ? '△'+(h.adjCentral-minAdjCentral).toFixed(2) : '-'}</span>
                 </div>
             </td>
             <td style="font-size:15px; ${wStyle}">
-                ${h.weightedATV !== null ?
-h.weightedATV.toFixed(2) : "-"}
+                ${h.weightedATV !== null ? h.weightedATV.toFixed(2) : "-"}
                 <div style="font-size:11px; margin-top:2px;">
                     <span style="color:${parseInt(h.weightedRank)<=3?'#111':'#666'}; font-weight:${parseInt(h.weightedRank)<=3?'bold':'normal'};">${h.weightedRank}位</span><br>
-                    <span style="font-weight:normal; color:#666;">${(h.weightedATV !== null && minWeightedATV !== Infinity && h.weightedATV > minWeightedATV) ?
-'△'+(h.weightedATV-minWeightedATV).toFixed(2) : '-'}</span>
+                    <span style="font-weight:normal; color:#666;">${(h.weightedATV !== null && minWeightedATV !== Infinity && h.weightedATV > minWeightedATV) ? '△'+(h.weightedATV-minWeightedATV).toFixed(2) : '-'}</span>
                 </div>
             </td>
             <td style="font-size:15px; ${cStyle}">
-                ${h.centralATV !== null ?
-h.centralATV.toFixed(2) : "-"}
+                ${h.centralATV !== null ? h.centralATV.toFixed(2) : "-"}
                 <div style="font-size:11px; margin-top:2px;">
                     <span style="color:${parseInt(h.centralRank)<=3?'#111':'#666'}; font-weight:${parseInt(h.centralRank)<=3?'bold':'normal'};">${h.centralRank}位</span><br>
-                    <span style="font-weight:normal; color:#666;">${(h.centralATV !== null && minCentralATV !== Infinity && h.centralATV > minCentralATV) ?
-'△'+(h.centralATV-minCentralATV).toFixed(2) : '-'}</span>
+                    <span style="font-weight:normal; color:#666;">${(h.centralATV !== null && minCentralATV !== Infinity && h.centralATV > minCentralATV) ? '△'+(h.centralATV-minCentralATV).toFixed(2) : '-'}</span>
                 </div>
             </td>`;
-for(let j=1; j<=data.maxDisplayRaces; j++) {
+        for(let j=1; j<=data.maxDisplayRaces; j++) {
             let race = h.pastRaces.find(r => r.idx === j);
-if (race && race.valid) {
+            if (race && race.valid) {
                 let bgCls = '';
-if (sortType === 'weightedATV') {
+                if (sortType === 'weightedATV') {
                     let idx = h.validATVs.findIndex(v => v.idx === race.idx);
-bgCls = idx < 3 ? `class="hl-weighted-${idx+1}"` : '';
+                    bgCls = idx < 3 ? `class="hl-weighted-${idx+1}"` : '';
                 } else if (sortType === 'adjWeighted') {
                     let idx = h.validATVs.findIndex(v => v.idx === race.idx);
-bgCls = idx < 3 ? `class="hl-adj-weighted-${idx+1}"` : '';
+                    bgCls = idx < 3 ? `class="hl-adj-weighted-${idx+1}"` : '';
                 } else if (sortType === 'centralATV') {
-                    bgCls = h.centralAdopted.some(t => t.idx === race.idx) ?
-`class="hl-central-adopt"` : (h.centralOutliers.some(t => t.idx === race.idx) ? `class="hl-central-out"` : '');
-} else if (sortType === 'adjCentral') {
-                    bgCls = h.centralAdopted.some(t => t.idx === race.idx) ?
-`class="hl-adj-central-adopt"` : (h.centralOutliers.some(t => t.idx === race.idx) ? `class="hl-adj-central-out"` : '');
-}
+                    bgCls = h.centralAdopted.some(t => t.idx === race.idx) ? `class="hl-central-adopt"` : (h.centralOutliers.some(t => t.idx === race.idx) ? `class="hl-central-out"` : '');
+                } else if (sortType === 'adjCentral') {
+                    bgCls = h.centralAdopted.some(t => t.idx === race.idx) ? `class="hl-adj-central-adopt"` : (h.centralOutliers.some(t => t.idx === race.idx) ? `class="hl-adj-central-out"` : '');
+                }
                 
                 html += `<td ${bgCls}>${formatAtvDetail(race, data.target)}</td>`;
-} else {
-                html += `<td>${race ?
-`<span class="skip-text">除外<br>(${race.reason})</span>` : "-"}</td>`;
+            } else {
+                html += `<td>${race ? `<span class="skip-text">除外<br>(${race.reason})</span>` : "-"}</td>`;
             }
         }
         html += `</tr>`;
-});
+    });
     return html + `</table>`;
 };

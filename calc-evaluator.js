@@ -15,7 +15,6 @@ window.checkTurfSpecialist = function(validATVs, target) {
         let yoshibaBest = Infinity;
         let hasNoshiba = false;
         let hasYoshiba = false;
-
         validATVs.forEach(r => {
             let isYoshiba = ["札幌", "函館"].includes(r.pLoc);
             if (isYoshiba) {
@@ -26,7 +25,6 @@ window.checkTurfSpecialist = function(validATVs, target) {
                 if (r.atv < noshibaBest) noshibaBest = r.atv;
             }
         });
-
         if (!isTargetYoshiba) { 
             if (hasNoshiba) {
                 validATVs.forEach(r => {
@@ -51,12 +49,15 @@ window.checkTurfSpecialist = function(validATVs, target) {
 };
 
 // ==========================================
-// 内部関数4: 脚質とペース判定
+// 内部関数4: 脚質とペース判定および平均追い抜き頭数の算出
 // ==========================================
 window.calcPaceAndStyle = function(validATVs) {
     let sumRatio = 0;
     let countRatio = 0;
     let hasLeadExperience = false;
+    
+    let sumPassed = 0;
+    let countPassed = 0;
 
     validATVs.forEach(r => {
         if (r.posRatio !== null) {
@@ -64,12 +65,19 @@ window.calcPaceAndStyle = function(validATVs) {
             countRatio++;
             if (r.hadLead) hasLeadExperience = true;
         }
+        
+        // 新規追加: 平均追い抜き頭数の算出（B案: 1以上のレースを母数とする）
+        if (r.passedCount !== null && r.passedCount > 0) {
+            sumPassed += r.passedCount;
+            countPassed++;
+        }
     });
 
     let avgPosRatio = countRatio > 0 ? (sumRatio / countRatio) : null;
+    let avgPassedCount = countPassed > 0 ? (sumPassed / countPassed) : 0;
+    
     let styleClass = null;
     let styleName = "";
-
     if (avgPosRatio !== null) {
         if (avgPosRatio <= 0.15) {
             if (hasLeadExperience) { styleClass = 1; styleName = "逃"; }
@@ -78,7 +86,7 @@ window.calcPaceAndStyle = function(validATVs) {
         else if (avgPosRatio <= 0.85) { styleClass = 3; styleName = "差"; }
         else { styleClass = 4; styleName = "追"; }
     }
-    return { avgPosRatio, styleClass, styleName };
+    return { avgPosRatio, styleClass, styleName, avgPassedCount };
 };
 
 // ==========================================
@@ -91,16 +99,11 @@ window.calcAggregateATVs = function(validATVs, avgPosRatio, cFactor) {
     let vLen = validATVs.length;
     let centralAdopted = [];
     let centralOutliers = [];
-
-    if (vLen >= 3) { weightedATV = validATVs[0].atv * 0.8 + validATVs[1].atv * 0.15 + validATVs[2].atv * 0.05;
-    }
-    else if (vLen === 2) { weightedATV = validATVs[0].atv * 0.8 + validATVs[1].atv * 0.2;
-    }
-    else if (vLen === 1) { weightedATV = validATVs[0].atv;
-    }
+    if (vLen >= 3) { weightedATV = validATVs[0].atv * 0.8 + validATVs[1].atv * 0.15 + validATVs[2].atv * 0.05; }
+    else if (vLen === 2) { weightedATV = validATVs[0].atv * 0.8 + validATVs[1].atv * 0.2; }
+    else if (vLen === 1) { weightedATV = validATVs[0].atv; }
     
     if (weightedATV !== null) weightedATV = Math.round(weightedATV * 100) / 100;
-
     let vLenCalc = Math.min(5, vLen);
     if (vLenCalc >= 5) {
         let eVal = (validATVs[0].atv + validATVs[4].atv) / 2;
@@ -125,7 +128,6 @@ window.calcAggregateATVs = function(validATVs, avgPosRatio, cFactor) {
         centralAdopted = [validATVs[0]];
     }
     if (centralATV !== null) centralATV = Math.round(centralATV * 100) / 100;
-
     let adjCentral = null;
     let adjWeighted = null;
     

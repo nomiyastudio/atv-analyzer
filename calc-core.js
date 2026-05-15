@@ -38,17 +38,20 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         let sorted = [...results].sort((a, b) => {
             let valA = a[sortKey]; let valB = b[sortKey];
             if (valA === null && valB === null) return 0;
-            if (valA === null) return 1; if (valB === null) return -1;
+            if (valA === null) return 1; 
+            if (valB === null) return -1;
             if (valA !== valB) return valA - valB;
             for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {
                 let atvA = a.validATVs.length > i ? a.validATVs[i].atv : Infinity;
                 let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
+        
                 if(atvA !== atvB) return atvA - atvB;
             }
             let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
             if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
             if (aNo !== bNo) return aNo - bNo;
-            return a.horseId.localeCompare(b.horseId); // 同点時のフォールバック
+            return a.horseId.localeCompare(b.horseId);
+            // 同点時のフォールバック
         });
         sorted.forEach((item, index) => {
             item[rankKey] = item[sortKey] !== null ? (index + 1) : "-";
@@ -65,15 +68,12 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         if (block.includes("調教タイム") || block.includes("ラップ表示")) continue;
         
         let headerArea = /\d{2}\/\d{2}/.test(block) ? block.split(/\d{2}\/\d{2}/)[0] : block;
-        
         // 修正: 外部化されたモジュール（calc-extractor.js）の呼び出し
         let info = window.extractHeaderInfo(headerArea, validHorseNames);
         if (info.horseName === "不明") continue;
-
         let horseId = "h_" + String(i).padStart(2, '0');
 
         let races = block.split(/\r?\n(?=\s*\d{2}\/\d{2}[\s\r\n])/);
-        
         // 修正: 外部化されたモジュール（calc-extractor.js）の呼び出し
         let raceData = window.processPastRaces(races, info.baseWeight, info.age, target, ratio);
         if (raceData.localMax > maxRacesIdx) maxRacesIdx = raceData.localMax;
@@ -83,7 +83,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         let paceData = window.calcPaceAndStyle(raceData.validATVs);
         let aggData = window.calcAggregateATVs(raceData.validATVs, paceData.avgPosRatio, cFactor);
         let intervalHtml = window.calcInterval(headerArea, raceData.pastRaces, target);
-
         results.push({
             horseId: horseId,
             horseNo: info.horseNo, 
@@ -92,6 +91,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             currentWeight: info.baseWeight, 
             sex: info.sex, 
             jockeyMark: info.jockeyMark, 
+   
             pastRaces: raceData.pastRaces, 
             weightedATV: aggData.weightedATV, 
             centralATV: aggData.centralATV, 
@@ -99,6 +99,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             adjWeighted: aggData.adjWeighted, 
             validCount: raceData.validATVs.length, 
             validATVs: raceData.validATVs, 
+     
             centralAdopted: aggData.centralAdopted, 
             centralOutliers: aggData.centralOutliers, 
             onlyYoshiba: turfData.onlyYoshiba, 
@@ -106,6 +107,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             styleClass: paceData.styleClass, 
             styleName: paceData.styleName, 
             avgPosRatio: paceData.avgPosRatio, 
+            avgPassedCount: paceData.avgPassedCount, // 新規追加: 平均追い抜き頭数 
             intervalHtml: intervalHtml
         });
     }
@@ -115,7 +117,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
     let centralSorted = applyRanking('centralATV', 'centralRank');
     applyRanking('adjCentral', 'adjCentralRank');
     applyRanking('adjWeighted', 'adjWeightedRank');
-
     // --- 監査ロジック ---
     let extractedNames = results.map(r => r.horseName);
     let missingHorses = validHorseNames.filter(name => !extractedNames.includes(name));
@@ -128,10 +129,9 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             }
         });
     });
-
     for(let i=0; i < centralSorted.length - 1; i++) {
-        let valA = centralSorted[i].centralATV !== null ? centralSorted[i].centralATV : Infinity;
-        let valB = centralSorted[i+1].centralATV !== null ? centralSorted[i+1].centralATV : Infinity;
+        let valA = (centralSorted[i].centralATV !== null) ? centralSorted[i].centralATV : Infinity;
+        let valB = (centralSorted[i+1].centralATV !== null) ? centralSorted[i+1].centralATV : Infinity;
         if (valA > valB) {
             auditErrors.push(`【ソート異常】${centralSorted[i].horseName}(${valA}) が ${centralSorted[i+1].horseName}(${valB}) より上位です。`);
             break;
