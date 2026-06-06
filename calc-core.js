@@ -6,7 +6,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
     let maxRacesIdx = 0;
     let auditErrors = [];
     let auditWarnings = [];
-
     // --- C値（展開係数）の算出 ---
     const getCourseFactor = (trackType, location, trackDetail) => {
         let c = window.ATV_CONFIG.C_FACTOR.TURF.DEFAULT;
@@ -81,7 +80,8 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
         // 修正: 外部化されたモジュール（calc-evaluator.js）の呼び出し
         let turfData = window.checkTurfSpecialist(raceData.validATVs, target);
         let paceData = window.calcPaceAndStyle(raceData.validATVs);
-        let aggData = window.calcAggregateATVs(raceData.validATVs, paceData.avgPosRatio, cFactor);
+        // 修正: 引数末尾にtargetを渡すように拡張し、事前ペース判定データへのアクセスを可能化
+        let aggData = window.calcAggregateATVs(raceData.validATVs, paceData.avgPosRatio, cFactor, target);
         let intervalHtml = window.calcInterval(headerArea, raceData.pastRaces, target);
         results.push({
             horseId: horseId,
@@ -91,7 +91,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             currentWeight: info.baseWeight, 
             sex: info.sex, 
             jockeyMark: info.jockeyMark, 
-   
             pastRaces: raceData.pastRaces, 
             weightedATV: aggData.weightedATV, 
             centralATV: aggData.centralATV, 
@@ -99,7 +98,6 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             adjWeighted: aggData.adjWeighted, 
             validCount: raceData.validATVs.length, 
             validATVs: raceData.validATVs, 
-     
             centralAdopted: aggData.centralAdopted, 
             centralOutliers: aggData.centralOutliers, 
             onlyYoshiba: turfData.onlyYoshiba, 

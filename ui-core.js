@@ -49,8 +49,7 @@ window.renderUI = function(target, hasAuditIssues) {
                     let borderCol = window.rgbToHex(window.darken(rgb));
                     let wColor = window.getWakuColor(h.horseNo, totalHorses);
                     let wakuBadge = `<span style="display:inline-block; width:16px; height:16px; line-height:16px; text-align:center; background-color:${wColor.bg}; color:${wColor.text}; border:1px solid ${wColor.border}; border-radius:3px; margin-right:4px; font-size:10px;">${h.horseNo}</span>`;
-                    paceHtml += `<li style="margin-bottom:2px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center;"
-                    title="${h.horseNo}. ${h.horseName}">
+                    paceHtml += `<li style="margin-bottom:2px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center;" title="${h.horseNo}. ${h.horseName}">
                         ${wakuBadge}
                         <span style="background-color:${hex}; color:${textCol}; border:1px solid ${borderCol}; padding: 2px 6px; border-radius: 4px; display:inline-block; width:100%; box-sizing:border-box;">${h.horseName}</span>
                     </li>`;
@@ -61,12 +60,23 @@ window.renderUI = function(target, hasAuditIssues) {
     }
     paceHtml += `</div>`;
 
+    let paceLabel = target.predictedPace === "SLOW" ? "スローペース" : (target.predictedPace === "HIGH" ? "ハイペース" : "ミドルペース");
+    let paceBtnText = window.useDynamicPace ? "⏸ ペース判定をオフにする" : "⚡ ペース判定をオンにする";
+    let paceStatusText = window.useDynamicPace ? `反映中 (${paceLabel})` : "未反映 (一律ミドル処理)";
+
     let resultHTML = `
         <div class="summary-block" style="width:100%; box-sizing:border-box;">
             <h3 style="margin: 0;">レース条件 ＆ システム検証</h3>
             <div style="margin-top:10px; margin-bottom:10px; display:flex; flex-wrap:wrap; gap:15px; font-size:15px;">
                 <span><b>条件:</b> ${target.distance}m / ${target.trackType}</span>
                 <span><b>基準斤量:</b> ${weightText} / ${target.location}</span>
+                <span><b>想定ペース:</b> <span style="font-weight:bold; color:var(--match-color);">${paceLabel}</span></span>
+                <span><b>反映ステータス:</b> <span style="font-weight:bold;">${paceStatusText}</span></span>
+            </div>
+            <div style="margin-bottom:10px;">
+                <button class="action-btn btn-load" style="padding: 6px 12px; font-size: 12px; width: auto;" onclick="window.togglePaceMode()">
+                    ${paceBtnText}
+                </button>
             </div>
             ${auditBadge}
             <div id="auditArea">${auditHtml}</div>
@@ -79,26 +89,19 @@ window.renderUI = function(target, hasAuditIssues) {
                 ${paceHtml}
             </div>
             <div class="pattern-block" style="width:100%; box-sizing:border-box;">
-            
                 <h3 style="margin-top:0;">ATVランキング</h3>
                 <div class="segmented-control style-pill" style="margin-bottom: 20px;">
                     <input type="radio" name="radio" id="ratio-00" value="00" onchange="window.switchRatio('00')">
                     <label for="ratio-00">0:10</label>
-                 
                     <input type="radio" name="radio" id="ratio-01" value="01" onchange="window.switchRatio('01')">
-    
                     <label for="ratio-01">1:9</label>
                     <input type="radio" name="radio" id="ratio-02" value="02" onchange="window.switchRatio('02')" checked>
                     <label for="ratio-02">2:8</label>
-                    
                     <input type="radio" name="radio" id="ratio-03" value="03" onchange="window.switchRatio('03')">
-           
                     <label for="ratio-03">3:7</label>
                     <input type="radio" name="radio" id="ratio-04" value="04" onchange="window.switchRatio('04')">
                     <label for="ratio-04">4:6</label>
-                 
                     <input type="radio" name="radio" id="ratio-05" value="05" onchange="window.switchRatio('05')">
-                   
                     <label for="ratio-05">5:5</label>
                 </div>
                 <div id="tableContainer" class="table-responsive"></div>
@@ -109,11 +112,9 @@ window.renderUI = function(target, hasAuditIssues) {
                 <div class="score-controls">
                     <div class="score-control-group score-checkbox-container">
                         <label class="score-control-label">評価指標</label>
-                   
                         <div class="score-checkbox-group">
                             <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="adjWeighted" onchange="window.runScoreAnalysis()">展開補正(ベスト)</label>
                             <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="adjCentral" onchange="window.runScoreAnalysis()">展開補正(安定)</label>
-         
                             <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="weightedATV" onchange="window.runScoreAnalysis()">加重平均(ベスト)</label>
                             <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="centralATV" onchange="window.runScoreAnalysis()">中央加重(安定)</label>
                         </div>
@@ -121,15 +122,11 @@ window.renderUI = function(target, hasAuditIssues) {
                   
                     <div class="score-control-group score-checkbox-container">
                         <label class="score-control-label">評価対象比率</label>
-      
                         <div class="score-checkbox-group">
                             <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="00" onchange="window.runScoreAnalysis()">0:10</label>
-             
                             <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="01" onchange="window.runScoreAnalysis()">1:9</label>
-  
                             <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="02" onchange="window.runScoreAnalysis()">2:8</label>
                             <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="03" onchange="window.runScoreAnalysis()">3:7</label>
-              
                             <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="04" onchange="window.runScoreAnalysis()">4:6</label>
                             <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="05" onchange="window.runScoreAnalysis()">5:5</label>
                         </div>
@@ -138,16 +135,15 @@ window.renderUI = function(target, hasAuditIssues) {
                     <div class="score-control-group" style="display: flex; align-items: center; gap: 0;">
                         <label class="score-control-label" style="margin-right: 8px;">許容差分閾値 (Δ)</label>
                         <div style="display: flex; align-items: stretch;">
-                            <input type="number" id="scoreThreshold" value="0.50" step="0.01" min="0.01" class="score-input-number" style="width: 55px; border-right: none; border-radius: 4px 0 0 4px; z-index: 1;">
-                            <select class="score-input-select" style="width: 24px; padding: 0; border-radius: 0 4px 4px 0; border-left: 1px solid #ccc; cursor: pointer; outline: none; margin-left: -1px; z-index: 2; appearance: none; -webkit-appearance: none; text-align: center; text-align-last: center;" onchange="document.getElementById('scoreThreshold').value = parseFloat(this.value).toFixed(2); window.runScoreAnalysis(); this.selectedIndex = 0;">
+                            <input type="text" id="scoreThreshold" value="0.50" class="score-input-number" style="width: 55px; border-right: none; border-radius: 4px 0 0 4px; z-index: 1;">
+                            <select class="score-input-select" style="width: 24px; padding: 0; border-radius: 0 4px 4px 0; border-left: 1px solid #ccc; cursor: pointer; outline: none; margin-left: -1px; z-index: 2; appearance: none; -webkit-appearance: none; text-align: center; text-align-last: center;" onchange="let v=this.value; document.getElementById('scoreThreshold').value = (v==='ALL' ? 'ALL' : parseFloat(v).toFixed(2)); window.runScoreAnalysis(); this.selectedIndex = 0;">
                                 <option value="" disabled selected hidden>▼</option>
+                                <option value="ALL">&nbsp;&nbsp;全頭&nbsp;&nbsp;</option>
                                 <option value="0.5">&nbsp;&nbsp;0.50&nbsp;&nbsp;</option>
-                             
                                 <option value="1.0">&nbsp;&nbsp;1.00&nbsp;&nbsp;</option>
                                 <option value="1.5">&nbsp;&nbsp;1.50&nbsp;&nbsp;</option>
                                 <option value="2.0">&nbsp;&nbsp;2.00&nbsp;&nbsp;</option>
                             </select>
-  
                         </div>
                         <button onclick="window.runScoreAnalysis()" style="padding: 4px 10px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 5px;">確定</button>
                     </div>
@@ -203,7 +199,6 @@ window.renderUI = function(target, hasAuditIssues) {
 // ==========================================
 window.drawRulerLabels = function() {
     const ticksContainer = document.getElementById('ruler-ticks-container');
-    
     if (!ticksContainer) return;
     ticksContainer.innerHTML = ''; 
     for (let i = 100; i <= 4000; i += 100) {

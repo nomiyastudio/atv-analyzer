@@ -7,5 +7,5 @@
 // 3. LAST_UPDATED をその日の日付・時刻に更新すること。
 // 4. このバージョンの更新のみを目的として、変更のない他ファイルのコードを全文出力してはならない。
 // ==========================================
-window.SYSTEM_VERSION = "37";
-window.LAST_UPDATED = "2026-05-14 01:05";
+window.SYSTEM_VERSION = "39";
+window.LAST_UPDATED = "2026/06/06 20:50";

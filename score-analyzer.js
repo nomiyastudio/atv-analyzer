@@ -4,16 +4,21 @@
 
 window.runScoreAnalysis = function() {
     let metrics = Array.from(document.querySelectorAll('.score-metric-cb:checked')).map(cb => cb.value);
-    let threshold = parseFloat(document.getElementById('scoreThreshold').value);
+    let thresholdInput = document.getElementById('scoreThreshold').value;
     let selectedRatios = Array.from(document.querySelectorAll('.score-ratio-cb:checked')).map(cb => cb.value);
     if (metrics.length === 0 || selectedRatios.length === 0) {
         document.getElementById('scoreResultContainer').innerHTML = "";
         return;
     }
     
-    if (isNaN(threshold) || threshold <= 0) {
-        alert("正しい閾値(0より大きい数値)を入力してください。");
-        return;
+    let isAllMode = (thresholdInput === 'ALL');
+    let threshold = 0;
+    if (!isAllMode) {
+        threshold = parseFloat(thresholdInput);
+        if (isNaN(threshold) || threshold <= 0) {
+            alert("正しい閾値(0より大きい数値)を入力してください。");
+            return;
+        }
     }
 
     let horseScores = {};
@@ -39,18 +44,29 @@ window.runScoreAnalysis = function() {
             let data = window.processedData[ratioId].results;
             
             let minVal = Infinity;
+            let maxVal = -Infinity;
             data.forEach(h => {
                 if (h[metric] !== null && h[metric] < minVal) minVal = h[metric];
+                if (h[metric] !== null && h[metric] > maxVal) maxVal = h[metric];
             });
 
             data.forEach(h => {
                 let val = h[metric];
                 let points = 0;
                 if (val !== null && minVal !== Infinity) {
-                    let diff = val - minVal;
-                    if (diff <= threshold) {
-                        points = 100 * (1 - (diff / threshold));
-                        if (points < 0) points = 0;
+                    if (isAllMode) {
+                        let range = maxVal - minVal;
+                        if (range === 0) {
+                            points = 100;
+                        } else {
+                            points = 1 + 99 * (1 - (val - minVal) / range);
+                        }
+                    } else {
+                        let diff = val - minVal;
+                        if (diff <= threshold) {
+                            points = 100 * (1 - (diff / threshold));
+                            if (points < 0) points = 0;
+                        }
                     }
                 }
                 let hs = horseScores[h.horseId]; // 変更: IDで参照
@@ -71,7 +87,7 @@ window.runScoreAnalysis = function() {
         hs.totalScore = hs.totalScore / (metrics.length * selectedRatios.length);
     });
     let sortedScores = Object.values(horseScores)
-        .filter(h => h.totalScore > 0)
+        .filter(h => isAllMode ? h.totalScore >= 0 : h.totalScore > 0)
         .sort((a, b) => {
             if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
             let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
@@ -88,7 +104,6 @@ window.runScoreAnalysis = function() {
         window.renderScoreResultTable(sortedScores, selectedRatios, metrics, baseData.length);
     }
 };
-
 window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, totalHorses) {
     const metricLabels = {
         'adjWeighted': '展開補正(ベスト)',
@@ -138,7 +153,7 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, 
         }
 
         html += `<tr>
-            <td style="font-weight:bold; color:#555; text-align:center;">${h.totalScore > 0 ? rank : '-'}</td>
+            <td style="font-weight:bold; color:#555; text-align:center;">${h.totalScore >= 0 ? rank : '-'}</td>
             <td style="background-color:${wakuColor.bg}; color:${wakuColor.text}; border:1px solid ${wakuColor.border}; font-weight:bold; text-align:center;">${wakuColor.waku}</td>
             <td style="font-weight:bold; text-align:center;">${h.horseNo}</td>
             <td class="align-left" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.horseName}</td>
@@ -153,7 +168,6 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, 
                 let pts = h.metrics[m].scores[r];
                 let color = pts >= 80 ? '#e74c3c' : (pts >= 50 ? '#e67e22' : '#555');
                 let fw = pts >= 50 ? 'bold' : 'normal';
-          
                 html += `<td style="color:${color}; font-weight:${fw}; text-align:center;">${pts > 0 ? pts.toFixed(0) : '0'}</td>`;
             });
         });

@@ -38,7 +38,7 @@ window.checkTurfSpecialist = function(validATVs, target) {
             if (hasYoshiba) {
                 validATVs.forEach(r => {
                     let isYoshiba = ["札幌", "函館"].includes(r.pLoc);
-                   if (!isYoshiba && r.atv < yoshibaBest) { r.atv = yoshibaBest; r.isLimited = true; }
+                    if (!isYoshiba && r.atv < yoshibaBest) { r.atv = yoshibaBest; r.isLimited = true; }
                 });
             } else if (hasNoshiba) {
                 onlyNoshiba = true;
@@ -58,7 +58,6 @@ window.calcPaceAndStyle = function(validATVs) {
     
     let sumPassed = 0;
     let countPassed = 0;
-
     validATVs.forEach(r => {
         if (r.posRatio !== null) {
             sumRatio += r.posRatio;
@@ -72,7 +71,6 @@ window.calcPaceAndStyle = function(validATVs) {
             countPassed++;
         }
     });
-
     let avgPosRatio = countRatio > 0 ? (sumRatio / countRatio) : null;
     let avgPassedCount = countPassed > 0 ? (sumPassed / countPassed) : 0;
     
@@ -92,7 +90,7 @@ window.calcPaceAndStyle = function(validATVs) {
 // ==========================================
 // 内部関数5: ATVの集計と展開補正
 // ==========================================
-window.calcAggregateATVs = function(validATVs, avgPosRatio, cFactor) {
+window.calcAggregateATVs = function(validATVs, avgPosRatio, cFactor, target) {
     validATVs.sort((a, b) => a.atv - b.atv);
     let weightedATV = null;
     let centralATV = null;
@@ -132,7 +130,23 @@ window.calcAggregateATVs = function(validATVs, avgPosRatio, cFactor) {
     let adjWeighted = null;
     
     if (avgPosRatio !== null) {
-        let penaltyMultiplier = 1.00 + Math.pow(avgPosRatio, 2) * cFactor;
+        let penaltyMultiplier = 1.00;
+        let paceMode = "MIDDLE"; // デフォルト仕様
+        
+        // フラグON時のみ事前判定された3値にスイッチ
+        if (window.useDynamicPace && target && target.predictedPace) {
+            paceMode = target.predictedPace;
+        }
+        
+        if (paceMode === "SLOW") {
+            penaltyMultiplier = 1.00 + Math.pow(avgPosRatio, 2) * cFactor;
+        } else if (paceMode === "HIGH") {
+            penaltyMultiplier = 1.00 + Math.pow(1 - avgPosRatio, 2) * cFactor;
+        } else {
+            // MIDDLE（判定オフの場合も一律ミドル線形処理テスト仕様）
+            penaltyMultiplier = 1.00 + avgPosRatio * cFactor;
+        }
+
         if (centralATV !== null) {
             adjCentral = centralATV * penaltyMultiplier;
             adjCentral = Math.round(adjCentral * 100) / 100;

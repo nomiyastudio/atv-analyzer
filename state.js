@@ -9,3 +9,6 @@ window.globalSortType = 'adjWeighted'; // 初期ソートキーを展開補正(�
 window.globalRatioId = '02'; // 現在選択されている比率のステート管理
 window.globalSortDirection = 'asc'; // ソートの昇順/降順管理
 window.resolveMonthCallback = null;
+
+// 新規追加: ペース判定の動的反映オンオフフラグ（デフォルトOFF）
+window.useDynamicPace = false;

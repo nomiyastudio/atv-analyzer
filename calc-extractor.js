@@ -57,7 +57,7 @@ window.extractHeaderInfo = function(headerArea, validHorseNames) {
     if (cwMatch) {
         currentWeight = parseFloat(cwMatch[1]);
     } else {
-        let cwMatchFallback = afterAgeArea.match(/(?:^|\s|\n)(4[8-9]\.[05]|5\d\.[05]|6[0-5]\.[05])(?=$|\s|\n)/);
+        let cwMatchFallback = afterAgeArea.match(/(?:^|\s|\n)(4[8-9]\.[05]|5\d\.[05]|6[0-5]\\.[05])(?=$|\s|\n)/);
         if (cwMatchFallback) currentWeight = parseFloat(cwMatchFallback[1]);
     }
 
@@ -71,23 +71,19 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
     let pastRaces = [];
     let validATVs = [];
     let localMax = 0;
-    const DIST_SENSITIVITY = window.ATV_CONFIG.DIST_SENSITIVITY;
 
     for (let j = 1; j < races.length; j++) {
         if (j > localMax) localMax = j;
-
         let rText = races[j].split(/\r?\n(?:全場(?:芝|ダ)|(?:中山|東京|京都|阪神|中京|小倉|新潟|福島|札幌|函館)(?:芝|ダ)\d+m)/)[0];
 
         let rDateMatch = rText.match(/(?:^|\n|\s)(\d{2}\/\d{2})/);
         let rDate = rDateMatch ? rDateMatch[1] : "不明";
 
         let isOuter = /外/.test(rText);
-
         let rTrackMatch = rText.match(/(芝|ダ)(\d+)/);
         if (!rTrackMatch) continue;
         let pTrack = rTrackMatch[1];
         let pDist = parseInt(rTrackMatch[2], 10);
-
         if (pTrack !== target.trackType) {
             pastRaces.push({ idx: j, date: rDate, valid: false, reason: "馬場不一致" });
             continue;
@@ -165,10 +161,28 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
 
         let baseTime = 0;
         let f3Front = parseFloat(f3FrontStr);
-        if (isNaN(f3Front)) baseTime = f3Back * 0.99;
-        else baseTime = (f3Front * ratio.f) + (f3Back * ratio.b);
+        if (isNaN(f3Front)) {
+            // 修正: 統計マトリックスに基づく多段階フォールバック処理の適用
+            let jraLocs = ["東京", "中山", "阪神", "京都", "中京", "新潟", "福島", "小倉", "札幌", "函館"];
+            let isJra = jraLocs.includes(pLoc);
+            let factor = window.ATV_CONFIG.LAP_FALLBACK_MATRIX.NAR.DEFAULT;
+            if (isJra) {
+                let distCat = pDist < 1400 ? "SHORT" : (pDist < 2000 ? "MIDDLE" : "LONG");
+                let trackCat = pTrack === "芝" ? "TURF" : "DIRT";
+                factor = window.ATV_CONFIG.LAP_FALLBACK_MATRIX.JRA[trackCat][distCat];
+            } else {
+                if (pClassRank === "S" || pClassRank === "A") {
+                    factor = window.ATV_CONFIG.LAP_FALLBACK_MATRIX.NAR.GRADE;
+                }
+            }
+            baseTime = f3Back * factor;
+        } else {
+            baseTime = (f3Front * ratio.f) + (f3Back * ratio.b);
+        }
 
-        const calcDistLoss = (d) => (Math.abs(d - 1600) / 1000) * DIST_SENSITIVITY;
+        // 修正: 芝・ダートで独立した感度定数を取得し、2乗曲線（非線形）による距離損失算出へ刷新
+        let currentSensitivity = pTrack === "芝" ? window.ATV_CONFIG.DIST_SENSITIVITY.TURF : window.ATV_CONFIG.DIST_SENSITIVITY.DIRT;
+        const calcDistLoss = (d) => Math.pow((d - 1600) / 1000, 2) * currentSensitivity;
         let pDistLoss = calcDistLoss(pDist);
         let tDistLoss = calcDistLoss(target.distance);
         let distMod = 1.00 + (tDistLoss - pDistLoss);
@@ -183,27 +197,8 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
             agePattern = 3;
         }
 
-        let classMod = 0.00;
-        if (agePattern === 1) {
-            if (["S", "A", "B"].includes(pClassRank)) classMod = 0.00;
-            else if (["C", "D", "E"].includes(pClassRank)) classMod = 0.01;
-            else if (pClassRank === "F") classMod = 0.02;
-        } else if (agePattern === 2) {
-            if (pClassRank === "S") classMod = -0.01;
-            else if (pClassRank === "A") classMod = 0.00;
-            else if (pClassRank === "B") classMod = 0.01;
-            else if (pClassRank === "C") classMod = 0.02;
-            else if (pClassRank === "D") classMod = 0.03;
-            else if (pClassRank === "E") classMod = 0.05;
-            else if (pClassRank === "F") classMod = 0.08;
-        } else {
-            if (pClassRank === "S") classMod = -0.01;
-            else if (pClassRank === "A") classMod = 0.00;
-            else if (pClassRank === "B") classMod = 0.01;
-            else if (pClassRank === "C") classMod = 0.03;
-            else if (pClassRank === "D") classMod = 0.06;
-            else if (["E", "F"].includes(pClassRank)) classMod = 0.10;
-        }
+        // 修正: クラス補正値を適正化されたマトリックス表からの引き当てに変更
+        let classMod = window.ATV_CONFIG.CLASS_FACTOR[agePattern][pClassRank] !== undefined ? window.ATV_CONFIG.CLASS_FACTOR[agePattern][pClassRank] : 0.00;
 
         let surfModBase = 0.00;
         if (pTrack === "芝") {
@@ -234,7 +229,8 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
         }
 
         let weightDiff = baseWeight - pWeight;
-        let wghtMod = weightDiff * 0.004;
+        // 修正: 斤量補正係数を外部変数（0.002）へ適正化
+        let wghtMod = weightDiff * window.ATV_CONFIG.WEIGHT_FACTOR;
 
         let condMod = 1.00 + surfMod + wghtMod + locMod + classMod;
         let atv = baseTime * distMod * condMod;
@@ -253,7 +249,6 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
             isOuter: isOuter,
             passedCount: passedCount // 新規追加: 追い抜き頭数
         };
-
         pastRaces.push(currentRaceData);
         validATVs.push(currentRaceData);
     }

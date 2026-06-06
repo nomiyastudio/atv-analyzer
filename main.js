@@ -32,7 +32,8 @@ window.runAnalysis = async function() {
     window.processedData = {};
     window.globalSortType = 'adjWeighted'; 
     window.globalSortDirection = 'asc'; // 追加: ソート方向の初期化
-    window.globalRatioId = '02'; // ステートのリセット
+    window.globalRatioId = '02';
+    // ステートのリセット
 
     try {
         const monthData = await window.detectRaceMonth(d1);
@@ -42,6 +43,11 @@ window.runAnalysis = async function() {
                 
                 target.is2yo = monthData.is2yo;
                 target.raceMonth = monthData.month;
+
+                // 新規追加: 事前ペース判定ロジックを最上流（計算処理の前段）へ組み込み
+                if (window.analyzeRacePace) {
+                    target.predictedPace = window.analyzeRacePace(horseBlocks, validHorseNames);
+                }
 
                 const ratios = [
                     { f: 0.0, b: 1.0, id: '00' },
@@ -122,11 +128,17 @@ window.handleHeaderClick = function(clickedSortType) {
             window.globalSortDirection = 'asc';
         }
     } else {
-        // その他の項目（ATVスコア等）は常に昇順(asc)固定とし、トグルは行わない
+        // その推移項目（ATVスコア等）は常に昇順(asc)固定とし、トグルは行わない
         window.globalSortDirection = 'asc';
         window.globalSortType = clickedSortType;
     }
 
     // ステートを使用して再描画
     window.switchRatio(window.globalRatioId);
+};
+
+// 新規追加: ペース判定反映オンオフ切り替え関数
+window.togglePaceMode = function() {
+    window.useDynamicPace = !window.useDynamicPace;
+    window.runAnalysis();
 };
