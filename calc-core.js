@@ -100,7 +100,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             validATVs: raceData.validATVs, 
             centralAdopted: aggData.centralAdopted, 
             centralOutliers: aggData.centralOutliers, 
-            onlyYoshiba: turfData.onlyYoshiba, 
+            onlyYoshiba: false, // 廃止に伴い一律falseへクレンジング
             onlyNoshiba: turfData.onlyNoshiba, 
             styleClass: paceData.styleClass, 
             styleName: paceData.styleName, 

@@ -10,39 +10,16 @@ window.checkTurfSpecialist = function(validATVs, target) {
     let onlyNoshiba = false;
 
     if (target.trackType === "芝") {
-        let isTargetYoshiba = ["札幌", "函館"].includes(target.location);
-        let noshibaBest = Infinity;
-        let yoshibaBest = Infinity;
-        let hasNoshiba = false;
         let hasYoshiba = false;
         validATVs.forEach(r => {
             let isYoshiba = ["札幌", "函館"].includes(r.pLoc);
             if (isYoshiba) {
                 hasYoshiba = true;
-                if (r.atv < yoshibaBest) yoshibaBest = r.atv;
-            } else {
-                hasNoshiba = true;
-                if (r.atv < noshibaBest) noshibaBest = r.atv;
             }
         });
-        if (!isTargetYoshiba) { 
-            if (hasNoshiba) {
-                validATVs.forEach(r => {
-                    let isYoshiba = ["札幌", "函館"].includes(r.pLoc);
-                    if (isYoshiba && r.atv < noshibaBest) { r.atv = noshibaBest; r.isLimited = true; }
-                });
-            } else if (hasYoshiba) {
-                onlyYoshiba = true;
-            }
-        } else { 
-            if (hasYoshiba) {
-                validATVs.forEach(r => {
-                    let isYoshiba = ["札幌", "函館"].includes(r.pLoc);
-                    if (!isYoshiba && r.atv < yoshibaBest) { r.atv = yoshibaBest; r.isLimited = true; }
-                });
-            } else if (hasNoshiba) {
-                onlyNoshiba = true;
-            }
+        // 過去走に洋芝実績（札幌・函館）が一度もない場合、未経験馬としてフラグを判定
+        if (!hasYoshiba) {
+            onlyNoshiba = true;
         }
     }
     return { onlyYoshiba, onlyNoshiba };

@@ -187,7 +187,7 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
         let tDistLoss = calcDistLoss(target.distance);
         let distMod = 1.00 + (tDistLoss - pDistLoss);
 
-        let agePattern = 3; 
+        let agePattern = 3;
         let monthCheck = target.raceMonth ? target.raceMonth : 11;
         if (age === 2 || (age === 3 && monthCheck <= 5)) {
             agePattern = 1;
@@ -211,27 +211,16 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
         }
         let surfMod = surfModBase * (pDist / 1600);
 
+        // 修正: 開催競馬場(target.location)と過去走競馬場(pLoc)の場所係数を引き当て、相対差分方式(過去走 - 開催)へ刷新
         let locMod = 0.00;
-        if (pTrack === "芝") {
-            if (["東京","新潟","京都"].includes(pLoc)) locMod = 0.00;
-            else if (["阪神","中京"].includes(pLoc)) locMod = -0.01;
-            else if (["中山","福島","小倉"].includes(pLoc)) locMod = -0.02;
-            else if (["札幌","函館"].includes(pLoc)) locMod = -0.03;
-        } else {
-            if (["東京","新潟","小倉"].includes(pLoc)) locMod = -0.01;
-            else if (["阪神","中京","福島"].includes(pLoc)) locMod = -0.02;
-            else if (["中山","札幌","函館","盛岡"].includes(pLoc)) locMod = -0.03;
-            else if (["水沢"].includes(pLoc)) locMod = -0.04;
-            else if (["大井"].includes(pLoc)) locMod = -0.05;
-            else if (["船橋","川崎","門別","園田"].includes(pLoc)) locMod = -0.06;
-            else if (["浦和","名古屋","笠松","金沢"].includes(pLoc)) locMod = -0.07;
-            else if (["高知","佐賀","姫路"].includes(pLoc)) locMod = -0.08;
-        }
+        let trackKey = pTrack === "芝" ? "TURF" : "DIRT";
+        let targetLocFactor = window.ATV_CONFIG.TRACK_LOCATION_FACTOR[trackKey][target.location] !== undefined ? window.ATV_CONFIG.TRACK_LOCATION_FACTOR[trackKey][target.location] : 0.00;
+        let pastLocFactor = window.ATV_CONFIG.TRACK_LOCATION_FACTOR[trackKey][pLoc] !== undefined ? window.ATV_CONFIG.TRACK_LOCATION_FACTOR[trackKey][pLoc] : 0.00;
+        locMod = pastLocFactor - targetLocFactor;
 
         let weightDiff = baseWeight - pWeight;
         // 修正: 斤量補正係数を外部変数（0.002）へ適正化
         let wghtMod = weightDiff * window.ATV_CONFIG.WEIGHT_FACTOR;
-
         let condMod = 1.00 + surfMod + wghtMod + locMod + classMod;
         let atv = baseTime * distMod * condMod;
         let atvRounded = Math.round(atv * 100) / 100;

@@ -8,7 +8,6 @@ window.renderAvgRanking = function(ratioId)
     let sortType = window.globalSortType;
     let target = data.target;
     let res = [...data.results];
-
     // ソートロジック
     res.sort((a, b) => {
         if (sortType === 'horseNo') {
@@ -67,7 +66,6 @@ window.renderAvgRanking = function(ratioId)
             return a.horseId.localeCompare(b.horseId);
         }
     });
-
     let hasNige = res.some(h => h.styleClass === 1);
     let minPaceRatio = Infinity;
     if (!hasNige) {
@@ -93,7 +91,6 @@ window.renderAvgRanking = function(ratioId)
         if (h.adjCentral !== null && h.adjCentral < minAdjCentral) minAdjCentral = h.adjCentral;
         if (h.adjWeighted !== null && h.adjWeighted < minAdjWeighted) minAdjWeighted = h.adjWeighted;
     });
-
     let getThresholds = (key) => {
         let vals = res.map(r => r[key]).filter(v => v !== null).sort((a,b) => a - b);
         if(vals.length === 0) return { t1: 0, t2: 0 };
@@ -107,7 +104,6 @@ window.renderAvgRanking = function(ratioId)
     let acThresh = getThresholds('adjCentral');
     let wThresh = getThresholds('weightedATV');
     let cThresh = getThresholds('centralATV');
-
     // ヘッダーの並び順: 展開補正(ベスト) → 展開補正(安定) → 加重平均 → 中央加重
     let html = `<table>
         <tr>
@@ -148,7 +144,6 @@ window.renderAvgRanking = function(ratioId)
             </th>`;
     for(let k=1; k<=data.maxDisplayRaces; k++) html += `<th>${k}走前</th>`;
     html += `</tr>`;
-
     let formatAtvDetail = (race, target) => {
         let locStr = race.pLoc === target.location ? `<span class="match-highlight">${race.pLoc}</span>` : race.pLoc;
         let distStr = race.pDist === target.distance ? `<span class="match-highlight">${race.pTrack}${race.pDist}m</span>` : `${race.pTrack}${race.pDist}m`;
@@ -178,7 +173,8 @@ window.renderAvgRanking = function(ratioId)
         let wStyle = (h.weightedATV !== null) ? (h.weightedATV <= wThresh.t1 ? 'background-color: var(--bg-w-1); border: 2px solid var(--bd-w-1); font-weight: bold; color: #111;' : (h.weightedATV <= wThresh.t2 ? 'background-color: var(--bg-w-2); border: 1px solid var(--bd-w-2); font-weight: normal; color: #111;' : 'font-weight: normal; color: #333;')) : 'font-weight: normal; color: #333;';
         let cStyle = (h.centralATV !== null) ? (h.centralATV <= cThresh.t1 ? 'background-color: var(--bg-c-1); border: 2px solid var(--bd-c-1); font-weight: bold; color: #111;' : (h.centralATV <= cThresh.t2 ? 'background-color: var(--bg-c-2); border: 1px solid var(--bd-c-2); font-weight: normal; color: #111;' : 'font-weight: normal; color: #333;')) : 'font-weight: normal; color: #333;';
         
-        let exceptionMark = h.onlyYoshiba ? `<br><span style="color:#e67e22; font-size:10px; font-weight:bold;">(洋)</span>` : (h.onlyNoshiba ? `<br><span style="color:#e67e22; font-size:10px; font-weight:bold;">(野)</span>` : "");
+        let isTargetYoshiba = ["札幌", "函館"].includes(target.location);
+        let exceptionMark = (isTargetYoshiba && h.onlyNoshiba) ? `<br><span style="color:#e67e22; font-size:10px; font-weight:bold;">⚠️洋未経験</span>` : "";
         let wakuColor = window.getWakuColor(h.horseNo, res.length);
   
         // 定量戦の場合は「騎手恩恵 + 年齢恩恵」のみをマイナス差分として強調判定に使用し、牝馬恩恵は除外する
@@ -186,7 +182,6 @@ window.renderAvgRanking = function(ratioId)
         let wCol = (diff <= -2.5 || diff >= 2.5) ? (diff < 0 ? '#0055ff' : '#e74c3c') : (diff <= -1.5 || diff >= 1.5 ? (diff < 0 ? '#0077cc' : '#e67e22') : '#555555');
         let isPaceSetter = hasNige ? (h.styleClass === 1) : (h.styleClass === 2 && h.avgPosRatio === minPaceRatio && h.avgPosRatio !== null);
         let paceTdStyle = `text-align:center; vertical-align:middle; padding:4px; border:1px solid var(--border-color);` + (isPaceSetter ? `background-color: #fff3e0; background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,167,38,0.15) 8px, rgba(255,167,38,0.15) 16px); box-shadow: inset 0 0 0 2px #ffa726; border: 1px solid #ff9800;` : ``);
-        
         html += `<tr>
             <td style="background-color:${wakuColor.bg}; color:${wakuColor.text}; border:1px solid ${wakuColor.border}; font-weight:bold; font-size:14px;">${wakuColor.waku}</td>
             <td style="font-weight: ${sortType === 'horseNo' ? 'bold' : 'normal'}; font-size:14px;">${h.horseNo}</td>
@@ -194,8 +189,7 @@ window.renderAvgRanking = function(ratioId)
             <td style="text-align:center; font-size:13px;"><span style="color:${wCol}; font-weight:bold;">${h.currentWeight.toFixed(1)}</span></td>
             <td style="text-align:center;">${h.intervalHtml}</td>
             <td style="${paceTdStyle}">
-                ${(h.styleClass !== null) ?
-                `<div class="pace-badge-wrapper" style="--badge-color: ${window.rgbToHex(window.getColorFromStops(window.paceStops, h.avgPosRatio*100))}; height: auto; gap: 2px;">
+                ${(h.styleClass !== null) ? `<div class="pace-badge-wrapper" style="--badge-color: ${window.rgbToHex(window.getColorFromStops(window.paceStops, h.avgPosRatio*100))}; height: auto; gap: 2px;">
                     <span class="pace-pct-text" style="margin-top: 0; margin-bottom: 0;">${(h.avgPosRatio*100).toFixed(0)}%</span>
                     <div class="pace-shape ${['','shape-nige','shape-senko','shape-sashi','shape-oikomi'][h.styleClass]}" style="margin-bottom: 0;">${h.styleName.charAt(0)}</div>
                     <span style="font-size:10px; font-weight:bold; color:${h.avgPassedCount > 0 ? '#e74c3c' : '#7f8c8d'};">${h.avgPassedCount > 0 ? '↑' + h.avgPassedCount.toFixed(1) : '±0'}</span>
