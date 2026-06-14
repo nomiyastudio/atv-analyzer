@@ -11,99 +11,23 @@ window.runScoreAnalysis = function() {
         return;
     }
     
-    let isAllMode = (thresholdInput === 'ALL');
-    let threshold = 0;
-    if (!isAllMode) {
-        threshold = parseFloat(thresholdInput);
-        if (isNaN(threshold) || threshold <= 0) {
-            alert("正しい閾値(0より大きい数値)を入力してください。");
-            return;
-        }
-    }
+    // 計算処理を外部化モジュール（score-calculator.js）へ委譲してビュー層を軽量化 [cite: 1282-1304]
+    let sortedScores = window.computeScoreAnalysis(metrics, selectedRatios, thresholdInput);
+    if (!sortedScores) return;
 
-    let horseScores = {};
-    
-    let baseData = window.processedData['03'].results;
-    baseData.forEach(h => {
-        horseScores[h.horseId] = { // 変更: キーをhorseId(内部ID)に変更しデータ上書きを防止
-            horseId: h.horseId,
-            horseNo: h.horseNo,
-            horseName: h.horseName,
-            avgPosRatio: h.avgPosRatio, // 新規追加: 脚質パーセント表示用
-            styleName: h.styleName, // 新規追加: 脚質漢字表記用
-            totalScore: 0,
-            metrics: {}
-        };
-        metrics.forEach(m => {
-            horseScores[h.horseId].metrics[m] = { subTotal: 0, scores: {} };
-            selectedRatios.forEach(r => horseScores[h.horseId].metrics[m].scores[r] = 0);
-        });
-    });
-    metrics.forEach(metric => {
-        selectedRatios.forEach(ratioId => {
-            let data = window.processedData[ratioId].results;
-            
-            let minVal = Infinity;
-            let maxVal = -Infinity;
-            data.forEach(h => {
-                if (h[metric] !== null && h[metric] < minVal) minVal = h[metric];
-                if (h[metric] !== null && h[metric] > maxVal) maxVal = h[metric];
-            });
-
-            data.forEach(h => {
-                let val = h[metric];
-                let points = 0;
-                if (val !== null && minVal !== Infinity) {
-                    if (isAllMode) {
-                        let range = maxVal - minVal;
-                        if (range === 0) {
-                            points = 100;
-                        } else {
-                            points = 1 + 99 * (1 - (val - minVal) / range);
-                        }
-                    } else {
-                        let diff = val - minVal;
-                        if (diff <= threshold) {
-                            points = 100 * (1 - (diff / threshold));
-                            if (points < 0) points = 0;
-                        }
-                    }
-                }
-                let hs = horseScores[h.horseId]; // 変更: IDで参照
-                if (hs) {
-                    hs.metrics[metric].scores[ratioId] = points;
-                    hs.metrics[metric].subTotal += points;
-                    hs.totalScore += points;
-                }
-            });
-        });
-    });
-
-    // 合計スコアおよび小計スコアを100点満点に正規化
-    Object.values(horseScores).forEach(hs => {
-        metrics.forEach(m => {
-            hs.metrics[m].subTotal = hs.metrics[m].subTotal / selectedRatios.length;
-        });
-        hs.totalScore = hs.totalScore / (metrics.length * selectedRatios.length);
-    });
-    let sortedScores = Object.values(horseScores)
-        .filter(h => isAllMode ? h.totalScore >= 0 : h.totalScore > 0)
-        .sort((a, b) => {
-            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-            let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
-            if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
-            if (aNo !== bNo) return aNo - bNo;
-            return a.horseId.localeCompare(b.horseId); // 変更: 同値時のフォールバックをhorseIdで安定化
-        });
     if (sortedScores.length === 0) {
+        let isAllMode = (thresholdInput === 'ALL');
+        let threshold = isAllMode ? 0 : parseFloat(thresholdInput);
         document.getElementById('scoreResultContainer').innerHTML = `<p style="text-align:center; color:#e74c3c; font-size:13px; font-weight:bold; padding:20px 0;">設定した閾値(${threshold})以内に該当する馬はいませんでした。</p>`;
         return;
     }
 
+    let baseData = window.processedData['03'].results;
     if (window.renderScoreResultTable) {
         window.renderScoreResultTable(sortedScores, selectedRatios, metrics, baseData.length);
     }
 };
+
 window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, totalHorses) {
     const metricLabels = {
         'adjWeighted': '展開補正(ベスト)',
@@ -121,6 +45,7 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, 
             <th rowspan="2" class="col-score-name" style="text-align:center;">馬名</th>
             <th rowspan="2" class="col-score-pace" style="text-align:center; writing-mode:vertical-rl; text-orientation:upright; padding:10px 5px;">脚質</th>
             <th rowspan="2" class="col-score-total" style="text-align:center;">総合スコア</th>`;
+
     // ヘッダー上段: 評価指標のグループ
     metrics.forEach(m => {
         let label = metricLabels[m] || m;
@@ -142,14 +67,14 @@ window.renderScoreResultTable = function(sortedScores, selectedRatios, metrics, 
         if (index > 0 && h.totalScore < sortedScores[index - 1].totalScore) rank = index + 1;
         let wakuColor = window.getWakuColor(h.horseNo, totalHorses);
         
-        // 脚質カラーとテキストの計算
+        // 脚質カラーとテキストの計算 [cite: 1310-1311]
         let paceColor = "#999";
         let paceText = "-";
         if (h.avgPosRatio !== null) {
             let pct = h.avgPosRatio * 100;
             let rgb = window.getColorFromStops(window.paceStops, pct);
             paceColor = window.rgbToHex(rgb);
-            paceText = h.styleName || "-"; // 変更: パーセント数値から漢字表記へ
+            paceText = h.styleName || "-"; // 変更: パーセント数値から漢字表記へ [cite: 1311]
         }
 
         html += `<tr>

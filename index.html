@@ -28,7 +28,7 @@
                     <button class="paste-btn" onclick="pasteFromClipboard('data1')">📋 貼付</button>
                     <textarea id="data1" class="input-data" placeholder="ここにデータ①を貼り付けてください"></textarea>
                 </div>
-  
+ 
                 <div class="input-box">
                     <label>
                         <span class="label-pc">データ②（馬柱）</span>
@@ -49,7 +49,7 @@
                     <span class="btn-text-pc">📂 データ読込</span>
                     <span class="btn-text-sp">📂 読込</span>
                 </label>
-            
+   
                 <button class="action-btn btn-save" onclick="window.saveProject()">
                     <span class="btn-text-pc">💾 データ保存</span>
                     <span class="btn-text-sp">💾 保存</span>
@@ -63,7 +63,7 @@
         <div class="modal-content">
             <h3>⚠️ 2歳戦 番組月判定</h3>
             <p class="modal-description">
-                9月と10月が混在する開催週を検知しました。<br>
+                9月と10月が混在する開催週を検検知しました。<br>
                 牝馬の減量規定(-1.0kg)の適用有無を決定するため、このレースの番組上の月を選択してください。
             </p>
             <div class="modal-buttons">
@@ -76,20 +76,36 @@
     <script src="state.js"></script>
     <script src="config.js"></script>
     <script src="version.js"></script>
-   
+  
+    <script src="course-jra-main-east.js"></script>
+    <script src="course-jra-main-west.js"></script>
+    <script src="course-jra-local-north.js"></script>
+    <script src="course-jra-local-south.js"></script>
+    <script src="course-nar-minami-kanto.js"></script>
+    <script src="course-nar-local.js"></script>
+    <script src="course-manager.js"></script>
+    
     <script src="utils-ui.js"></script>
     <script src="utils-racing.js"></script>
     <script src="parse-d1.js"></script>
+    <script src="parse-d1-formats.js"></script>
     <script src="parse-d2.js"></script>
     <script src="parse-core.js"></script>
     <script src="calc-extractor.js"></script>
+    <script src="calc-modifier.js"></script>
     <script src="calc-evaluator.js"></script>
     <script src="calc-core.js"></script>
     <script src="calc-pace.js"></script>
+    <script src="score-calculator.js"></script>
     <script src="score-analyzer.js"></script>
+    <script src="ui-ranking-sorter.js"></script>
+    <script src="ui-ranking-detail.js"></script>
     <script src="ui-ranking.js"></script>
     <script src="ui-log.js"></script>
     <script src="ui-prompt.js"></script>
+    <script src="ui-component-summary.js"></script>
+    <script src="ui-component-pace.js"></script>
+    <script src="ui-component-score.js"></script>
     <script src="ui-core.js"></script>
     <script src="io.js"></script>
     <script src="prompt-builder.js"></script>

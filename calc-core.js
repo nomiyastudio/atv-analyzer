@@ -6,29 +6,18 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
     let maxRacesIdx = 0;
     let auditErrors = [];
     let auditWarnings = [];
+
     // --- C値（展開係数）の算出 ---
-    const getCourseFactor = (trackType, location, trackDetail) => {
-        let c = window.ATV_CONFIG.C_FACTOR.TURF.DEFAULT;
-        if (trackType === "芝") {
-            if (["東京", "新潟"].includes(location) || (["京都", "阪神"].includes(location) && trackDetail === "外")) {
-                c = window.ATV_CONFIG.C_FACTOR.TURF.FAST;
-            } else if (["中山", "札幌", "函館", "福島", "小倉"].includes(location)) {
-                c = window.ATV_CONFIG.C_FACTOR.TURF.HEAVY;
-            } else {
-                c = window.ATV_CONFIG.C_FACTOR.TURF.DEFAULT;
-            }
-        } else {
-            if (["東京", "中京"].includes(location)) {
-                c = window.ATV_CONFIG.C_FACTOR.DIRT.FAST;
-            } else if (["京都", "阪神", "新潟"].includes(location)) {
-                c = window.ATV_CONFIG.C_FACTOR.DIRT.HEAVY;
-            } else {
-                c = window.ATV_CONFIG.C_FACTOR.DIRT.DEFAULT;
-            }
+    // 統括マネージャー（course-manager.js）からターゲットコース固有の展開係数をピンポイント外部引き当て
+    let targetCourseData = { ratioId: "02", locFactor: 0.00, cFactor: 0.020, staminaPenalty: 1.00 };
+    if (target.location && target.location !== "不明") {
+        try {
+            targetCourseData = window.getCourseData(target.location, target.trackType, target.distance, "F");
+        } catch (e) {
+            // 例外時はデフォルト値を使用
         }
-        return c;
-    };
-    const cFactor = getCourseFactor(target.trackType, target.location, target.trackDetail);
+    }
+    const cFactor = targetCourseData.cFactor;
 
     // ==========================================
     // 内部関数7: ソートおよび順位付与ヘルパー
@@ -38,6 +27,7 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
             let valA = a[sortKey]; let valB = b[sortKey];
             if (valA === null && valB === null) return 0;
             if (valA === null) return 1; 
+ 
             if (valB === null) return -1;
             if (valA !== valB) return valA - valB;
             for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {

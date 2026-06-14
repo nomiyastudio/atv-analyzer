@@ -8,64 +8,10 @@ window.renderAvgRanking = function(ratioId)
     let sortType = window.globalSortType;
     let target = data.target;
     let res = [...data.results];
-    // ソートロジック
-    res.sort((a, b) => {
-        if (sortType === 'horseNo') {
-            let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
-            if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
-            if (aNo !== bNo) return aNo - bNo;
-            return a.horseId.localeCompare(b.horseId);
-        } else if (sortType === 'currentWeight') {
-            let wA = a.currentWeight; let wB = b.currentWeight;
-            if (wA !== wB) {
-                return window.globalSortDirection === 'desc' ? wB - wA : wA - wB;
-            }
-            let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
-            if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
-            if (aNo !== bNo) return aNo - bNo;
-            return a.horseId.localeCompare(b.horseId);
-        } else if (sortType === 'pace') {
-            let classA = a.styleClass !== null ? a.styleClass : 99;
-            let classB = b.styleClass !== null ? b.styleClass : 99;
-            if (classA !== classB) {
-                return window.globalSortDirection === 'desc' ? classB - classA : classA - classB;
-            }
-            let valA = a.avgPosRatio;
-            let valB = b.avgPosRatio;
-            if (valA === null && valB === null) return 0;
-            if (valA === null) return 1;
-            if (valB === null) return -1;
-            if (valA !== valB) {
-                return window.globalSortDirection === 'desc' ? valB - valA : valA - valB;
-            }
-            let cA = a.centralATV !== null ? a.centralATV : Infinity;
-            let cB = b.centralATV !== null ? b.centralATV : Infinity;
-            if (cA !== cB) return cA - cB;
-            
-            let aNo = parseInt(a.horseNo); let bNo = parseInt(b.horseNo);
-            if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
-            if (aNo !== bNo) return aNo - bNo;
-            return a.horseId.localeCompare(b.horseId);
-        } else {
-            let valA = a[sortType];
-            let valB = b[sortType];
-            if (valA === null && valB === null) return 0;
-            if (valA === null) return 1;
-            if (valB === null) return -1;
-            if (valA !== valB) return valA - valB;
-            for(let i=0; i<a.validATVs.length || i<b.validATVs.length; i++) {
-                let atvA = a.validATVs.length > i ? a.validATVs[i].atv : Infinity;
-                let atvB = b.validATVs.length > i ? b.validATVs[i].atv : Infinity;
-                if(atvA !== atvB) return atvA - atvB;
-            }
-            
-            let aNo = parseInt(a.horseNo);
-            let bNo = parseInt(b.horseNo);
-            if (isNaN(aNo)) aNo = 999; if (isNaN(bNo)) bNo = 999;
-            if (aNo !== bNo) return aNo - bNo;
-            return a.horseId.localeCompare(b.horseId);
-        }
-    });
+
+    // ソート処理を外部化モジュール（ui-ranking-sorter.js）へ委譲して軽量化
+    res = window.sortHorseResults(res, sortType, window.globalSortDirection);
+
     let hasNige = res.some(h => h.styleClass === 1);
     let minPaceRatio = Infinity;
     if (!hasNige) {
@@ -141,31 +87,7 @@ window.renderAvgRanking = function(ratioId)
             <th class="sortable-header ${sortType === 'centralATV' ? 'active-sort' : ''}" onclick="window.handleHeaderClick('centralATV')" title="中央加重でソート">
                 中央加重<br><span class="sort-desc">(安定)</span>
                 ${sortType === 'centralATV' ? '<br><span style="font-size:10px;color:var(--secondary-color);">▼</span>' : ''}
-            </th>`;
-    for(let k=1; k<=data.maxDisplayRaces; k++) html += `<th>${k}走前</th>`;
-    html += `</tr>`;
-    let formatAtvDetail = (race, target) => {
-        let locStr = race.pLoc === target.location ? `<span class="match-highlight">${race.pLoc}</span>` : race.pLoc;
-        let distStr = race.pDist === target.distance ? `<span class="match-highlight">${race.pTrack}${race.pDist}m</span>` : `${race.pTrack}${race.pDist}m`;
-        let limitMark = race.isLimited ? `<span style="color:#e74c3c; font-size:10px; font-weight:bold; margin-left:2px;">[限]</span>` : "";
-        
-        let passedMark = "";
-        if (race.passedCount !== null && race.passedCount !== undefined) {
-            if (race.passedCount > 0) {
-                passedMark = ` <span style="color:#e74c3c; font-weight:bold;">↑${race.passedCount}</span>`;
-            } else if (race.passedCount === 0) {
-                passedMark = ` <span style="color:#7f8c8d;">±0</span>`;
-            }
-        }
-
-        return `
-            <div style="display:flex; justify-content:center; align-items:baseline; gap:4px; margin-bottom:2px;">
-                <span style="font-size:10px; color:#888;">${isNaN(parseFloat(race.f3f)) ? "-" : parseFloat(race.f3f).toFixed(1)}</span>
-                <span style="font-weight:bold; font-size:14px; color:var(--primary-color);">${race.atv.toFixed(2)}${limitMark}</span>
-                <span style="font-size:10px; color:#888;">${isNaN(parseFloat(race.f3b)) ? "-" : parseFloat(race.f3b).toFixed(1)}</span>
-            </div>
-            <span style="font-size:10px; color:#666;">${race.date} ${locStr} ${race.pWeight.toFixed(1)}kg<br>${race.pCond} ${distStr}${passedMark}</span>`;
-    };
+            </th></tr>`;
 
     res.forEach((h) => {
         let awStyle = (h.adjWeighted !== null) ? (h.adjWeighted <= awThresh.t1 ? 'background-color: var(--bg-aw-1); border: 2px solid var(--bd-aw-1); font-weight: bold; color: #111;' : (h.adjWeighted <= awThresh.t2 ? 'background-color: var(--bg-aw-2); border: 1px solid var(--bd-aw-2); font-weight: normal; color: #111;' : 'font-weight: normal; color: #333;')) : 'font-weight: normal; color: #333;';
@@ -189,11 +111,7 @@ window.renderAvgRanking = function(ratioId)
             <td style="text-align:center; font-size:13px;"><span style="color:${wCol}; font-weight:bold;">${h.currentWeight.toFixed(1)}</span></td>
             <td style="text-align:center;">${h.intervalHtml}</td>
             <td style="${paceTdStyle}">
-                ${(h.styleClass !== null) ? `<div class="pace-badge-wrapper" style="--badge-color: ${window.rgbToHex(window.getColorFromStops(window.paceStops, h.avgPosRatio*100))}; height: auto; gap: 2px;">
-                    <span class="pace-pct-text" style="margin-top: 0; margin-bottom: 0;">${(h.avgPosRatio*100).toFixed(0)}%</span>
-                    <div class="pace-shape ${['','shape-nige','shape-senko','shape-sashi','shape-oikomi'][h.styleClass]}" style="margin-bottom: 0;">${h.styleName.charAt(0)}</div>
-                    <span style="font-size:10px; font-weight:bold; color:${h.avgPassedCount > 0 ? '#e74c3c' : '#7f8c8d'};">${h.avgPassedCount > 0 ? '↑' + h.avgPassedCount.toFixed(1) : '±0'}</span>
-                </div>` : "-"}
+                ${(h.styleClass !== null) ? `<div class="pace-badge-wrapper" style="--badge-color: ${window.rgbToHex(window.getColorFromStops(window.paceStops, h.avgPosRatio*100))}; height: auto; gap: 2px;"> <span class="pace-pct-text" style="margin-top: 0; margin-bottom: 0;"> ${(h.avgPosRatio*100).toFixed(0)}%</span> <div class="pace-shape ${['','shape-nige','shape-senko','shape-sashi','shape-oikomi'][h.styleClass]}" style="margin-bottom: 0;">${h.styleName.charAt(0)}</div> <span style="font-size:10px; font-weight:bold; color:${h.avgPassedCount > 0 ? '#e74c3c' : '#7f8c8d'};">${h.avgPassedCount > 0 ? '↑' + h.avgPassedCount.toFixed(1) : '±0'}</span> </div>` : "-"}
             </td>
             <td style="font-size:15px; ${awStyle}">
                 ${h.adjWeighted !== null ? h.adjWeighted.toFixed(2) : "-"}
@@ -239,7 +157,7 @@ window.renderAvgRanking = function(ratioId)
                     bgCls = h.centralAdopted.some(t => t.idx === race.idx) ? `class="hl-adj-central-adopt"` : (h.centralOutliers.some(t => t.idx === race.idx) ? `class="hl-adj-central-out"` : '');
                 }
                 
-                html += `<td ${bgCls}>${formatAtvDetail(race, data.target)}</td>`;
+                html += `<td ${bgCls}>${window.formatAtvDetail(race, data.target)}</td>`;
             } else {
                 html += `<td>${race ? `<span class="skip-text">除外<br>(${race.reason})</span>` : "-"}</td>`;
             }

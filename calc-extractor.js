@@ -47,7 +47,6 @@ window.extractHeaderInfo = function(headerArea, validHorseNames) {
 
     // D1で見つからなかった場合のみ、従来通りD2の限定領域（afterAgeArea）からフォールバック探索
     if (!jockeyMark) {
-        // 文字化け [一-?] を [一-龠] に修正して SyntaxError を回避
         let markMatch = afterAgeArea.match(/[☆△▲★◇](?=[一-龠ぁ-んァ-ヴー])/);
         if (markMatch) jockeyMark = markMatch[0];
     }
@@ -65,7 +64,7 @@ window.extractHeaderInfo = function(headerArea, validHorseNames) {
 };
 
 // ==========================================
-// 内部関数2: 各過去走データの解析と補正値計算
+// 内部関数2: 各過去走データの解析（パース処理特化）
 // ==========================================
 window.processPastRaces = function(races, baseWeight, age, target, ratio) {
     let pastRaces = [];
@@ -121,12 +120,11 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
         else if (/2勝|２勝|1000万|１０００万/.test(rText)) pClassRank = "D";
         else if (/1勝|１勝|500万|５０0万/.test(rText)) pClassRank = "E";
         else if (/新馬|未勝利/.test(rText)) pClassRank = "F";
-
         let headMatch = rText.match(/(\d+)頭/);
         let horseCount = headMatch ? parseInt(headMatch[1]) : 0;
         let posRatio = null;
         let hadLead = false;
-        let corner4Pos = null; // 新規追加: 4コーナー位置
+        let corner4Pos = null;
 
         if (horseCount > 0 && posStr) {
             let posNums = posStr.match(/\d+/g);
@@ -140,14 +138,13 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
                     targetPos = parseInt(posNums[0]);
                 }
                 posRatio = targetPos / horseCount;
-                corner4Pos = parseInt(posNums[posNums.length - 1], 10); // 最後の数字が4コーナー
+                corner4Pos = parseInt(posNums[posNums.length - 1], 10);
                 for (let pIdx = 0; pIdx < posNums.length; pIdx++) {
                     if (parseInt(posNums[pIdx]) === 1) hadLead = true;
                 }
             }
         }
 
-        // 新規追加: 最終着順の抽出と追い抜き頭数の算出
         let finalRank = null;
         let rankMatch = rText.match(/(\d+)着/);
         if (rankMatch) {
@@ -162,7 +159,6 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
         let baseTime = 0;
         let f3Front = parseFloat(f3FrontStr);
         if (isNaN(f3Front)) {
-            // 修正: 統計マトリックスに基づく多段階フォールバック処理の適用
             let jraLocs = ["東京", "中山", "阪神", "京都", "中京", "新潟", "福島", "小倉", "札幌", "函館"];
             let isJra = jraLocs.includes(pLoc);
             let factor = window.ATV_CONFIG.LAP_FALLBACK_MATRIX.NAR.DEFAULT;
@@ -180,64 +176,15 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
             baseTime = (f3Front * ratio.f) + (f3Back * ratio.b);
         }
 
-        // 修正: 芝・ダートで独立した感度定数を取得し、2乗曲線（非線形）による距離損失算出へ刷新
-        let currentSensitivity = pTrack === "芝" ? window.ATV_CONFIG.DIST_SENSITIVITY.TURF : window.ATV_CONFIG.DIST_SENSITIVITY.DIRT;
-        const calcDistLoss = (d) => Math.pow((d - 1600) / 1000, 2) * currentSensitivity;
-        let pDistLoss = calcDistLoss(pDist);
-        let tDistLoss = calcDistLoss(target.distance);
-        let distMod = 1.00 + (tDistLoss - pDistLoss);
-
-        let agePattern = 3;
-        let monthCheck = target.raceMonth ? target.raceMonth : 11;
-        if (age === 2 || (age === 3 && monthCheck <= 5)) {
-            agePattern = 1;
-        } else if (age === 3 && monthCheck >= 6) {
-            agePattern = 2;
-        } else if (age >= 4) {
-            agePattern = 3;
-        }
-
-        // 修正: クラス補正値を適正化されたマトリックス表からの引き当てに変更
-        let classMod = window.ATV_CONFIG.CLASS_FACTOR[agePattern][pClassRank] !== undefined ? window.ATV_CONFIG.CLASS_FACTOR[agePattern][pClassRank] : 0.00;
-
-        let surfModBase = 0.00;
-        if (pTrack === "芝") {
-            if (pCond === "稍") surfModBase = -0.01;
-            else if (pCond === "重") surfModBase = -0.02;
-            else if (pCond === "不") surfModBase = -0.04;
-        } else {
-            if (pCond === "稍") surfModBase = 0.01;
-            else if (pCond === "重" || pCond === "不") surfModBase = 0.02;
-        }
-        let surfMod = surfModBase * (pDist / 1600);
-
-        // 修正: 開催競馬場(target.location)と過去走競馬場(pLoc)の場所係数を引き当て、相対差分方式(過去走 - 開催)へ刷新
-        let locMod = 0.00;
-        let trackKey = pTrack === "芝" ? "TURF" : "DIRT";
-        let targetLocFactor = window.ATV_CONFIG.TRACK_LOCATION_FACTOR[trackKey][target.location] !== undefined ? window.ATV_CONFIG.TRACK_LOCATION_FACTOR[trackKey][target.location] : 0.00;
-        let pastLocFactor = window.ATV_CONFIG.TRACK_LOCATION_FACTOR[trackKey][pLoc] !== undefined ? window.ATV_CONFIG.TRACK_LOCATION_FACTOR[trackKey][pLoc] : 0.00;
-        locMod = pastLocFactor - targetLocFactor;
-
-        let weightDiff = baseWeight - pWeight;
-        // 修正: 斤量補正係数を外部変数（0.002）へ適正化
-        let wghtMod = weightDiff * window.ATV_CONFIG.WEIGHT_FACTOR;
-        let condMod = 1.00 + surfMod + wghtMod + locMod + classMod;
-        let atv = baseTime * distMod * condMod;
-        let atvRounded = Math.round(atv * 100) / 100;
-
-        let currentRaceData = {
-            idx: j, date: rDate, valid: true,
-            baseTime: baseTime, distMod: distMod, condMod: condMod, atv: atvRounded,
-            f3f: f3FrontStr, f3b: f3BackStr, distDiff: target.distance - pDist,
-            surfModText: pTrack+pCond, surfMod: surfMod, 
-            wghtModText: (weightDiff >= 0 ? "+" : "") + weightDiff.toFixed(1) + "kg", wghtMod: wghtMod, 
-            locModText: pLoc || "不明", locMod: locMod,
-            classMod: classMod, agePattern: agePattern, pClassRank: pClassRank, 
-            pLoc: pLoc || "不明", pTrack: pTrack, pDist: pDist, pCond: pCond, pWeight: pWeight,
-            isLimited: false, posRatio: posRatio, hadLead: hadLead,
-            isOuter: isOuter,
-            passedCount: passedCount // 新規追加: 追い抜き頭数
+        // 抽出したパースデータを構造化
+        let rawRaceData = {
+            idx: j, date: rDate, pLoc, pTrack, pDist, pCond, pWeight,
+            f3FrontStr, f3BackStr, posRatio, hadLead, isOuter, passedCount, baseTime, pClassRank
         };
+
+        // 新設の数理計算モジュール（calc-modifier.js）へ処理を委譲
+        let currentRaceData = window.calculateRaceModifications(rawRaceData, baseWeight, age, target);
+
         pastRaces.push(currentRaceData);
         validATVs.push(currentRaceData);
     }

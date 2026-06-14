@@ -3,6 +3,8 @@
 // ========================================== */
 @import url("style-base.css");
 @import url("style-layout.css");
+@import url("style-buttons.css");
+@import url("style-badges.css");
 @import url("style-components.css");
 @import url("style-table.css");
 @import url("style-ruler.css");

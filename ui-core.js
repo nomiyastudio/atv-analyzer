@@ -3,91 +3,27 @@
 // ==========================================
 
 window.renderUI = function(target, hasAuditIssues) {
-    let auditHtml = "";
-    let auditBadge = "";
-    if (!hasAuditIssues) {
-        // 正常時のシンプルバッジ表示 (右上固定用インラインスタイル付与)
-        auditBadge = `<span style="position: absolute; top: 20px; right: 20px; color: #27ae60; font-weight: bold; background: #f4fdf8; padding: 2px 6px; border-radius: 4px; border: 1px solid #27ae60; font-size: 13px;">✓</span>`;
-    } else {
-        // 異常時の詳細エラーブロック表示
-        auditHtml = `<div style="border-left: 4px solid #e74c3c; padding: 5px 10px; background: #fdf2e9; border-radius: 4px;"><details><summary style="color: #e74c3c; font-weight: bold; font-size: 13px; cursor: pointer;">⚠ システム検証: 問題あり (クリックで詳細を展開)</summary><ul style="font-size: 13px; color: #333; margin-top: 10px; padding-left: 20px; margin-bottom: 0;"><li style="color: #e74c3c; font-weight: bold; margin-bottom:4px;">抽出または計算処理に致命的なエラーが検出されました。</li></ul></details></div>`;
-    }
-
-    let paceHtml = `<div class="pace-grid">`;
     let weightText = "計算中...";
+    let paceLabel = target.predictedPace === "SLOW" ? "スローペース" : (target.predictedPace === "HIGH" ? "ハイペース" : "ミドルペース");
+    let paceBtnText = window.useDynamicPace ? "⏸ ペース判定をオフにする" : "⚡ ペース判定をオンにする";
+    let paceStatusText = window.useDynamicPace ? `反映中 (${paceLabel})` : "未反映 (一律ミドル処理)";
+
     if (!hasAuditIssues) {
         let results03 = window.processedData['03']?.results || [];
-        let totalHorses = results03.length;
         let weightAnalysis = window.analyzeWeightRule(results03, target);
         if (weightAnalysis.isFlatRace) {
             weightText = `定量 (ベース ${weightAnalysis.flatBaseWeight.toFixed(1)}kg)`;
         } else {
             weightText = "別定/ハンデ";
         }
-
-        const paceStyles = [
-            {class: 1, name: "逃げ", border: "#d35400"},
-            {class: 2, name: "先行", border: "#f1c40f"},
-            {class: 3, name: "差し", border: "#6b8e23"},
-            {class: 4, name: "追込", border: "#1b4f72"}
-        ];
-        paceStyles.forEach(s => {
-            let horses = results03.filter(h => h.styleClass === s.class).sort((a,b) => (a.avgPosRatio || 0) - (b.avgPosRatio || 0));
-            paceHtml += `<div style="border:1px solid ${s.border}; border-radius:6px; background:transparent; padding:10px; box-sizing:border-box;">
-                <h4 style="margin:0 0 10px 0; color:${s.border}; text-align:center; border-bottom:1px solid ${s.border}; padding-bottom:5px;">${s.name}</h4>
-                <ul style="list-style:none; padding:0; margin:0; font-size:12px;">`;
-    
-            if (horses.length === 0) {
-                paceHtml += `<li style="color:#999; text-align:center;">不在</li>`;
-            } else {
-                horses.forEach(h => {
-                    let pct = (h.avgPosRatio !== null) ? h.avgPosRatio * 100 : 50;
- 
-                    let rgb = window.getColorFromStops(window.paceStops, pct);
-                    let hex = window.rgbToHex(rgb);
-                    let textCol = window.getTextColor(rgb);
-                    let borderCol = window.rgbToHex(window.darken(rgb));
-                    let wColor = window.getWakuColor(h.horseNo, totalHorses);
-                    let wakuBadge = `<span style="display:inline-block; width:16px; height:16px; line-height:16px; text-align:center; background-color:${wColor.bg}; color:${wColor.text}; border:1px solid ${wColor.border}; border-radius:3px; margin-right:4px; font-size:10px;">${h.horseNo}</span>`;
-                    paceHtml += `<li style="margin-bottom:2px; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center;" title="${h.horseNo}. ${h.horseName}">
-                        ${wakuBadge}
-                        <span style="background-color:${hex}; color:${textCol}; border:1px solid ${borderCol}; padding: 2px 6px; border-radius: 4px; display:inline-block; width:100%; box-sizing:border-box;">${h.horseName}</span>
-                    </li>`;
-                });
-            }
-            paceHtml += `</ul></div>`;
-        });
     }
-    paceHtml += `</div>`;
 
-    let paceLabel = target.predictedPace === "SLOW" ? "スローペース" : (target.predictedPace === "HIGH" ? "ハイペース" : "ミドルペース");
-    let paceBtnText = window.useDynamicPace ? "⏸ ペース判定をオフにする" : "⚡ ペース判定をオンにする";
-    let paceStatusText = window.useDynamicPace ? `反映中 (${paceLabel})` : "未反映 (一律ミドル処理)";
+    // 各情報ブロックのHTMLは、新設するコンポーネント関数から取得して結合する（軽量化・ハルシネーション防止）
+    let resultHTML = window.renderSummaryBlockHTML(target, hasAuditIssues, weightText, paceLabel, paceStatusText, paceBtnText);
 
-    let resultHTML = `
-        <div class="summary-block" style="width:100%; box-sizing:border-box;">
-            <h3 style="margin: 0;">レース条件 ＆ システム検証</h3>
-            <div style="margin-top:10px; margin-bottom:10px; display:flex; flex-wrap:wrap; gap:15px; font-size:15px;">
-                <span><b>条件:</b> ${target.distance}m / ${target.trackType}</span>
-                <span><b>基準斤量:</b> ${weightText} / ${target.location}</span>
-                <span><b>想定ペース:</b> <span style="font-weight:bold; color:var(--match-color);">${paceLabel}</span></span>
-                <span><b>反映ステータス:</b> <span style="font-weight:bold;">${paceStatusText}</span></span>
-            </div>
-            <div style="margin-bottom:10px;">
-                <button class="action-btn btn-load" style="padding: 6px 12px; font-size: 12px; width: auto;" onclick="window.togglePaceMode()">
-                    ${paceBtnText}
-                </button>
-            </div>
-            ${auditBadge}
-            <div id="auditArea">${auditHtml}</div>
-        </div>
-    `;
     if (!hasAuditIssues) {
+        resultHTML += window.renderPaceBlockHTML(target);
         resultHTML += `
-            <div class="pace-pattern-block" style="width:100%; box-sizing:border-box;">
-                <h3 style="margin-top:0;">展開予想 (脚質グルーピング)</h3>
-                ${paceHtml}
-            </div>
             <div class="pattern-block" style="width:100%; box-sizing:border-box;">
                 <h3 style="margin-top:0;">ATVランキング</h3>
                 <div class="segmented-control style-pill" style="margin-bottom: 20px;">
@@ -99,58 +35,19 @@ window.renderUI = function(target, hasAuditIssues) {
                     <label for="ratio-02">2:8</label>
                     <input type="radio" name="radio" id="ratio-03" value="03" onchange="window.switchRatio('03')">
                     <label for="ratio-03">3:7</label>
-                    <input type="radio" name="radio" id="ratio-04" value="04" onchange="window.switchRatio('04')">
+                    <input type="radio" name="radio" id="radio-04" value="04" onchange="window.switchRatio('04')">
                     <label for="ratio-04">4:6</label>
-                    <input type="radio" name="radio" id="ratio-05" value="05" onchange="window.switchRatio('05')">
+                    <input type="radio" name="radio" id="radio-05" value="05" onchange="window.switchRatio('05')">
                     <label for="ratio-05">5:5</label>
                 </div>
                 <div id="tableContainer" class="table-responsive"></div>
             </div>
-      
-            <div class="score-analysis-block" style="width:100%; box-sizing:border-box;">
-                <h3 style="margin-top:0;">多角展開スコア分析</h3>
-                <div class="score-controls">
-                    <div class="score-control-group score-checkbox-container">
-                        <label class="score-control-label">評価指標</label>
-                        <div class="score-checkbox-group">
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="adjWeighted" onchange="window.runScoreAnalysis()">展開補正(ベスト)</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="adjCentral" onchange="window.runScoreAnalysis()">展開補正(安定)</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="weightedATV" onchange="window.runScoreAnalysis()">加重平均(ベスト)</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-metric-cb" value="centralATV" onchange="window.runScoreAnalysis()">中央加重(安定)</label>
-                        </div>
-                    </div>
-                  
-                    <div class="score-control-group score-checkbox-container">
-                        <label class="score-control-label">評価対象比率</label>
-                        <div class="score-checkbox-group">
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="00" onchange="window.runScoreAnalysis()">0:10</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="01" onchange="window.runScoreAnalysis()">1:9</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="02" onchange="window.runScoreAnalysis()">2:8</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="03" onchange="window.runScoreAnalysis()">3:7</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="04" onchange="window.runScoreAnalysis()">4:6</label>
-                            <label class="score-checkbox-label"><input type="checkbox" class="score-ratio-cb" value="05" onchange="window.runScoreAnalysis()">5:5</label>
-                        </div>
-                    </div>
-    
-                    <div class="score-control-group" style="display: flex; align-items: center; gap: 0;">
-                        <label class="score-control-label" style="margin-right: 8px;">許容差分閾値 (Δ)</label>
-                        <div style="display: flex; align-items: stretch;">
-                            <input type="text" id="scoreThreshold" value="0.50" class="score-input-number" style="width: 55px; border-right: none; border-radius: 4px 0 0 4px; z-index: 1;">
-                            <select class="score-input-select" style="width: 24px; padding: 0; border-radius: 0 4px 4px 0; border-left: 1px solid #ccc; cursor: pointer; outline: none; margin-left: -1px; z-index: 2; appearance: none; -webkit-appearance: none; text-align: center; text-align-last: center;" onchange="let v=this.value; document.getElementById('scoreThreshold').value = (v==='ALL' ? 'ALL' : parseFloat(v).toFixed(2)); window.runScoreAnalysis(); this.selectedIndex = 0;">
-                                <option value="" disabled selected hidden>▼</option>
-                                <option value="ALL">&nbsp;&nbsp;全頭&nbsp;&nbsp;</option>
-                                <option value="0.5">&nbsp;&nbsp;0.50&nbsp;&nbsp;</option>
-                                <option value="1.0">&nbsp;&nbsp;1.00&nbsp;&nbsp;</option>
-                                <option value="1.5">&nbsp;&nbsp;1.50&nbsp;&nbsp;</option>
-                                <option value="2.0">&nbsp;&nbsp;2.00&nbsp;&nbsp;</option>
-                            </select>
-                        </div>
-                        <button onclick="window.runScoreAnalysis()" style="padding: 4px 10px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; margin-left: 5px;">確定</button>
-                    </div>
-                </div>
-                <div id="scoreResultContainer" class="table-responsive score-table-container"></div>
-            </div>
+        `;
+        
+        // 多角展開スコア分析ブロックの生成を新設コンポーネントに委譲
+        resultHTML += window.renderScoreBlockHTML();
 
+        resultHTML += `
             <div class="details-block" style="width:100%; box-sizing:border-box;">
                 <details>
                     <summary style="cursor:pointer; padding: 5px 0;">
