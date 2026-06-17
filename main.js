@@ -44,35 +44,45 @@ window.runAnalysis = async function() {
                 target.is2yo = monthData.is2yo;
                 target.raceMonth = monthData.month;
 
+         
                 // 新規追加: 事前ペース判定ロジックを最上流（計算処理の前段）へ組み込み
                 if (window.analyzeRacePace) {
                     target.predictedPace = window.analyzeRacePace(horseBlocks, validHorseNames);
                 }
 
                 const ratios = [
+               
                     { f: 0.0, b: 1.0, id: '00' },
                     { f: 0.1, b: 0.9, id: '01' },
                     { f: 0.2, b: 0.8, id: '02' },
                     { f: 0.3, b: 0.7, id: '03' },
+       
                     { f: 0.4, b: 0.6, id: '04' },
                     { f: 0.5, b: 0.5, id: '05' }
                 ];
 
                 let globalHasAuditIssues = false;
+                let allAuditErrors = [];
 
-                ratios.forEach(ratio => {
+                ratios.forEach(ratio => 
+                {
                     const data = window.calculateATV(horseBlocks, validHorseNames, target, ratio);
                     window.processedData[ratio.id] = { ...data, target };
 
                     if (data.auditErrors.length > 0 || data.auditWarnings.length > 0) {
                         globalHasAuditIssues = true;
+                        data.auditErrors.forEach(err => {
+                            if (!allAuditErrors.includes(err)) {
+                                allAuditErrors.push(err);
+                            }
+                        });
                     }
 
                     // プロンプト生成ロジックを prompt-builder.js へ委譲
                     window.generatedPrompts[ratio.id] = window.buildAuditPrompts(data, d1, d2, horseBlocks);
                 });
 
-                window.renderUI(target, globalHasAuditIssues);
+                window.renderUI(target, globalHasAuditIssues, allAuditErrors);
                 window.switchRatio(window.globalRatioId);
 
             } catch (e) {

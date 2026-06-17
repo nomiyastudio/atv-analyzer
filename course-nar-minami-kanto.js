@@ -3,11 +3,12 @@
 // ==========================================
 
 window.ATV_COURSE_MASTER = window.ATV_COURSE_MASTER || {};
-
 window.ATV_COURSE_MASTER["大井"] = {
     DIRT: {
+        1000: { locFactor: -0.04, cFactor: 0.025, staminaPenalty: 1.05, classes: { "S":"05", "A":"05", "B":"05", "C":"05", "D":"05", "E":"05", "F":"05" } },
         1200: { locFactor: -0.04, cFactor: 0.025, staminaPenalty: 1.10, classes: { "S":"05", "A":"04", "B":"04", "C":"04", "D":"03", "E":"03", "F":"03" } }, // 内回り
         1400: { locFactor: -0.04, cFactor: 0.025, staminaPenalty: 1.10, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } }, // 内回り
+        1500: { locFactor: -0.04, cFactor: 0.025, staminaPenalty: 1.10, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } }, // 内回り
         1600: { locFactor: -0.04, cFactor: 0.025, staminaPenalty: 1.10, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } }, // 内回り
         1700: { locFactor: -0.05, cFactor: 0.025, staminaPenalty: 1.15, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } }, // 外回り
         1800: { locFactor: -0.05, cFactor: 0.025, staminaPenalty: 1.15, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } }, // 外回り
@@ -35,7 +36,8 @@ window.ATV_COURSE_MASTER["船橋"] = {
         1600: { locFactor: -0.06, cFactor: 0.026, staminaPenalty: 1.10, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } },
         1700: { locFactor: -0.06, cFactor: 0.026, staminaPenalty: 1.10, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } },
         1800: { locFactor: -0.06, cFactor: 0.026, staminaPenalty: 1.10, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } },
-        2200: { locFactor: -0.06, cFactor: 0.024, staminaPenalty: 1.10, classes: { "S":"02", "A":"02", "B":"02", "C":"02", "D":"02", "E":"01", "F":"01" } }
+        2200: { locFactor: -0.06, cFactor: 0.024, staminaPenalty: 1.10, classes: { "S":"02", "A":"02", "B":"02", "C":"02", "D":"02", "E":"01", "F":"01" } },
+        2400: { locFactor: -0.06, cFactor: 0.022, staminaPenalty: 1.20, classes: { "S":"01", "A":"01", "B":"01", "C":"01", "D":"01", "E":"00", "F":"00" } }
     }
 };
 

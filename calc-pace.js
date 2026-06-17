@@ -23,19 +23,24 @@ window.analyzeRacePace = function(horseBlocks, validHorseNames) {
         totalHorses++;
 
         let races = block.split(/\r?\n(?=\s*\d{2}\/\d{2}[\s\r\n])/);
-        let raceData = window.processPastRaces(races, info.baseWeight, info.age, dummyTarget, dummyRatio);
-        let paceData = window.calcPaceAndStyle(raceData.validATVs);
+        try {
+            let raceData = window.processPastRaces(races, info.baseWeight, info.age, dummyTarget, dummyRatio);
+            let paceData = window.calcPaceAndStyle(raceData.validATVs);
 
-        if (paceData.styleClass === 1) {
-            nigeCount++;
-        } else if (paceData.styleClass === 2) {
-            senkoCount++;
+            if (paceData.styleClass === 1) {
+                nigeCount++;
+            } else if (paceData.styleClass === 2) {
+                senkoCount++;
+            }
+        } catch (e) {
+            // 未登録コース検出などの例外発生時は、対象馬をペース集計母数から除外してスキップ
+            totalHorses--;
+            continue;
         }
     }
 
     let frontRatio = totalHorses > 0 ? (nigeCount + senkoCount) / totalHorses : 0;
     let pace = "MIDDLE";
-
     if (nigeCount <= 1 && frontRatio < 0.30) {
         pace = "SLOW";
     } else if (nigeCount >= 3 || frontRatio >= 0.60) {

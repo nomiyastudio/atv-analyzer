@@ -85,3 +85,14 @@ window.getTextColor = function(rgb) {
 window.darken = function(rgb) {
     return rgb.map(x => Math.max(0, Math.floor(x * 0.8)));
 };
+
+// --- 新規追加: UIルーラー表示トグル制御関数 ---
+window.toggleRuler = function() {
+    const ruler = document.getElementById('ui-ruler-v4');
+    const btn = document.getElementById('rulerToggleBtn');
+    if (!ruler || !btn) return;
+
+    const isHidden = ruler.classList.toggle('hidden-element');
+    document.body.classList.toggle('ruler-active', !isHidden);
+    btn.textContent = isHidden ? "▼" : "▲";
+};

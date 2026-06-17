@@ -7,11 +7,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="ui-ruler-v4">
+    <div id="ui-ruler-v4" class="hidden-element">
         <div class="ticks" id="ruler-ticks-container"></div>
         <div class="guide bp-480"><span class="guide-tag">480</span></div>
         <div class="guide bp-768"><span class="guide-tag">768</span></div>
     </div>
+    <button id="rulerToggleBtn" class="ruler-toggle-btn" onclick="window.toggleRuler()">▼</button>
 
     <div class="container">
         <div class="header-container">
@@ -79,6 +80,7 @@
   
     <script src="course-jra-main-east.js"></script>
     <script src="course-jra-main-west.js"></script>
+   
     <script src="course-jra-local-north.js"></script>
     <script src="course-jra-local-south.js"></script>
     <script src="course-nar-minami-kanto.js"></script>
@@ -99,6 +101,7 @@
     <script src="score-calculator.js"></script>
     <script src="score-analyzer.js"></script>
     <script src="ui-ranking-sorter.js"></script>
+    
     <script src="ui-ranking-detail.js"></script>
     <script src="ui-ranking.js"></script>
     <script src="ui-log.js"></script>
