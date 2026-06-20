@@ -8,3 +8,12 @@
 @import url("style-components.css");
 @import url("style-table.css");
 @import url("style-ruler.css");
+@import url("style-comp-inputs.css");
+@import url("style-comp-summary.css");
+@import url("style-comp-pattern.css");
+@import url("style-comp-score.css");
+@import url("style-comp-pace.css");
+@import url("style-comp-ranking.css");
+@import url("style-comp-log.css");
+@import url("style-comp-prompt.css");
+@import url("style-comp-indicator.css");

@@ -1,0 +1,131 @@
+/* ==========================================
+// style-comp-pattern.css
+// ========================================== */
+
+/* ピル型UI (セグメントコントロール) */
+.style-pill {
+    background-color: #eee;
+    border-radius: 50px;
+    margin-bottom: 20px;
+}
+
+.style-pill label {
+    border-radius: 50px;
+    color: #666;
+    padding: 0 5px;
+}
+
+.style-pill input:checked + label {
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* 汎用ブロック幅定義 */
+.pattern-block,
+.details-block,
+.prompt-block {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* アコーディオン (details/summary) 共通静的装飾 */
+.details-block details summary,
+.prompt-block details summary {
+    cursor: pointer;
+    padding: 5px 0;
+}
+
+.details-block details summary h3,
+.prompt-block details summary h3 {
+    margin: 0;
+    display: inline;
+    line-height: 1.5;
+}
+
+.details-block details summary .summary-hint,
+.prompt-block details summary .summary-hint {
+    font-size: 12px;
+    color: #666;
+    margin-left: 10px;
+}
+
+.details-block .details-content,
+.prompt-block .prompt-content-area {
+    margin-top: 15px;
+}
+
+/* ⚠ 解析停止カード */
+.stop-analysis-container {
+    text-align: center;
+    padding: 30px 10px 10px 10px;
+}
+
+.stop-analysis-container .stop-title {
+    color: #e74c3c;
+    display: inline-block;
+    border-left: 4px solid #e74c3c;
+    margin-bottom: 10px;
+    padding-left: 8px;
+    margin-top: 0;
+}
+
+.stop-analysis-container .stop-msg-main {
+    color: #555;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.stop-analysis-container .stop-msg-sub {
+    font-size: 13px;
+    color: #777;
+    margin-top: 5px;
+}
+
+/* 一元化されたエラー詳細ブロック */
+.audit-error-card {
+    border-left: 4px solid #e74c3c;
+    padding: 10px;
+    background: #fdf2e9;
+    border-radius: 4px;
+    margin: 15px auto;
+    text-align: left;
+    max-width: 800px;
+    box-sizing: border-box;
+}
+
+.audit-error-card .error-first {
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 8px;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.audit-error-card details {
+    margin-top: 6px;
+}
+
+.audit-error-card details summary {
+    color: #555;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.audit-error-card .error-list {
+    font-size: 13px;
+    color: #333;
+    margin-top: 8px;
+    padding-left: 20px;
+    margin-bottom: 0;
+}
+
+.audit-error-card .error-list li {
+    margin-bottom: 4px;
+    word-break: break-all;
+    line-height: 1.4;
+}

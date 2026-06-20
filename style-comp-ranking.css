@@ -1,0 +1,118 @@
+/* ==========================================
+// style-comp-ranking.css
+// ========================================== */
+
+table .header-v-align {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+table .v-text-spacing {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 2px;
+}
+
+table .sort-indicator {
+    font-size: 10px;
+    color: var(--secondary-color);
+    margin-top: 2px;
+}
+
+table td.waku-cell-box {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+table td.umaban-cell-box {
+    font-size: 14px;
+}
+
+table td.weight-cell-box {
+    text-align: center;
+    font-size: 13px;
+}
+
+table .weight-diff-major-negative {
+    color: #0055ff;
+    font-weight: bold;
+}
+
+table .weight-diff-major-positive {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+table .weight-diff-minor-negative {
+    color: #0077cc;
+    font-weight: bold;
+}
+
+table .weight-diff-minor-positive {
+    color: #e67e22;
+    font-weight: bold;
+}
+
+table .weight-diff-normal {
+    color: #555555;
+}
+
+table td.pace-td-normal {
+    text-align: center;
+    vertical-align: middle;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+}
+
+table td.pace-td-setter {
+    text-align: center;
+    vertical-align: middle;
+    padding: 4px;
+    background-color: #fff3e0;
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,167,38,0.15) 8px, rgba(255,167,38,0.15) 16px);
+    box-shadow: inset 0 0 0 2px #ffa726;
+    border: 1px solid #ff9800;
+}
+
+table td.atv-rank-cell {
+    font-size: 15px;
+}
+
+table .rank-sub-info {
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+table .rank-top-three {
+    color: #111;
+    font-weight: bold;
+}
+
+table .rank-other {
+    color: #666;
+    font-weight: normal;
+}
+
+table .rank-delta-text {
+    font-weight: normal;
+    color: #666;
+}
+
+table .exception-warning-text {
+    color: #e67e22;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+table .passed-count-positive {
+    font-size: 10px;
+    font-weight: bold;
+    color: #e74c3c;
+}
+
+table .passed-count-neutral {
+    font-size: 10px;
+    font-weight: bold;
+    color: #7f8c8d;
+}

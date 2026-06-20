@@ -1,0 +1,115 @@
+/* ==========================================
+// style-comp-score.css
+// ========================================== */
+
+.score-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+    background: #fbfcfc;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e1e8ed;
+    width: fit-content;
+    /* 中の要素に合わせる設定 */
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.score-control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap; /* 画面幅が狭い場合の保険 */
+}
+
+.score-checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.score-checkbox-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    /* 常に左詰め */
+}
+
+.score-control-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--primary-color);
+    white-space: nowrap;
+    margin: 0;
+}
+
+.score-input-select, .score-input-number {
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    outline: none;
+}
+
+.score-select-combo {
+    display: inline-flex;
+    align-items: stretch;
+    vertical-align: middle;
+}
+
+.score-input-number {
+    width: 55px;
+    text-align: center;
+    border-radius: 4px 0 0 4px;
+    border-right: none;
+}
+
+.score-input-select {
+    width: 24px;
+    padding: 6px 0;
+    border-radius: 0 4px 4px 0;
+    margin-left: -1px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    text-align: center;
+    text-align-last: center;
+    cursor: pointer;
+}
+
+.score-checkbox-label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    font-size: 13px;
+    margin: 0;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.score-checkbox-label input {
+    margin-right: 4px;
+}
+
+/* モバイルサイズでのスコア分析配置（レスポンシブ制御） */
+@media (max-width: 800px) {
+    .score-controls {
+        width: 100%;
+    }
+    .score-control-group {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .score-checkbox-container {
+        flex-direction: row; 
+        align-items: flex-start;
+    }
+    .score-checkbox-group {
+        gap: 8px 12px;
+    }
+}

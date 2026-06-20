@@ -7,19 +7,17 @@
 ========================================== */
 :root {
     /* 展開補正(ベスト) - 少し濃い青系 */
-    --bg-aw-1: #bbdefb;
-    --bd-aw-1: #42a5f5; /* 1段階目 */
-    --bg-aw-2: #e3f2fd; --bd-aw-2: #64b5f6;
-    /* 2段階目 */
+    --bg-aw-1: #bbdefb; --bd-aw-1: #42a5f5; /* 1段階目 */
+    --bg-aw-2: #e3f2fd; --bd-aw-2: #64b5f6; /* 2段階目 */
 
     /* 展開補正(安定) - 少し濃い緑系 */
     --bg-ac-1: #c8e6c9; --bd-ac-1: #66bb6a;
-    --bg-ac-2: #e8f5e9;
-    --bd-ac-2: #81c784;
+    --bg-ac-2: #e8f5e9; --bd-ac-2: #81c784;
 
     /* 加重平均(ベスト) - 薄い青系 */
     --bg-w-1: #e3f2fd; --bd-w-1: #90caf9;
     --bg-w-2: #f4f9fe; --bd-w-2: #90caf9;
+
     /* 中央加重(安定) - 薄い緑系 */
     --bg-c-1: #e8f5e9; --bd-c-1: #a5d6a7;
     --bg-c-2: #f5fbf6; --bd-c-2: #a5d6a7;
@@ -27,22 +25,66 @@
 
 /* 過去走のハイライト用クラス */
 /* 加重平均用 */
-.hl-weighted-1 { background-color: var(--bg-w-1); border: 2px solid var(--bd-w-1) !important; font-weight: bold; color: #111; }
-.hl-weighted-2 { background-color: var(--bg-w-2); border: 1px solid var(--bd-w-2) !important; color: #111; }
-.hl-weighted-3 { background-color: var(--bg-w-2); border: 1px solid var(--bd-w-2) !important; color: #111; }
+.hl-weighted-1 {
+    background-color: var(--bg-w-1);
+    border: 2px solid var(--bd-w-1) !important;
+    font-weight: bold;
+    color: #111;
+}
+.hl-weighted-2 {
+    background-color: var(--bg-w-2);
+    border: 1px solid var(--bd-w-2) !important;
+    color: #111;
+}
+.hl-weighted-3 {
+    background-color: var(--bg-w-2);
+    border: 1px solid var(--bd-w-2) !important;
+    color: #111;
+}
 
 /* 展開補正(ベスト)用 */
-.hl-adj-weighted-1 { background-color: var(--bg-aw-1); border: 2px solid var(--bd-aw-1) !important; font-weight: bold; color: #111; }
-.hl-adj-weighted-2 { background-color: var(--bg-aw-2); border: 1px solid var(--bd-aw-2) !important; color: #111; }
-.hl-adj-weighted-3 { background-color: var(--bg-aw-2); border: 1px solid var(--bd-aw-2) !important; color: #111; }
+.hl-adj-weighted-1 {
+    background-color: var(--bg-aw-1);
+    border: 2px solid var(--bd-aw-1) !important;
+    font-weight: bold;
+    color: #111;
+}
+.hl-adj-weighted-2 {
+    background-color: var(--bg-aw-2);
+    border: 1px solid var(--bd-aw-2) !important;
+    color: #111;
+}
+.hl-adj-weighted-3 {
+    background-color: var(--bg-aw-2);
+    border: 1px solid var(--bd-aw-2) !important;
+    color: #111;
+}
 
 /* 中央加重用 (採用/除外の表現) */
-.hl-central-adopt { background-color: var(--bg-c-1); border: 2px solid var(--bd-c-1) !important; font-weight: bold; color: #111; }
-.hl-central-out { background-color: #f9f9f9; border: 1px dashed #ccc !important; color: #999; }
+.hl-central-adopt {
+    background-color: var(--bg-c-1);
+    border: 2px solid var(--bd-c-1) !important;
+    font-weight: bold;
+    color: #111;
+}
+.hl-central-out {
+    background-color: #f9f9f9;
+    border: 1px dashed #ccc !important;
+    color: #999;
+}
 
 /* 展開補正(安定)用 */
-.hl-adj-central-adopt { background-color: var(--bg-ac-1); border: 2px solid var(--bd-ac-1) !important; font-weight: bold; color: #111; }
-.hl-adj-central-out { background-color: #f9f9f9; border: 1px dashed #ccc !important; color: #999; }
+.hl-adj-central-adopt {
+    background-color: var(--bg-ac-1);
+    border: 2px solid var(--bd-ac-1) !important;
+    font-weight: bold;
+    color: #111;
+}
+.hl-adj-central-out {
+    background-color: #f9f9f9;
+    border: 1px dashed #ccc !important;
+    color: #999;
+}
 
 .highlight-horse-1 { background-color: #ffcc80; border: 2px solid #ffa726 !important; }
 .highlight-horse-2 { background-color: #ffe0b2; border: 2px solid #ffcc80 !important; }
@@ -50,61 +92,3 @@
 .match-highlight { color: var(--match-color); font-weight: bold; }
 .skip-text { color: #95a5a6; font-size: 10px; }
 .rank-badge { font-size: 11px; font-weight: normal; color: #555; }
-
-/* 脚質バッジ */
-.pace-badge-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    height: 44px;
-    width: 100%;
-}
-
-.pace-shape {
-    background-color: var(--badge-color);
-    color: #fff;
-    font-weight: 900;
-    display: flex;
-    justify-content: center;
-    box-sizing: border-box;
-    margin-bottom: 2px;
-    width: 20px;
-    font-size: 12px;
-}
-
-.pace-shape.shape-nige {
-    height: 28px;
-    clip-path: polygon(50% 0, 100% 8px, 100% 100%, 0 100%, 0 8px);
-    align-items: flex-end;
-    padding-bottom: 3px;
-}
-
-.pace-shape.shape-senko {
-    height: 24px;
-    border-radius: 8px 8px 0 0;
-    align-items: flex-end;
-    padding-bottom: 2px;
-}
-
-.pace-shape.shape-sashi {
-    height: 24px;
-    border-radius: 0 0 8px 8px;
-    align-items: flex-start;
-    padding-top: 2px;
-}
-
-.pace-shape.shape-oikomi {
-    height: 28px;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), 50% 100%, 0 calc(100% - 8px));
-    align-items: flex-start;
-    padding-top: 3px;
-}
-
-.pace-pct-text {
-    font-size: 10px;
-    font-weight: bold;
-    color: var(--badge-color);
-    margin-top: auto;
-    line-height: 1;
-}

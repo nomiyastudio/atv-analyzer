@@ -1,0 +1,17 @@
+/* ==========================================
+// style-comp-log.css
+// ========================================== */
+
+.log-table th.log-th-ratio {
+    background-color: #eaf2f8 !important;
+}
+
+.log-table td.log-horse-title {
+    background-color: #f4f6f7 !important;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.log-table td.log-atv-bold {
+    font-weight: bold;
+}

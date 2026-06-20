@@ -11,27 +11,27 @@ window.renderPromptArea = function(ratioId) {
     let html = "";
     if (pData.hasErrors) {
         html = `
-            <div style="margin-bottom:10px; display:flex; gap:5px; justify-content:flex-start;">
-                <button class="copy-btn" onclick="window.copyPrompt('debug', 0, this)" style="background:#c0392b; flex:none; padding:10px 20px;">📋 デバッグ要求プロンプトをコピー</button>
-                <button class="action-btn btn-save" onclick="window.downloadPrompt('debug', 0)" style="width:45px; height:45px; flex:none;">💾</button>
+            <div class="prompt-btn-wrap">
+                <button class="copy-btn prompt-btn-debug" onclick="window.copyPrompt('debug', 0, this)" style="background:#c0392b;">📋 デバッグ要求プロンプトをコピー</button>
+                <button class="action-btn btn-save prompt-action-icon" onclick="window.downloadPrompt('debug', 0)">💾</button>
             </div>`;
     } else {
         html += `
-            <div style="margin-bottom:12px;">
-                <label style="font-size:12px; color:#2c3e50; margin-bottom:5px; display:block;">▼ ステップ1: 全体検証（抽出・ソート）</label>
-                <div style="display:flex; gap:5px; justify-content:flex-start;">
-                    <button class="copy-btn" onclick="window.copyPrompt('macro', 0, this)" style="background:#2980b9; padding:12px 20px; flex:none; font-size:13px; min-width:max-content;">📋 全体検証（抽出・ソート）</button>
-                    <button class="action-btn btn-save" onclick="window.downloadPrompt('macro', 0)" style="width:45px; height:45px; flex:none;">💾</button>
+            <div class="prompt-section-wrap">
+                <label class="prompt-section-label">▼ ステップ1: 全体検証（抽出・ソート）</label>
+                <div class="prompt-btn-wrap">
+                    <button class="copy-btn prompt-btn-macro" onclick="window.copyPrompt('macro', 0, this)" style="background:#2980b9;">📋 全体検証（抽出・ソート）</button>
+                    <button class="action-btn btn-save prompt-action-icon" onclick="window.downloadPrompt('macro', 0)">💾</button>
                 </div>
             </div>`;
         html += `
-            <label style="font-size:12px; color:#2c3e50; margin-bottom:5px; display:block;">▼ ステップ2: 個別検算（3頭ずつ分割）</label>
-            <div style="display:flex; flex-wrap:wrap; gap:8px; width:100%;">`;
+            <label class="prompt-section-label">▼ ステップ2: 個別検算（3頭ずつ分割）</label>
+            <div class="prompt-micro-wrap">`;
         pData.microPrompts.forEach((m, idx) => {
             html += `
-                <div style="display:flex; gap:3px; flex: 0 1 auto; min-width:max-content;">
-                    <button class="copy-btn" onclick="window.copyPrompt('micro', ${idx}, this)" style="font-size:12px; padding:10px 12px; flex:none;">📋 ${m.title}</button>
-                    <button class="action-btn btn-save" onclick="window.downloadPrompt('micro', ${idx})" style="width:38px; height:38px; flex:none; font-size:12px;">💾</button>
+                <div class="prompt-micro-box">
+                    <button class="copy-btn prompt-btn-micro" onclick="window.copyPrompt('micro', ${idx}, this)">📋 ${m.title}</button>
+                    <button class="action-btn btn-save prompt-icon-micro" onclick="window.downloadPrompt('micro', ${idx})">💾</button>
                 </div>`;
         });
         html += `</div>`;

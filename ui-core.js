@@ -24,9 +24,9 @@ window.renderUI = function(target, hasAuditIssues, allAuditErrors) {
     if (!hasAuditIssues) {
         resultHTML += window.renderPaceBlockHTML(target);
         resultHTML += `
-            <div class="pattern-block" style="width:100%; box-sizing:border-box;">
-                <h3 style="margin-top:0;">ATVランキング</h3>
-                <div class="segmented-control style-pill" style="margin-bottom: 20px;">
+            <div class="pattern-block">
+                <h3>ATVランキング</h3>
+                <div class="segmented-control style-pill">
                     <input type="radio" name="radio" id="ratio-00" value="00" onchange="window.switchRatio('00')">
                     <label for="ratio-00">0:10</label>
                     <input type="radio" name="radio" id="ratio-01" value="01" onchange="window.switchRatio('01')">
@@ -46,13 +46,13 @@ window.renderUI = function(target, hasAuditIssues, allAuditErrors) {
         // 多角展開スコア分析ブロックの生成を新設コンポーネントに委譲
         resultHTML += window.renderScoreBlockHTML();
         resultHTML += `
-            <div class="details-block" style="width:100%; box-sizing:border-box;">
+            <div class="details-block">
                 <details>
-                    <summary style="cursor:pointer; padding: 5px 0;">
-                        <h3 style="margin:0; display:inline; line-height:1.5;">詳細データ (計算プロセスログ)</h3>
-                        <span style="font-size:12px; color:#666; margin-left:10px;">(クリックで展開)</span>
+                    <summary>
+                        <h3>詳細データ (計算プロセスログ)</h3>
+                        <span class="summary-hint">(クリックで展開)</span>
                     </summary>
-                    <div style="margin-top:15px;" id="detailedLogContainer"></div>
+                    <div class="details-content" id="detailedLogContainer"></div>
                 </details>
             </div>
         `;
@@ -62,44 +62,42 @@ window.renderUI = function(target, hasAuditIssues, allAuditErrors) {
 
         if (allAuditErrors && allAuditErrors.length > 0) {
             allAuditErrors.forEach(err => {
-                errorListHtml += `<li style="margin-bottom:4px; word-break:break-all; line-height:1.4;">${err}</li>`;
+                errorListHtml += `<li>${err}</li>`;
             });
         } else {
-            errorListHtml = `<li style="margin-bottom:4px; word-break:break-all; line-height:1.4;">抽出または計算処理に致命的なエラーが検出されました。</li>`;
+            errorListHtml = `<li>抽出または計算処理に致命的なエラーが検出されました。</li>`;
         }
 
         resultHTML += `
-            <div class="pattern-block" style="width:100%; box-sizing:border-box;">
-                <div class="pattern-content">
-                    <div style="text-align:center; padding: 30px 10px 10px 10px;">
-                        <h3 style="color:#e74c3c; display:inline-block; border-left:4px solid #e74c3c; margin-bottom:10px; padding-left:8px;">⚠ 解析停止</h3>
-                        <p style="color:#555; font-size:14px; font-weight:bold; margin:0;">システム検証で問題が検出されたため、解析結果の表示を停止しています。</p>
-                        
-                        <div style="border-left: 4px solid #e74c3c; padding: 10px; background: #fdf2e9; border-radius: 4px; margin: 15px auto; text-align: left; max-width: 800px; box-sizing: border-box;">
-                            <div style="color: #e74c3c; font-weight: bold; font-size: 14px; margin-bottom: 8px; word-break: break-all; line-height: 1.4;">⚠️ 解析停止の原因: ${firstErrorText}</div>
-                            <details style="margin-top: 6px;">
-                                <summary style="color: #555; font-weight: bold; font-size: 12px; cursor: pointer; user-select: none;">すべての検出エラー（全 ${allAuditErrors ? allAuditErrors.length : 0} 件）を確認する</summary>
-                                <ul style="font-size: 13px; color: #333; margin-top: 8px; padding-left: 20px; margin-bottom: 0;">
-                                    ${errorListHtml}
-                                </ul>
-                            </details>
-                        </div>
-
-                        <p style="font-size:13px; color:#777; margin-top:5px;">下の検証用プロンプトをコピーし、AIに修正案をリクエストしてください。</p>
+            <div class="pattern-block">
+                <div class="stop-analysis-container">
+                    <h3 class="stop-title">⚠ 解析停止</h3>
+                    <p class="stop-msg-main">システム検証で問題が検出されたため、解析結果の表示を停止しています。</p>
+                    
+                    <div class="audit-error-card">
+                        <div class="error-first">⚠️ 解析停止の原因: ${firstErrorText}</div>
+                        <details>
+                            <summary>すべての検出エラー（全 ${allAuditErrors ? allAuditErrors.length : 0} 件）を確認する</summary>
+                            <ul class="error-list">
+                                ${errorListHtml}
+                            </ul>
+                        </details>
                     </div>
+
+                    <p class="stop-msg-sub">下の検証用プロンプトをコピーし、AIに修正案をリクエストしてください。</p>
                 </div>
             </div>
         `;
     }
 
     resultHTML += `
-        <div class="prompt-block" style="width:100%; box-sizing:border-box;">
+        <div class="prompt-block">
             <details>
-                <summary style="cursor:pointer; padding: 5px 0;">
-                    <h3 style="margin:0; display:inline; line-height:1.5;">検証用プロンプト (AI監査用)</h3>
-                    <span style="font-size:12px; color:#666; margin-left:10px;">(クリックで展開)</span>
+                <summary>
+                    <h3>検証用プロンプト (AI監査用)</h3>
+                    <span class="summary-hint">(クリックで展開)</span>
                 </summary>
-                <div style="margin-top:15px;" id="promptControlArea"></div>
+                <div class="prompt-content-area" id="promptControlArea"></div>
             </details>
         </div>
     `;

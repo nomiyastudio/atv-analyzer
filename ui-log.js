@@ -7,10 +7,10 @@ window.renderDetailedLog = function(ratioId) {
     if (!data || data.auditErrors.length > 0) return "";
     let originalResults = [...data.results].sort((a, b) => (parseInt(a.horseNo) || 999) - (parseInt(b.horseNo) || 999));
     
-    let logHtml = `<div class="table-responsive"><table class="log-table"><tr><th>走</th><th>日付</th><th>判定</th><th>前3F</th><th>後3F</th><th>距離補正<br>(distMod)</th><th>馬場補正<br>(surfMod)</th><th>斤量補正<br>(wghtMod)</th><th>場所補正<br>(locMod)</th><th>クラス補正<br>(classMod)</th><th>条件補正<br>(condMod)</th><th style="background:#eaf2f8;">ATV(0.0)</th><th style="background:#eaf2f8;">ATV(0.1)</th><th style="background:#eaf2f8;">ATV(0.2)</th><th style="background:#eaf2f8;">ATV(0.3)</th><th style="background:#eaf2f8;">ATV(0.4)</th><th style="background:#eaf2f8;">ATV(0.5)</th></tr>`;
+    let logHtml = `<div class="table-responsive"><table class="log-table"><tr><th>走</th><th>日付</th><th>判定</th><th>前3F</th><th>後3F</th><th>距離補正<br>(distMod)</th><th>馬場補正<br>(surfMod)</th><th>斤量補正<br>(wghtMod)</th><th>場所補正<br>(locMod)</th><th>クラス補正<br>(classMod)</th><th>条件補正<br>(condMod)</th><th class="log-th-ratio">ATV(0.0)</th><th class="log-th-ratio">ATV(0.1)</th><th class="log-th-ratio">ATV(0.2)</th><th class="log-th-ratio">ATV(0.3)</th><th class="log-th-ratio">ATV(0.4)</th><th class="log-th-ratio">ATV(0.5)</th></tr>`;
     
     originalResults.forEach(h => {
-        logHtml += `<tr><td colspan="17" class="align-left" style="background:#f4f6f7; font-weight:bold; color:var(--primary-color);">(${h.horseNo}) ${h.horseName}</td></tr>`;
+        logHtml += `<tr><td colspan="17" class="align-left log-horse-title">(${h.horseNo}) ${h.horseName}</td></tr>`;
         h.pastRaces.forEach(r => {
             if (r.valid) {
                 let getAtv = (id) => { 
@@ -33,15 +33,15 @@ window.renderDetailedLog = function(ratioId) {
                     <td>${r.locMod.toFixed(2)}</td>
                     <td>${r.classMod.toFixed(2)}</td>
                     <td>${r.condMod.toFixed(3)}</td>
-                    <td style="font-weight:bold;">${getAtv('00')}</td>
-                    <td style="font-weight:bold;">${getAtv('01')}</td>
-                    <td style="font-weight:bold;">${getAtv('02')}</td>
-                    <td style="font-weight:bold;">${getAtv('03')}</td>
-                    <td style="font-weight:bold;">${getAtv('04')}</td>
-                    <td style="font-weight:bold;">${getAtv('05')}</td>
+                    <td class="log-atv-bold">${getAtv('00')}</td>
+                    <td class="log-atv-bold">${getAtv('01')}</td>
+                    <td class="log-atv-bold">${getAtv('02')}</td>
+                    <td class="log-atv-bold">${getAtv('03')}</td>
+                    <td class="log-atv-bold">${getAtv('04')}</td>
+                    <td class="log-atv-bold">${getAtv('05')}</td>
                 </tr>`;
             } else {
-                logHtml += `<tr><td>${r.idx}走</td><td>${r.date}</td><td class="error">×</td><td colspan="14" class="align-left">スキップ: ${r.reason}</td></tr>`;
+                logHtml += `<tr><td Esh><td>${r.date}</td><td class="error">×</td><td colspan="14" class="align-left">スキップ: ${r.reason}</td></tr>`;
             }
         });
     });

@@ -15,16 +15,16 @@
  */
 window.renderSummaryBlockHTML = function(target, hasAuditIssues, weightText, paceLabel, paceStatusText, paceBtnText, allAuditErrors) {
     return `
-        <div class="summary-block" style="width:100%; box-sizing:border-box;">
-            <h3 style="margin: 0;">レース条件</h3>
-            <div style="margin-top:10px; margin-bottom:10px; display:flex; flex-wrap:wrap; gap:15px; font-size:15px;">
+        <div class="summary-block">
+            <h3>レース条件</h3>
+            <div class="cond-container">
                 <span><b>条件:</b> ${target.distance}m / ${target.trackType}</span>
                 <span><b>基準斤量:</b> ${weightText} / ${target.location}</span>
-                <span><b>想定ペース:</b> <span style="font-weight:bold; color:var(--match-color);">${paceLabel}</span></span>
-                <span><b>反映ステータス:</b> <span style="font-weight:bold;">${paceStatusText}</span></span>
+                <span><b>想定ペース:</b> <span class="match-highlight">${paceLabel}</span></span>
+                <span><b>反映ステータス:</b> <b>${paceStatusText}</b></span>
             </div>
-            <div style="margin-bottom:10px;">
-                <button class="action-btn btn-load" style="padding: 6px 12px; font-size: 12px; width: auto;" onclick="window.togglePaceMode()">
+            <div>
+                <button class="action-btn btn-load btn-pace-toggle" onclick="window.togglePaceMode()">
                     ${paceBtnText}
                 </button>
             </div>

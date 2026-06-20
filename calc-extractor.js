@@ -47,7 +47,7 @@ window.extractHeaderInfo = function(headerArea, validHorseNames) {
 
     // D1で見つからなかった場合のみ、従来通りD2の限定領域（afterAgeArea）からフォールバック探索
     if (!jockeyMark) {
-        let markMatch = afterAgeArea.match(/[☆△▲★◇](?=[一-龠ぁ-んァ-ヴー])/);
+        let markMatch = afterAgeArea.match(/[☆△▲★◇](?=[一-推])/);
         if (markMatch) jockeyMark = markMatch[0];
     }
 
@@ -89,7 +89,8 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
         }
 
         let condMatch = rText.match(/(良|稍|重|不)/);
-        let pCond = condMatch ? condMatch[1] : "良";
+        let pCond = condMatch ?
+        condMatch[1] : "良";
         
         let pLocMatch = rText.match(/\d{2}\/\d{2}[\s\S]{1,20}?(東京|中山|京都|阪神|中京|小倉|新潟|福島|札幌|函館|盛岡|水沢|大井|船橋|川崎|浦和|門別|園田|名古屋|笠松|金沢|高知|佐賀|姫路)/);
         let pLoc = pLocMatch ? pLocMatch[1] : "不明";
@@ -146,7 +147,7 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
         }
 
         let finalRank = null;
-        let rankMatch = rText.match(/(\d+)着/);
+        let rankMatch = rText.match(/(\d+)(?:着|[\s\t]+\d+頭)/);
         if (rankMatch) {
             finalRank = parseInt(rankMatch[1], 10);
         }
@@ -163,7 +164,8 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
             let isJra = jraLocs.includes(pLoc);
             let factor = window.ATV_CONFIG.LAP_FALLBACK_MATRIX.NAR.DEFAULT;
             if (isJra) {
-                let distCat = pDist < 1400 ? "SHORT" : (pDist < 2000 ? "MIDDLE" : "LONG");
+                let distCat = pDist < 1400 ?
+                "SHORT" : (pDist < 2000 ? "MIDDLE" : "LONG");
                 let trackCat = pTrack === "芝" ? "TURF" : "DIRT";
                 factor = window.ATV_CONFIG.LAP_FALLBACK_MATRIX.JRA[trackCat][distCat];
             } else {
@@ -181,7 +183,6 @@ window.processPastRaces = function(races, baseWeight, age, target, ratio) {
             idx: j, date: rDate, pLoc, pTrack, pDist, pCond, pWeight,
             f3FrontStr, f3BackStr, posRatio, hadLead, isOuter, passedCount, baseTime, pClassRank
         };
-
         // 新設の数理計算モジュール（calc-modifier.js）へ処理を委譲
         let currentRaceData = window.calculateRaceModifications(rawRaceData, baseWeight, age, target);
 
