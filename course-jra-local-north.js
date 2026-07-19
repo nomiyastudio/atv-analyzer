@@ -53,6 +53,7 @@ window.ATV_COURSE_MASTER["札幌"] = {
 
 window.ATV_COURSE_MASTER["函館"] = {
     TURF: {
+        1000: { locFactor: -0.03, cFactor: 0.028, staminaPenalty: 1.15, classes: { "S":"05", "A":"05", "B":"04", "C":"04", "D":"04", "E":"03", "F":"03" } },
         1200: { locFactor: -0.03, cFactor: 0.028, staminaPenalty: 1.22, classes: { "S":"05", "A":"05", "B":"04", "C":"04", "D":"04", "E":"03", "F":"03" } },
         1800: { locFactor: -0.03, cFactor: 0.022, staminaPenalty: 1.22, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } },
         2000: { locFactor: -0.03, cFactor: 0.022, staminaPenalty: 1.22, classes: { "S":"03", "A":"03", "B":"03", "C":"03", "D":"02", "E":"02", "F":"02" } },
