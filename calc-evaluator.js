@@ -151,34 +151,6 @@ window.calcInterval = function(headerArea, pastRaces, target) {
         let fw = isHard ? "bold" : "normal";
         let bd = isHard ? `border:1px solid #e74c3c; background-color:#fdedec;` : `border:1px solid transparent;`;
         intervalHtml = `<span style="font-size:11px; color:${color}; font-weight:${fw}; ${bd} padding:2px 4px; border-radius:4px; display:inline-block;">${intervalText}</span>`;
-    } else if (target.dateStr) {
-        let tMatch = target.dateStr.match(/(\d{1,2})月(\d{1,2})日/);
-        let latestRace = pastRaces.find(r => r.idx === 1);
-        if (tMatch && latestRace && latestRace.date !== "不明") {
-            let tMonth = parseInt(tMatch[1]);
-            let tDay = parseInt(tMatch[2]);
-            let pMatch = latestRace.date.split('/');
-            if (pMatch.length === 2) {
-                let pMonth = parseInt(pMatch[0]);
-                let pDay = parseInt(pMatch[1]);
-                let tYear = 2026, pYear = 2026;
-                if (tMonth < pMonth) pYear--;
-                let d1 = new Date(tYear, tMonth-1, tDay);
-                let d2 = new Date(pYear, pMonth-1, pDay);
-                let diff = Math.floor((d1 - d2) / (1000 * 60 * 60 * 24));
-                if (diff >= 0) {
-                    let weeks = Math.floor(diff / 7);
-                    if (weeks === 0) {
-                        intervalHtml = `<span style="font-size:11px; color:#e74c3c; font-weight:bold; border:1px solid #e74c3c; padding:2px 4px; border-radius:4px; background-color:#fdedec; display:inline-block;">連闘</span>`;
-                    } else {
-                        let color = weeks < 3 ? "#e74c3c" : "#555";
-                        let fw = weeks < 3 ? "bold" : "normal";
-                        let bd = weeks < 3 ? `border:1px solid #e74c3c; background-color:#fdedec;` : `border:1px solid transparent;`;
-                        intervalHtml = `<span style="font-size:11px; color:${color}; font-weight:${fw}; ${bd} padding:2px 4px; border-radius:4px; display:inline-block;">中${weeks}週</span>`;
-                    }
-                }
-            }
-        }
     }
     return intervalHtml;
 };

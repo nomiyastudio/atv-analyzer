@@ -2,14 +2,18 @@
 // calc-pace.js
 // ==========================================
 
-window.analyzeRacePace = function(horseBlocks, validHorseNames) {
+window.analyzeRacePace = function(horseBlocks, validHorseNames, target) {
     let totalHorses = 0;
     let nigeCount = 0;
     let senkoCount = 0;
 
     // 脚質判定用のダミーのターゲット条件と比率
-    // (脚質の判定ロジックは位置比率のみを参照するため、距離や前後比率には依存しない)
-    const dummyTarget = { trackType: "芝", distance: 1600, raceMonth: 11 };
+    // (過去走の馬場一致判定を正常に通過させるため、実際のtarget.trackTypeを引き継ぐ)
+    const dummyTarget = { 
+        trackType: (target && target.trackType) ? target.trackType : "芝", 
+        distance: 1600, 
+        raceMonth: 11 
+    };
     const dummyRatio = { f: 0.5, b: 0.5 };
 
     for (let i = 0; i < horseBlocks.length; i++) {

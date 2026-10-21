@@ -47,7 +47,7 @@ window.runAnalysis = async function() {
          
                 // 新規追加: 事前ペース判定ロジックを最上流（計算処理の前段）へ組み込み
                 if (window.analyzeRacePace) {
-                    target.predictedPace = window.analyzeRacePace(horseBlocks, validHorseNames);
+                    target.predictedPace = window.analyzeRacePace(horseBlocks, validHorseNames, target);
                 }
 
                 const ratios = [

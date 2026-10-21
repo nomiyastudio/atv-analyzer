@@ -25,8 +25,8 @@ window.renderDetailedLog = function(ratioId) {
                     <td>${r.idx}走</td>
                     <td>${r.date}</td>
                     <td class="success">✓</td>
-                    <td>${parseFloat(r.f3f).toFixed(1)}</td>
-                    <td>${parseFloat(r.f3b).toFixed(1)}</td>
+                    <td>${isNaN(parseFloat(r.f3f)) ? "-" : parseFloat(r.f3f).toFixed(1)}</td>
+                    <td>${isNaN(parseFloat(r.f3b)) ? "-" : parseFloat(r.f3b).toFixed(1)}</td>
                     <td>${r.distMod.toFixed(3)}</td>
                     <td>${r.surfMod.toFixed(3)}</td>
                     <td>${r.wghtMod.toFixed(3)}</td>
@@ -41,7 +41,7 @@ window.renderDetailedLog = function(ratioId) {
                     <td class="log-atv-bold">${getAtv('05')}</td>
                 </tr>`;
             } else {
-                logHtml += `<tr><td Esh><td>${r.date}</td><td class="error">×</td><td colspan="14" class="align-left">スキップ: ${r.reason}</td></tr>`;
+                logHtml += `<tr><td>${r.idx}走</td><td>${r.date}</td><td class="error">×</td><td colspan="14" class="align-left">スキップ: ${r.reason}</td></tr>`;
             }
         });
     });

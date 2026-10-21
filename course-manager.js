@@ -42,11 +42,11 @@ window.getCourseData = function(location, trackType, distance, classRank) {
         normalizedClass = "A";
     } else if (["B", "OP", "ＯＰ", "L", "Ｌ", "リステッド"].includes(classRank)) {
         normalizedClass = "B";
-    } else if (["C", "3勝", "３勝", "1600万", "１６０0万"].includes(classRank)) {
+    } else if (["C", "3勝", "３勝", "1600万", "１６００万"].includes(classRank)) {
         normalizedClass = "C";
     } else if (["D", "2勝", "２勝", "1000万", "１０００万"].includes(classRank)) {
         normalizedClass = "D";
-    } else if (["E", "1勝", "１勝", "500万", "５０0万"].includes(classRank)) {
+    } else if (["E", "1勝", "１勝", "500万", "５００万"].includes(classRank)) {
         normalizedClass = "E";
     } else {
         normalizedClass = "F";

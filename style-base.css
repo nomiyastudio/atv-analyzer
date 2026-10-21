@@ -16,6 +16,4 @@ body {
     color: #333;
     margin: 0;
     padding: 20px;
-    /* UIルーラー(25px)の表示分、上部余白を押し下げ (20px + 25px = 45px) */
-    padding-top: 45px;
 }

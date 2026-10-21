@@ -1,31 +1,6 @@
 /* ==========================================
 // style-components.css
 // ========================================== */
-label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 8px;
-    color: var(--primary-color);
-    font-size: 14px;
-}
-.input-box label {
-    padding-right: 60px;
-}
-
-/* ラベル表示制御 */
-.label-sp { display: none; }
-
-textarea.input-data {
-    width: 100%;
-    height: 75px;
-    padding: 10px;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    resize: none;
-    font-family: monospace;
-    font-size: 13px;
-}
 
 /* セグメントコントロール (ピル型UI) */
 .segmented-control {
@@ -51,48 +26,6 @@ textarea.input-data {
     margin: 0;
     white-space: nowrap;
     padding: 0 15px;
-}
-.style-pill {
-    background-color: #eee;
-    border-radius: 50px;
-}
-.style-pill label { border-radius: 50px; color: #666;
-    padding: 0 5px; }
-.style-pill input:checked + label {
-    background-color: var(--primary-color);
-    color: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.score-control-label {
-    font-size: 12px;
-    font-weight: bold;
-    color: var(--primary-color);
-    white-space: nowrap;
-    margin: 0;
-}
-.score-input-select, .score-input-number {
-    padding: 6px 8px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    font-size: 13px;
-    outline: none;
-}
-.score-input-number {
-    width: 55px;
-    text-align: center;
-}
-.score-checkbox-label {
-    display: flex;
-    align-items: center;
-    font-weight: normal;
-    font-size: 13px;
-    margin: 0;
-    cursor: pointer;
-    white-space: nowrap;
-}
-.score-checkbox-label input {
-    margin-right: 4px;
 }
 
 h3 {
@@ -134,35 +67,9 @@ h3 {
 }
 .dl-btn:hover { background-color: #128f76; }
 
-/* モーダル */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: flex; justify-content: center; align-items: center; z-index: 9999;
-}
-.modal-overlay.hidden-element {
-    display: none;
-}
-.modal-content {
-    background: #fff; padding: 25px; border-radius: 8px; max-width: 400px; text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-.modal-buttons { display: flex; gap: 15px; justify-content: center; }
-.modal-buttons button {
-    padding: 10px 15px; border: none;
-    border-radius: 4px; color: #fff; cursor: pointer; font-weight: bold;
-}
-.btn-sep { background-color: #7f8c8d; }
-.btn-oct { background-color: #2980b9; }
-
 /* HTMLクレンジング用代替クラス */
 .header-title {
     margin: 0;
-}
-.modal-description {
-    font-size: 13px;
-    color: #555;
-    margin-bottom: 20px;
 }
 
 /* レスポンシブ: コンポーネント制御 */
@@ -181,7 +88,4 @@ h3 {
         padding: 0 2px;
         font-size: 11px;
     }
-    /* ラベル表記の短縮 */
-    .label-pc { display: none; }
-    .label-sp { display: inline; }
 }

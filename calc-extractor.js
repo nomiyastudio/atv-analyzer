@@ -56,7 +56,7 @@ window.extractHeaderInfo = function(headerArea, validHorseNames) {
     if (cwMatch) {
         currentWeight = parseFloat(cwMatch[1]);
     } else {
-        let cwMatchFallback = afterAgeArea.match(/(?:^|\s|\n)(4[8-9]\.[05]|5\d\.[05]|6[0-5]\\.[05])(?=$|\s|\n)/);
+        let cwMatchFallback = afterAgeArea.match(/(?:^|\s|\n)(4[8-9]\.[05]|5\d\.[05]|6[0-5]\.[05])(?=$|\s|\n)/);
         if (cwMatchFallback) currentWeight = parseFloat(cwMatchFallback[1]);
     }
 
