@@ -3,6 +3,18 @@ window.ATV_CONFIG = {
         TURF: 0.040,
         DIRT: 0.065
     },
+    DIST_EXPONENT: 1.3,
+    OUTER_TRACK_MOD: {
+        STAMINA_PENALTY: 0.95,
+        C_FACTOR: 0.85
+    },
+    PACE_MOD: {
+        SLOW_EXP: 1.3,
+        SLOW_MULT: 1.6,
+        HIGH_FRONT_EXP: 1.3,
+        HIGH_FRONT_MULT: 1.1,
+        HIGH_BACK_BIAS: 0.35
+    },
     AGE_ALLOWANCE: {
         6: [3.0, 3.0, 3.0, 4.0],
         7: [2.0, 3.0, 3.0, 4.0],

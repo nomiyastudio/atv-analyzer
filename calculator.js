@@ -70,9 +70,10 @@ window.calculateRaceModifications = function(rawRaceData, baseWeight, age, targe
 
     let targetCourseData = { locFactor: 0.00, cFactor: 0.020, staminaPenalty: 1.00 };
     let pastCourseData = { locFactor: 0.00, cFactor: 0.020, staminaPenalty: 1.00 };
+    let tClassRank = target.classRank || "F";
 
     if (target.location && target.location !== "不明" && pLoc !== "不明") {
-        targetCourseData = window.getCourseData(target.location, target.trackType, target.distance, "F");
+        targetCourseData = window.getCourseData(target.location, target.trackType, target.distance, tClassRank);
         pastCourseData = window.getCourseData(pLoc, pTrack, pDist, pClassRank);
     } else if (pLoc !== "不明" && window.ATV_COURSE_MASTER[pLoc]) {
         try {
@@ -82,9 +83,19 @@ window.calculateRaceModifications = function(rawRaceData, baseWeight, age, targe
     }
 
     let currentSensitivity = pTrack === "芝" ? window.ATV_CONFIG.DIST_SENSITIVITY.TURF : window.ATV_CONFIG.DIST_SENSITIVITY.DIRT;
-    const calcDistLoss = (d, penalty) => Math.pow((d - 1600) / 1000, 2) * currentSensitivity * penalty;
-    let pDistLoss = calcDistLoss(pDist, pastCourseData.staminaPenalty);
-    let tDistLoss = calcDistLoss(target.distance, targetCourseData.staminaPenalty);
+    let distExp = window.ATV_CONFIG.DIST_EXPONENT || 1.3;
+    let outerStaminaMod = (window.ATV_CONFIG.OUTER_TRACK_MOD && window.ATV_CONFIG.OUTER_TRACK_MOD.STAMINA_PENALTY) ? window.ATV_CONFIG.OUTER_TRACK_MOD.STAMINA_PENALTY : 0.95;
+
+    let pPenalty = pastCourseData.staminaPenalty * (isOuter ? outerStaminaMod : 1.00);
+    let tPenalty = targetCourseData.staminaPenalty * (target.trackDetail === "外" ? outerStaminaMod : 1.00);
+
+    const calcDistLoss = (d, penalty) => {
+        let diff = (d - 1600) / 1000;
+        let sign = diff >= 0 ? 1 : -1;
+        return sign * Math.pow(Math.abs(diff), distExp) * currentSensitivity * penalty;
+    };
+    let pDistLoss = calcDistLoss(pDist, pPenalty);
+    let tDistLoss = calcDistLoss(target.distance, tPenalty);
     let distMod = 1.00 + (tDistLoss - pDistLoss);
 
     let agePattern = 3;
@@ -108,7 +119,7 @@ window.calculateRaceModifications = function(rawRaceData, baseWeight, age, targe
         if (pCond === "稍") surfModBase = 0.01;
         else if (pCond === "重" || pCond === "不") surfModBase = 0.02;
     }
-    let surfMod = surfModBase * (pDist / 1600);
+    let surfMod = surfModBase * Math.sqrt(pDist / 1600);
 
     let locMod = pastCourseData.locFactor - targetCourseData.locFactor;
 
@@ -357,13 +368,17 @@ window.calcAggregateATVs = function(validATVs, avgPosRatio, cFactor, target) {
         if (window.useDynamicPace && target && target.predictedPace) {
             paceMode = target.predictedPace;
         }
+
+        let outerCFactorMod = (window.ATV_CONFIG.OUTER_TRACK_MOD && window.ATV_CONFIG.OUTER_TRACK_MOD.C_FACTOR) ? window.ATV_CONFIG.OUTER_TRACK_MOD.C_FACTOR : 0.85;
+        let effectiveCFactor = (target && target.trackDetail === "外") ? (cFactor * outerCFactorMod) : cFactor;
+        let pMod = window.ATV_CONFIG.PACE_MOD || { SLOW_EXP: 1.3, SLOW_MULT: 1.6, HIGH_FRONT_EXP: 1.3, HIGH_FRONT_MULT: 1.1, HIGH_BACK_BIAS: 0.35 };
         
         if (paceMode === "SLOW") {
-            penaltyMultiplier = 1.00 + Math.pow(avgPosRatio, 2) * cFactor;
+            penaltyMultiplier = 1.00 + Math.pow(avgPosRatio, pMod.SLOW_EXP) * (effectiveCFactor * pMod.SLOW_MULT);
         } else if (paceMode === "HIGH") {
-            penaltyMultiplier = 1.00 + Math.pow(1 - avgPosRatio, 2) * cFactor;
+            penaltyMultiplier = 1.00 + (Math.pow(1 - avgPosRatio, pMod.HIGH_FRONT_EXP) * pMod.HIGH_FRONT_MULT + avgPosRatio * pMod.HIGH_BACK_BIAS) * effectiveCFactor;
         } else {
-            penaltyMultiplier = 1.00 + avgPosRatio * cFactor;
+            penaltyMultiplier = 1.00 + avgPosRatio * effectiveCFactor;
         }
 
         if (centralATV !== null) {
@@ -402,9 +417,10 @@ window.calculateATV = function(horseBlocks, validHorseNames, target, ratio) {
 
     try {
         let targetCourseData = { ratioId: "02", locFactor: 0.00, cFactor: 0.020, staminaPenalty: 1.00 };
+        let tClassRank = target.classRank || "F";
         if (target.location && target.location !== "不明") {
             try {
-                targetCourseData = window.getCourseData(target.location, target.trackType, target.distance, "F");
+                targetCourseData = window.getCourseData(target.location, target.trackType, target.distance, tClassRank);
             } catch (e) {
             }
         }

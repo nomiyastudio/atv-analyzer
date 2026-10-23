@@ -249,6 +249,16 @@ window.runAnalysis = async function() {
                 target.is2yo = monthData.is2yo;
                 target.raceMonth = monthData.month;
 
+                if (target.location && target.location !== "不明") {
+                    try {
+                        let tCourse = window.getCourseData(target.location, target.trackType, target.distance, target.classRank || "F");
+                        if (tCourse && tCourse.ratioId) {
+                            window.globalRatioId = tCourse.ratioId;
+                        }
+                    } catch (e) {
+                    }
+                }
+
                 if (window.analyzeRacePace) {
                     target.predictedPace = window.analyzeRacePace(horseBlocks, validHorseNames, target);
                 }

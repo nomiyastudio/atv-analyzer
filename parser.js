@@ -7,14 +7,13 @@ window.resolveMonth = function(month) {
 
 window.detectRaceMonth = async function(d1Text) {
     let is2yo = /2歳|２歳/.test(d1Text);
-    if (!is2yo) return { is2yo: false, month: null };
 
     let headerText = d1Text.split(/1R|2R|3R|4R|5R|6R|7R|8R|9R|10R|11R|12R/)[0];
     let mMatch = [...headerText.matchAll(/(\d{1,2})(?:\/|月)/g)].map(m => parseInt(m[1], 10));
     let uniqueMonths = [...new Set(mMatch)].filter(m => m >= 1 && m <= 12);
 
     let raceMonth = null;
-    if (uniqueMonths.includes(9) && uniqueMonths.includes(10)) {
+    if (is2yo && uniqueMonths.includes(9) && uniqueMonths.includes(10)) {
         raceMonth = await new Promise(resolve => {
             window.resolveMonthCallback = resolve;
             document.getElementById('month-prompt-modal').classList.remove('hidden-element');
@@ -24,7 +23,7 @@ window.detectRaceMonth = async function(d1Text) {
     } else {
         raceMonth = 11;
     }
-    return { is2yo: true, month: raceMonth };
+    return { is2yo: is2yo, month: raceMonth };
 };
 
 window.cleanHorseName = function(rawName) {
@@ -42,7 +41,8 @@ window.parseTarget = function(d1) {
         location: "不明",
         weightRule: "馬齢",
         trackDetail: "標準",
-        raceName: ""
+        raceName: "",
+        classRank: "F"
     };
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
@@ -79,6 +79,15 @@ window.parseTarget = function(d1) {
              }
          }
     }
+    
+    if (/G1|Ｇ１|Jpn1|Ｊｐｎ１/i.test(d1)) target.classRank = "S";
+    else if (/G2|Ｇ２|Jpn2|Ｊｐｎ２|G3|Ｇ３|Jpn3|Ｊｐｎ３/i.test(d1)) target.classRank = "A";
+    else if (/OP|ＯＰ|L|Ｌ|リステッド/i.test(d1)) target.classRank = "B";
+    else if (/3勝|３勝|1600万|１６００万/.test(d1)) target.classRank = "C";
+    else if (/2勝|２勝|1000万|１０００万/.test(d1)) target.classRank = "D";
+    else if (/1勝|１勝|500万|５０0万/.test(d1)) target.classRank = "E";
+    else if (/新馬|未勝利/.test(d1)) target.classRank = "F";
+
     return target;
 };
 
