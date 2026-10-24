@@ -50,7 +50,6 @@ window.ATV_CONFIG = {
     }
 };
 
-window.generatedPrompts = {};
 window.processedData = {};
 window.globalSortType = 'adjWeighted';
 window.globalRatioId = '02';

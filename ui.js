@@ -525,42 +525,6 @@ window.renderDetailedLog = function(ratioId) {
     return logHtml + `</table></div>`;
 };
 
-window.renderPromptArea = function(ratioId) {
-    let pData = window.generatedPrompts[ratioId];
-    let container = document.getElementById('promptControlArea');
-    if (!container || !pData) return;
-
-    let html = "";
-    if (pData.hasErrors) {
-        html = `
-            <div class="prompt-btn-wrap">
-                <button class="copy-btn prompt-btn-debug" onclick="window.copyPrompt('debug', 0, this)" style="background:#c0392b;">📋 デバッグ要求プロンプトをコピー</button>
-                <button class="action-btn btn-save prompt-action-icon" onclick="window.downloadPrompt('debug', 0)">💾</button>
-            </div>`;
-    } else {
-        html += `
-            <div class="prompt-section-wrap">
-                <label class="prompt-section-label">▼ ステップ1: 全体検証（抽出・ソート）</label>
-                <div class="prompt-btn-wrap">
-                    <button class="copy-btn prompt-btn-macro" onclick="window.copyPrompt('macro', 0, this)" style="background:#2980b9;">📋 全体検証（抽出・ソート）</button>
-                    <button class="action-btn btn-save prompt-action-icon" onclick="window.downloadPrompt('macro', 0)">💾</button>
-                </div>
-            </div>`;
-        html += `
-            <label class="prompt-section-label">▼ ステップ2: 個別検算（3頭ずつ分割）</label>
-            <div class="prompt-micro-wrap">`;
-        pData.microPrompts.forEach((m, idx) => {
-            html += `
-                <div class="prompt-micro-box">
-                    <button class="copy-btn prompt-btn-micro" onclick="window.copyPrompt('micro', ${idx}, this)">📋 ${m.title}</button>
-                    <button class="action-btn btn-save prompt-icon-micro" onclick="window.downloadPrompt('micro', ${idx})">💾</button>
-                </div>`;
-        });
-        html += `</div>`;
-    }
-    container.innerHTML = html;
-};
-
 window.runScoreAnalysis = function() {
     let metrics = Array.from(document.querySelectorAll('.score-metric-cb:checked')).map(cb => cb.value);
     let thresholdInput = document.getElementById('scoreThreshold').value;
@@ -746,17 +710,6 @@ window.renderUI = function(target, hasAuditIssues, allAuditErrors) {
         `;
     }
 
-    resultHTML += `
-        <div class="prompt-block">
-            <details>
-                <summary>
-                    <h3>検証用プロンプト (AI監査用)</h3>
-                    <span class="summary-hint">(クリックで展開)</span>
-                </summary>
-                <div class="prompt-content-area" id="promptControlArea"></div>
-            </details>
-        </div>
-    `;
     document.getElementById('resultArea').innerHTML = resultHTML;
 
     if (!hasAuditIssues) {
